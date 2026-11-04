@@ -120,17 +120,33 @@ try {
   const about = await page.$eval("#about", (el) => el.textContent);
   assert(about.includes("Ada computes every position"), "about");
   const items = await page.$$eval("#backlog li", (els) => els.map((el) => el.textContent.replace(/\s+/g, " ").trim()));
-  assert(items.length === 6, "backlog length");
+  assert(items.length === 7, "backlog length " + items.length);
   assert(items[1].includes("Splash and live page") && items[1].includes("done"), items[1]);
-  assert(items[2].includes("not started"), items[2]);
-  assert(items[5].includes("Contributor How-To") && items[5].includes("not started"), items[5]);
+  assert(items[2].includes("Core tensor and maths") && items[2].includes("done"), items[2]);
+  assert(items[3].includes("SPARK proofs of the kernels") && items[3].includes("not started"), items[3]);
+  assert(items[6].includes("Contributor How-To") && items[6].includes("not started"), items[6]);
   const hrefs = await page.$$eval("#links a", (els) => els.map((a) => a.href));
   assert(hrefs.some((h) => h === "https://github.com/RobertBoettcherSF/ada-ai-amplifier"), "repo link " + hrefs);
   assert(hrefs.some((h) => h.includes("README.md#using-the-page")), "howto link " + hrefs);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
   assert(overflow, "desktop main overflows");
   const numbered = await page.$$eval("#backlog .n", (els) => els.map((el) => el.textContent.trim()));
-  assert(numbered.join(" ") === "1. 2. 3. 4. 5. 6.", "backlog numbers " + numbered);
+  assert(numbered.join(" ") === "1. 2. 3. 4. 5. 6. 7.", "backlog numbers " + numbered);
+  const product = await page.$$eval("#y1, #y2, #y3", (els) => els.map((el) => el.textContent.trim()));
+  assert(product.join(",") === "14,14,17", "product " + product);
+  const soft = await page.$$eval("#s1, #s2, #s3", (els) => els.map((el) => Number(el.textContent)));
+  assert(Math.abs(soft[0] - 0.0452785) < 2e-4 && Math.abs(soft[2] - 0.909443) < 2e-4, "softmax " + soft);
+  await page.$eval("#v3", (el) => { el.value = "0"; });
+  await page.click("#compute");
+  const edited = await page.$$eval("#y1, #y2, #y3", (els) => els.map((el) => el.textContent.trim()));
+  assert(edited.join(",") === "5,2,17", "edited product " + edited);
+  await page.$eval("#v3", (el) => { el.value = "nope"; });
+  await page.click("#compute");
+  assert(await page.$eval("#demoerr", (el) => !el.hidden && el.textContent.includes("finite number")), "bad input");
+  await page.$eval("#v3", (el) => { el.value = "3"; });
+  await page.click("#compute");
+  const restored = await page.$eval("#y1", (el) => el.textContent.trim());
+  assert(restored === "14", "restored " + restored);
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   const covered = await page.evaluate(() => {
     const link = document.querySelector("#links a[href*='using-the-page']").getBoundingClientRect();
@@ -173,6 +189,8 @@ try {
   });
   await phonePage.touchscreen.tap(box.x, box.y);
   await phonePage.waitForFunction(() => document.getElementById("splash").hidden);
+  const phoneProduct = await phonePage.$eval("#y1", (el) => el.textContent.trim());
+  assert(phoneProduct === "14", "phone product " + phoneProduct);
   const phoneOverflow = await phonePage.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
   assert(phoneOverflow, "phone main overflows");
   await phonePage.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
@@ -206,6 +224,8 @@ try {
   await badPage.click("#cont");
   await badPage.waitForFunction(() => document.getElementById("splash").hidden);
   assert(await badPage.$eval("#banner", (el) => !el.hidden && el.textContent.includes("did not load")), "banner");
+  assert(await badPage.$eval("#demoerr", (el) => !el.hidden && el.textContent.includes("no product")), "demo down");
+  assert(await badPage.$eval("#compute", (el) => el.disabled), "compute still enabled");
   assert(badErrors.length === 0, "nowasm errors " + badErrors);
 
   const html = readFileSync(resolve(root, "site/index.html"), "utf8");

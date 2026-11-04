@@ -5,9 +5,10 @@
 # into site/index.html.
 #
 # Runtime checks stay on (-gnata, and no -gnatp). Nothing here is proved,
-# so checks are not stripped. The bodies are written so this module does
-# not call the exception runtime; the link does not pass
-# --allow-undefined, so a check that needs that runtime fails here.
+# so checks are not stripped. This runtime cannot propagate an exception.
+# tools/wasm-checks.c supplies the two symbols a failed check calls, and
+# those trap the module. The link does not pass --allow-undefined. The
+# native test is where a shape mismatch raises.
 set -e
 cd "$(dirname "$0")"
 T=$PWD/toolchain/usr
@@ -18,7 +19,7 @@ rm -rf obj/wasm && mkdir -p obj/wasm
 cd obj/wasm
 for F in ../../src/*.adb; do
   case $(basename "$F") in
-    hello.adb) continue ;;
+    hello.adb|tensors_test.adb) continue ;;
   esac
   # -gnatw.X: this runtime forbids exception propagation, and the
   # compiler warns that a check would call Last_Chance_Handler. The
@@ -28,10 +29,19 @@ for F in ../../src/*.adb; do
     --RTS="$T/lib/rts-native" -I../../src "$F"
 done
 ar x "$T/lib/rts-native/adalib/libgnat.a" s-memcop.o s-memmov.o s-memset.o
+#  A failed Pre or length check cannot propagate on this runtime.
+#  tools/wasm-checks.c traps instead. The native test is where a
+#  mismatch raises. The link does not pass --allow-undefined.
+"$T/bin/llvm-gcc" -c --target=wasm32 -O2 \
+  -o wasm_checks.o "$PWD/../../tools/wasm-checks.c"
 "$LD" --no-entry --strip-all \
   --export=aa_version_length --export=aa_version_byte \
   --export=aa_splash_reset --export=aa_splash_tick \
   --export=aa_step --export=aa_count --export=aa_get \
+  --export=aa_set_m --export=aa_get_m \
+  --export=aa_set_v --export=aa_get_v \
+  --export=aa_tensor_run \
+  --export=aa_product --export=aa_softmax \
   -z stack-size=2097152 --initial-memory=16777216 \
   -o ai_amplifier.wasm *.o
 cd ../..
