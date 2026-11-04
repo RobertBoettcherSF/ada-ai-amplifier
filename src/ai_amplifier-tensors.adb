@@ -88,6 +88,17 @@ is
       end if;
    end ReLU_Of;
 
+   --  Same split as the Post on Leaky_ReLU. Zero takes the slope
+   --  branch, and the slope times zero is zero.
+   function Leaky_Of (X, Slope : Float) return Float is
+   begin
+      if X > 0.0 then
+         return X;
+      else
+         return Slope * X;
+      end if;
+   end Leaky_Of;
+
    --  Length check in both directions. Indexing only the shorter side
    --  would ignore a longer operand. Assigning one array onto the
    --  other's bounds raises Constraint_Error either way.
@@ -217,6 +228,15 @@ is
       end loop;
       return Result;
    end ReLU;
+
+   function Leaky_ReLU (V : Vector; Slope : Float) return Vector is
+      Result : Vector := Zero_Vector (V.Length);
+   begin
+      for I in 1 .. Result.Length loop
+         Result.Data (I) := Leaky_Of (V.Data (I), Slope);
+      end loop;
+      return Result;
+   end Leaky_ReLU;
 
    function Sigmoid (V : Vector) return Vector is
       Result : Vector := Zero_Vector (V.Length);

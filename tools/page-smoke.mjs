@@ -125,11 +125,11 @@ try {
   assert(items[2].includes("Core tensor and maths") && items[2].includes("done"), items[2]);
   assert(items[3].includes("Tiny trainable MLP") && items[3].includes("done"), items[3]);
   assert(items[4].includes("Byte-level BPE") && items[4].includes("done"), items[4]);
-  assert(items[5].includes("Contributor How-To") && items[5].includes("not started"), items[5]);
+  assert(items[5].includes("Contributor How-To") && items[5].includes("done"), items[5]);
   assert(items[6].includes("SPARK proofs of the kernels") && items[6].includes("not started"), items[6]);
   const hrefs = await page.$$eval("#links a", (els) => els.map((a) => a.href));
   assert(hrefs.some((h) => h === "https://github.com/RobertBoettcherSF/ada-ai-amplifier"), "repo link " + hrefs);
-  assert(hrefs.some((h) => h.includes("README.md#using-the-page")), "howto link " + hrefs);
+  assert(hrefs.some((h) => h.includes("/docs/HOWTO.md")), "howto link " + hrefs);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
   assert(overflow, "desktop main overflows");
   const numbered = await page.$$eval("#backlog .n", (els) => els.map((el) => el.textContent.trim()));
@@ -149,6 +149,26 @@ try {
   await page.click("#compute");
   const restored = await page.$eval("#y1", (el) => el.textContent.trim());
   assert(restored === "14", "restored " + restored);
+
+  const lrelu = await page.$$eval("#lo1, #lo2, #lo3", (els) => els.map((el) => Number(el.textContent)));
+  const lslope = await page.$eval("#lrslope", (el) => Number(el.textContent));
+  assert(Math.abs(lslope - 0.01) < 1e-6, "lrelu slope " + lslope);
+  assert(Math.abs(lrelu[0] - lslope * -2) < 1e-5 && lrelu[1] === 0 && lrelu[2] === 3, "lrelu " + lrelu);
+  const lreluH = await page.$eval("#lrelu-apply", (el) => el.getBoundingClientRect().height);
+  assert(lreluH >= 44, "lrelu height " + lreluH);
+  await page.$eval("#lr1", (el) => { el.value = "1.5"; });
+  await page.click("#lrelu-apply");
+  const lreluEdited = await page.$eval("#lo1", (el) => el.textContent.trim());
+  assert(lreluEdited === "1.5", "lrelu edited " + lreluEdited);
+  await page.$eval("#lr1", (el) => { el.value = "nope"; });
+  await page.click("#lrelu-apply");
+  assert(await page.$eval("#lreluerr", (el) => !el.hidden && el.textContent.includes("finite number")), "lrelu bad input");
+  await page.$eval("#lr1", (el) => { el.value = "-2"; });
+  await page.click("#lrelu-apply");
+  const lreluBack = await page.$eval("#lo1", (el) => Number(el.textContent));
+  assert(Math.abs(lreluBack - lslope * -2) < 1e-5, "lrelu restored " + lreluBack);
+  await page.evaluate(() => document.getElementById("lrelu").scrollIntoView({ block: "center" }));
+  await page.screenshot({ path: resolve(shotDir, "leaky.png") });
 
   const mlpInit = await page.$eval("#mlpstat", (el) => el.textContent);
   assert(mlpInit.startsWith("step 0"), "mlp init " + mlpInit);
@@ -273,7 +293,7 @@ try {
 
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   const covered = await page.evaluate(() => {
-    const link = document.querySelector("#links a[href*='using-the-page']").getBoundingClientRect();
+    const link = document.querySelector("#links a[href*='docs/HOWTO.md']").getBoundingClientRect();
     const btn = document.getElementById("fbbtn").getBoundingClientRect();
     const ver = document.getElementById("ver").getBoundingClientRect();
     return link.bottom > btn.top || link.bottom > ver.top || link.top < 0;
@@ -315,6 +335,12 @@ try {
   await phonePage.waitForFunction(() => document.getElementById("splash").hidden);
   const phoneProduct = await phonePage.$eval("#y1", (el) => el.textContent.trim());
   assert(phoneProduct === "14", "phone product " + phoneProduct);
+  const phoneLrelu = await phonePage.$eval("#lrelu-apply", (el) => el.getBoundingClientRect().height);
+  assert(phoneLrelu >= 44, "phone lrelu height " + phoneLrelu);
+  const phoneLreluFont = await phonePage.$eval("#lr1", (el) => parseFloat(getComputedStyle(el).fontSize));
+  assert(phoneLreluFont >= 16, "phone lrelu font " + phoneLreluFont);
+  const phoneLreluOut = await phonePage.$eval("#lo3", (el) => el.textContent.trim());
+  assert(phoneLreluOut === "3", "phone lrelu " + phoneLreluOut);
   const phoneTrain = await phonePage.$eval("#train", (el) => el.getBoundingClientRect().height);
   assert(phoneTrain >= 44, "phone train height " + phoneTrain);
   const phoneFont = await phonePage.$eval("#rate", (el) => parseFloat(getComputedStyle(el).fontSize));
@@ -344,7 +370,7 @@ try {
   assert(phoneOverflow, "phone main overflows");
   await phonePage.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   const phoneCovered = await phonePage.evaluate(() => {
-    const link = document.querySelector("#links a[href*='using-the-page']").getBoundingClientRect();
+    const link = document.querySelector("#links a[href*='docs/HOWTO.md']").getBoundingClientRect();
     const btn = document.getElementById("fbbtn").getBoundingClientRect();
     const ver = document.getElementById("ver").getBoundingClientRect();
     return link.bottom > btn.top || link.bottom > ver.top;
@@ -375,6 +401,8 @@ try {
   assert(await badPage.$eval("#banner", (el) => !el.hidden && el.textContent.includes("did not load")), "banner");
   assert(await badPage.$eval("#demoerr", (el) => !el.hidden && el.textContent.includes("no product")), "demo down");
   assert(await badPage.$eval("#compute", (el) => el.disabled), "compute still enabled");
+  assert(await badPage.$eval("#lreluerr", (el) => !el.hidden && el.textContent.includes("no leaky ReLU")), "lrelu down");
+  assert(await badPage.$eval("#lrelu-apply", (el) => el.disabled), "lrelu still enabled");
   assert(await badPage.$eval("#mlperr", (el) => !el.hidden && el.textContent.includes("cannot train")), "mlp down");
   assert(await badPage.$eval("#train", (el) => el.disabled), "train still enabled");
   assert(await badPage.$eval("#attnerr", (el) => !el.hidden && el.textContent.includes("cannot tokenize")), "attn down");

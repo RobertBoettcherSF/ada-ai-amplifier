@@ -2,6 +2,7 @@ with Ada.Assertions;
 with Ada.Command_Line;
 with Ada.Text_IO;
 with AI_Amplifier.Tensors.Demo;
+with AI_Amplifier.Tensors.Leaky_Demo;
 
 --  Known values, empty shapes, large softmax logits, and mismatches.
 --  A mismatch must raise. It must not return a partial product.
@@ -66,6 +67,7 @@ begin
         or else T.Sigmoid (Empty).Length /= 0
         or else T.Tanh (Empty).Length /= 0
         or else T.Softmax (Empty).Length /= 0
+        or else T.Leaky_ReLU (Empty, T.Negative_Slope).Length /= 0
       then
          Fail ("empty activation length");
       end if;
@@ -175,6 +177,49 @@ begin
       Expect ("tanh zero", H.Data (1), 0.0);
       Expect ("tanh large", H.Data (2), 1.0);
       Expect ("tanh neg", H.Data (3), -1.0);
+   end;
+
+   declare
+      Inp : constant T.Vector := V3 (-2.0, 0.0, 3.0);
+      R   : constant T.Vector := T.Leaky_ReLU (Inp, T.Negative_Slope);
+      As_ReLU : constant T.Vector := T.Leaky_ReLU (Inp, 0.0);
+      Copied  : constant T.Vector := T.Leaky_ReLU (Inp, 1.0);
+   begin
+      Expect ("slope", T.Negative_Slope, 0.01);
+      if R.Length /= 3 then
+         Fail ("leaky length");
+      else
+         Expect ("leaky neg", R.Data (1), T.Negative_Slope * (-2.0));
+         Expect ("leaky zero", R.Data (2), 0.0);
+         Expect ("leaky pos", R.Data (3), 3.0);
+      end if;
+      Expect ("leaky as relu", As_ReLU.Data (1), 0.0);
+      Expect ("leaky as relu pos", As_ReLU.Data (3), 3.0);
+      Expect ("leaky copy", Copied.Data (1), -2.0);
+      Expect ("leaky copy pos", Copied.Data (3), 3.0);
+   end;
+
+   declare
+      Raised : Boolean := False;
+      R : T.Vector (3);
+   begin
+      begin
+         R := T.Leaky_ReLU (V3 (-1.0, 0.0, 1.0), -0.1);
+         Fail ("leaky negative slope returned " & Float'Image (R.Data (1)));
+      exception
+         when Ada.Assertions.Assertion_Error =>
+            Raised := True;
+      end;
+      Raised_Assertion ("leaky negative slope", Raised);
+      Raised := False;
+      begin
+         R := T.Leaky_ReLU (V3 (-1.0, 0.0, 1.0), 1.5);
+         Fail ("leaky steep slope returned " & Float'Image (R.Data (1)));
+      exception
+         when Ada.Assertions.Assertion_Error =>
+            Raised := True;
+      end;
+      Raised_Assertion ("leaky steep slope", Raised);
    end;
 
    declare
@@ -317,6 +362,31 @@ begin
      or else AI_Amplifier.Tensors.Demo.Get_Matrix (0, 1) /= 0.0
    then
       Fail ("demo index did not read as 0");
+   end if;
+
+   AI_Amplifier.Tensors.Leaky_Demo.Run;
+   Expect ("lrelu demo neg",
+     AI_Amplifier.Tensors.Leaky_Demo.Output (1),
+     T.Negative_Slope * (-2.0));
+   Expect ("lrelu demo zero",
+     AI_Amplifier.Tensors.Leaky_Demo.Output (2), 0.0);
+   Expect ("lrelu demo pos",
+     AI_Amplifier.Tensors.Leaky_Demo.Output (3), 3.0);
+   Expect ("lrelu slope",
+     AI_Amplifier.Tensors.Leaky_Demo.Slope, T.Negative_Slope);
+   if AI_Amplifier.Tensors.Leaky_Demo.Output (0) /= 0.0
+     or else AI_Amplifier.Tensors.Leaky_Demo.Output (4) /= 0.0
+     or else AI_Amplifier.Tensors.Leaky_Demo.Get_Input (0) /= 0.0
+   then
+      Fail ("lrelu index did not read as 0");
+   end if;
+   AI_Amplifier.Tensors.Leaky_Demo.Set_Input (1, 4.0);
+   AI_Amplifier.Tensors.Leaky_Demo.Set_Input (0, 9.0);
+   AI_Amplifier.Tensors.Leaky_Demo.Run;
+   Expect ("lrelu edited",
+     AI_Amplifier.Tensors.Leaky_Demo.Output (1), 4.0);
+   if AI_Amplifier.Tensors.Leaky_Demo.Get_Input (1) /= 4.0 then
+      Fail ("lrelu input was not stored");
    end if;
 
    declare

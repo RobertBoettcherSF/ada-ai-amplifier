@@ -77,6 +77,21 @@ is
    function ReLU (V : Vector) return Vector
      with Post => ReLU'Result.Length = V.Length;
 
+   --  The page uses this slope. 0 is ReLU. 1 copies the vector.
+   --  A slope outside [0.0, 1.0] is rejected by Leaky_ReLU's Pre.
+   Negative_Slope : constant Float := 0.01;
+
+   --  A positive component passes through. Any other component is
+   --  multiplied by Slope. An empty vector stays empty. The Post is
+   --  that rule, checked when the function returns. It is not a proof.
+   function Leaky_ReLU (V : Vector; Slope : Float) return Vector
+     with Pre  => Slope >= 0.0 and then Slope <= 1.0,
+          Post => Leaky_ReLU'Result.Length = V.Length
+            and then (for all I in 1 .. V.Length =>
+              Leaky_ReLU'Result.Data (I) =
+                (if V.Data (I) > 0.0 then V.Data (I)
+                 else Slope * V.Data (I)));
+
    function Sigmoid (V : Vector) return Vector
      with Post => Sigmoid'Result.Length = V.Length;
 
