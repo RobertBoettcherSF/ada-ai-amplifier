@@ -5,14 +5,14 @@ JavaScript only draws, and writes the feedback and crash files.
 The splash on the live page is a small picture of a network: Ada moves
 the points, and the page plots them.
 
-Visible stamp: **v0.4.0-mlp**
+Visible stamp: **v0.5.0-attention**
 
 The same text is `AI_Amplifier.Version.Version_Text`, the yellow badge in
 `web/template.html`, `version.txt`, and the line printed by `bin/hello`.
-The Alire crate version is `0.4.0-mlp` (the stamp without the leading
+The Alire crate version is `0.5.0-attention` (the stamp without the leading
 `v`, because Alire versions are semver).
 
-**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.4.0-mlp
+**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.5.0-attention
 
 `.github/workflows/pages.yml` builds `site/` and deploys it with GitHub
 Actions. The query is the cache bust. `version.txt` is published next to
@@ -27,9 +27,10 @@ from that Ada to WebAssembly and embedded in one HTML file.
 
 Item 3 is the tensor kernels, in plain Ada, and a 3 by 3 demo on the
 page. Item 4 is a real network on those kernels: eight tanh units, one
-sigmoid output, trained by gradient descent. The splash is still a
-drawing. It is not trained. SPARK proofs of the kernels are the last
-backlog item.
+sigmoid output, trained by gradient descent. Item 5 is a byte-level
+BPE tokenizer and one causal attention block, forward only. The splash
+is still a drawing. It is not trained. The attention weights are a
+seed, not a fit. SPARK proofs of the kernels are the last backlog item.
 
 ## Why plain Ada
 
@@ -55,6 +56,7 @@ backlog item.
 | Dataset | XOR, two circles, or two spirals. Changing it resets the weights and keeps the learning rate |
 | Learning rate | The step size Ada uses. The page control runs from 0.01 to 2. Lower and raise are the minus and plus buttons |
 | Reset | Restores the seeded weights for the current dataset |
+| Text box | Sends the text to Ada as UTF-8 bytes. Ada splits it with byte-level BPE and runs one causal attention block. The page paints the pieces and the heatmap |
 | Feedback, or F9 | Asks for a short note, then writes `feedback-*.json` (version, browser, screen, the recent UI events, and the note). On a phone that can share files, it offers the share sheet |
 | Crash report | If the previous visit did not end cleanly, or the module traps, a panel offers `crash-report-*.json` |
 | Yellow badge | The stamp, on every screen, including when JavaScript is off |
@@ -76,17 +78,21 @@ omitted when printing.
 | `src/ai_amplifier-tensors-demo.ads/.adb` | The page's 3 by 3 panel. Calls `Mat_Vec` and `Softmax` |
 | `src/ai_amplifier-mlp.ads/.adb` | The 2–8–1 network. Init, loss, backprop, gradient descent. Plain Ada |
 | `src/ai_amplifier-mlp-demo.ads/.adb` | The page's copy of that network. Dataset, rate, steps, grid, loss curve |
+| `src/ai_amplifier-bpe.ads/.adb` | Byte-level BPE. Learns merges from one excerpt. Encode and Decode |
+| `src/ai_amplifier-attention.ads/.adb` | One causal self-attention block. Embeddings, Q/K/V, mask, residual, layer norm |
+| `src/ai_amplifier-attention-demo.ads/.adb` | The page's buffer. Bytes in, token pieces and weights out |
 | `src/hello.adb` | Native program. Prints the stamp. Also calls the splash so the native build compiles it |
 | `src/tensors_test.adb` | Native tests. Known values, empty shapes, large logits, mismatches |
 | `src/mlp_test.adb` | Native tests. XOR, the circles, a central-difference gradient check |
+| `src/attention_test.adb` | Native tests. BPE round trip, the hand-computed attention pass, the mask |
 | `web/template.html` | Page source. `build.sh` replaces `__WASM_BASE64__` |
 | `site/index.html` | Built page, gitignored. GitHub Pages publishes the `site/` directory |
 | `version.txt` | The same stamp, one line |
 | `build.sh` | AdaWebPack 24 to `obj/wasm/ai_amplifier.wasm`, smoke, then `site/index.html` |
 | `prove.sh` | `gnatprove --mode=flow`, writes `proof/`. Not run by CI |
 | `tools/get-toolchain.sh` | Downloads the wasm compiler into `toolchain/` (gitignored) |
-| `tools/wasm-smoke.mjs` | Node: stamp, no wasm imports, splash numbers, product and softmax, XOR training |
-| `tools/page-smoke.mjs` | Headless Chrome: splash, the tensor panel, the training panel, Enter, tap, F9, crash panel, failed module |
+| `tools/wasm-smoke.mjs` | Node: stamp, no wasm imports, splash numbers, product and softmax, XOR training, BPE round trip, attention rows |
+| `tools/page-smoke.mjs` | Headless Chrome: splash, the tensor panel, the training panel, the token panel, Enter, tap, F9, crash panel, failed module |
 | `tools/wasm-checks.c` | Wasm-only. A failed check traps. Not linked into the native build |
 | `proof/gnatprove.out` | Flow summary from the skeleton. It does not include the splash or the tensors |
 
@@ -107,7 +113,7 @@ alr -n build
 on). Expected line:
 
 ```text
-ada-ai-amplifier v0.4.0-mlp
+ada-ai-amplifier v0.5.0-attention
 ```
 
 Then:
@@ -115,6 +121,7 @@ Then:
 ```sh
 ./bin/tensors_test
 ./bin/mlp_test
+./bin/attention_test
 ```
 
 Expected lines:
@@ -122,6 +129,7 @@ Expected lines:
 ```text
 tensors ok
 mlp ok
+attention ok
 ```
 
 ## Flow analysis
@@ -135,9 +143,10 @@ export PATH="$HOME/.alire/bin:$PATH"
 ```
 
 `ada_ai_amplifier.gpr` passes `--mode=flow`. `./prove.sh` passes it again.
-Provers are not run. `hello.adb`, `tensors_test.adb`, `mlp_test.adb`,
-`AI_Amplifier.Splash`, `AI_Amplifier.Tensors` (and its demo child), and
-`AI_Amplifier.MLP` (and its demo child) are outside SPARK.
+Provers are not run. `hello.adb`, `tensors_test.adb`, `mlp_test.adb`, `attention_test.adb`,
+`AI_Amplifier.Splash`, `AI_Amplifier.Tensors` (and its demo child),
+`AI_Amplifier.MLP` (and its demo child), `AI_Amplifier.BPE`, and
+`AI_Amplifier.Attention` (and its demo child) are outside SPARK.
 
 The committed `proof/gnatprove.out` is the skeleton run (version unit and
 empty root only). Running `./prove.sh` now rewrites `proof/` and will mention
@@ -185,9 +194,10 @@ node tools/page-smoke.mjs
 ```
 
 `build.sh` compiles every `src/*.adb` except `hello.adb`,
-`tensors_test.adb`, and `mlp_test.adb` (Text_IO is not part of this
-runtime), links `--no-entry`, and exports the version, splash,
-tensor-demo, and training entry points. It also links
+`tensors_test.adb`, `mlp_test.adb`, and `attention_test.adb` (Text_IO
+is not part of this runtime), links `--no-entry`, and exports the
+version, splash, tensor-demo, training, and token-attention entry
+points. It also links
 `tools/wasm-checks.c`. It does not pass `--allow-undefined`. The module
 this build emits has no imports. Runtime checks stay on. A failed check
 traps that module; it does not propagate.
@@ -346,31 +356,173 @@ hidden unit is 0, the four labels are balanced, and every gradient
 component is 0. The loss is `ln 2`. The seeded weights are what break
 that tie. `bin/mlp_test` checks the zero net as well.
 
+## Tokenizer
+
+`AI_Amplifier.BPE` is plain Ada (`SPARK_Mode => Off`). It is byte-level
+BPE. Ids `0 .. 255` are the bytes. Ids from 256 up are merges learned
+from one excerpt stored as UTF-8 bytes in the body. The source file
+stays in the Ada character set. The excerpt, 563 bytes, is:
+
+```text
+Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it. Es war einmal eine kleine süße Dirne, die hatte jedermann lieb, der sie nur ansah, am allerliebsten aber ihre Großmutter, die wußte gar nicht, was sie alles dem Kinde geben sollte. Einmal schenkte sie ihm ein Käppchen von rotem Sammet, und weil ihm das so wohl stand, und es nichts anders mehr tragen wollte, hieß es nur das Rotkäppchen.
+```
+
+The English is the opening of Lewis Carroll's *Alice's Adventures in
+Wonderland* (1865), through "conversations in it". The German is the
+opening of the Grimms' *Rotkäppchen* (1857), through the sentence that
+names the child. Both are public domain. Nothing is downloaded.
+
+Learning counts adjacent pairs. Overlapping positions both count, so
+`aaa` contributes two counts of `(a, a)`. The winner is the highest
+count. A tie goes to the smaller left id, then the smaller right id.
+The pair is replaced left to right, with no overlap. A pair whose
+joined piece would be longer than 16 bytes is skipped. Learning stops
+at 32 merges, or sooner if no pair still occurs twice. This excerpt
+uses all 32. The vocabulary is 288. The first merge is the bytes of
+`e` and a space, id 256. Encode of the excerpt is 376 tokens.
+`bin/attention_test` locks those numbers.
+
+Encode starts from the raw bytes and applies the merges in the order
+they were learned. Decode concatenates the stored bytes of each id.
+On every input that fits in 768 bytes, the two are inverses: ASCII,
+the empty string, every byte from 0 to 255, and UTF-8. A longer
+argument fails the precondition (`Assertion_Error` in the native
+test). The page wrapper does not raise: it keeps 768 bytes and counts
+the rest as dropped.
+
+In this vocabulary the UTF-8 of ß (`C3 9F`) is one token. The UTF-8
+of ä (`C3 A4`) is still two byte ids, 195 and 164. The pair is in the
+excerpt, and it did not win a slot among the 32. The page shows that
+split as two chips.
+
+## Attention
+
+`AI_Amplifier.Attention` is plain Ada (`SPARK_Mode => Off`). It is one
+single-head self-attention block. Forward only. There is no loss and
+no update.
+
+| | |
+|---|---|
+| `D_Model` | 8. Fits in `Tensors.Max_Extent` |
+| `Max_Seq` | 16 positions. A score row is a `Vector` |
+| Projections | `W_Q`, `W_K`, `W_V`, `W_O`, each 8 by 8. No bias |
+| Embeddings | one length-8 vector per token id, and one per place |
+| Norm | gamma starts at 1, beta at 0, `Eps` is `1.0e-5` |
+| Seed | `Embed_Seed`, `20261104`, the same number as the MLP |
+
+The generator is the one in the MLP unit, in its own stream:
+
+```text
+state := state * 1664525 + 1013904223    (mod 2**32)
+```
+
+A drawn component is uniform on `[-s, s)` with `s = 1/sqrt(8)`.
+The projections are one stream from `Embed_Seed`. The token table,
+then the 16 position vectors, are a second stream from the same seed.
+`X(i) = token_embed(id) + position_embed(i)`. The vocabulary is wider
+than `Max_Extent`, so the tables are arrays of `Vector`, not one
+`Matrix`. On this wasm runtime a vector kept in such an array and
+passed straight into `Dot` or `Mat_Vec` is not the view those kernels
+read. The attention body copies the components into a fresh aggregate
+at the call. The native test does not need that copy, and it checks
+the same kernels.
+
+For a sequence `X(1) .. X(n)`:
+
+```text
+Q = W_Q X,   K = W_K X,   V = W_V X
+score(i, j) = Q(i) · K(j) / sqrt(8)     for j <= i
+weight(i)   = softmax of those scores
+weight(i, j) = 0                         for j > i
+context(i)  = sum_j weight(i, j) * V(j)
+Y(i)        = LayerNorm(W_O context(i) + X(i))
+```
+
+The softmax for row `i` is only over `1 .. i`. A future column is
+written as 0. It is not a large negative logit. Layer norm divides by
+`D_Model` (population variance, not `D_Model - 1`) and adds `Eps`
+under the square root. The square root is the same Newton loop the
+MLP uses for its own square root. There is no second head and no
+feed-forward layer.
+
+`1/sqrt(8)` is about `0.353_553_38`. `bin/attention_test` checks
+`Scaled_Dot` of `(1, 0, …)` with itself against that value, and the
+dot of `(1, 0, …)` with `(0, 1, …)` as 0.
+
+The hand-computed pass uses two tokens and a block the test fills in:
+
+```text
+X1 = (1, 3, 0, 0, 0, 0, 0, 0)
+X2 = (5, 7, 0, 0, 0, 0, 0, 0)
+W_Q = 0,  W_K = 0,  W_V = I,  W_O = 2 I
+gamma = 1,  beta = 0
+```
+
+Q and K are zero, so every unmasked score is 0. Softmax of one 0 is
+1. Softmax of two 0s is 1/2 and 1/2. The future weight on row 1 is 0.
+
+```text
+context1 = X1 = (1, 3, 0, …)
+context2 = (3, 5, 0, …)
+W_O doubles that, then the residual adds X:
+Y before the norm = (3, 9, 0, …) and (11, 17, 0, …)
+```
+
+Layer norm of those, within `0.000_05`:
+
+```text
+(0.500, 2.500, -0.500, -0.500, -0.500, -0.500, -0.500, -0.500)
+(1.201, 2.162, -0.560, -0.560, -0.560, -0.560, -0.560, -0.560)
+```
+
+A second check sets gamma to 2 and beta to 0.5 and matches
+`2 * y + 0.5` on the first component. A third check is three tokens
+with zero Q and K: the rows are `(1, 0, 0)`, `(1/2, 1/2, 0)`, and
+three equal thirds. A fourth check puts a much larger key in the
+future. Without the mask, token 1 would attend to it (`10/sqrt(8)`
+against `1/sqrt(8)`). The weight on that future token is 0, and token
+1's weight on itself is 1.
+
+The seeded block is what the page runs. Each of its rows sums to 1
+within `0.000_05`, and every future weight is 0. The same seed is the
+same block. `Forward_Tokens` on a phrase matches `Forward` on the
+embeddings of those ids.
+
+The page keeps one buffer in `AI_Amplifier.Attention.Demo`. The box
+starts as `Alice was beginning süß`, which encodes to 15 tokens, so
+attention covers all of them. A longer text is still tokenized. The
+heatmap is the first 16 tokens, and the page says how many later
+pieces were left out of it. JavaScript sends bytes and reads ids,
+piece bytes, and weights. It adds a row up when it writes the
+sentence under the heatmap. It does not form Q, K, or V.
+
 ## Backlog
 
 1. **Repo skeleton — done.** Crate, stamp, native hello, wasm target, placeholder page.
 2. **Splash and live page — done.** One HTML file, Ada in WebAssembly, JavaScript draws. Version badge, F9 feedback, crash report, Pages from the workflow.
 3. **Core tensor and maths (plain Ada) — done.** `Vector` and `Matrix`, the kernels above, native tests, and the 3 by 3 panel.
 4. **Tiny trainable MLP, live in the browser — done.** The network above, native tests including a finite-difference gradient check, and the training panel.
-5. **Byte-level BPE tokenizer and one transformer attention block — not started.**
+5. **Byte-level BPE tokenizer and one transformer attention block — done.** The tokenizer and the block above, native tests including the hand-computed pass, and the token panel.
 6. **Contributor How-To docs — not started.**
 7. **SPARK proofs of the kernels — not started.** This stays last.
 
-Items land one at a time. Item 5 has not been started.
+Items land one at a time. Item 6 has not been started.
 
 ## Honesty
 
 1. The splash arithmetic is plain Ada. It is not proved. `SPARK_Mode` is off on that unit so it is not presented as a proof target. The `SPARK_Mode` and contracts on `AI_Amplifier.Version` are unchanged.
 2. The tensor kernels are plain Ada too. `SPARK_Mode` is off. The `Pre` and `Post` are ordinary Ada contracts, checked when the program runs. They were not submitted to a prover. There is no Silver claim and no Gold claim.
-3. CI builds the native program, runs `bin/tensors_test`, builds the wasm module and the page, then runs the headless smoke. CI does not run GNATprove. `prove.sh` remains. The committed `proof/gnatprove.out` is the skeleton flow run described above, not a proof of the splash or of the kernels.
+3. CI builds the native program, runs `bin/tensors_test`, `bin/mlp_test`, and `bin/attention_test`, builds the wasm module and the page, then runs the headless smoke. CI does not run GNATprove. `prove.sh` remains. The committed `proof/gnatprove.out` is the skeleton flow run described above, not a proof of the splash, the kernels, the network, the tokenizer, or the attention block.
 4. The wasm module's lack of imports is what this build emits, and `tools/wasm-smoke.mjs` checks it. The tensor body does reference a failed-check path. `tools/wasm-checks.c` defines `__gnat_last_chance_handler` and `system__assertions__raise_assert_failure` as traps, so that path links without an import. On the native runtime the same check raises. `-gnatp` is not used. `-gnatw.X` is the same switch as the native Alire profile: this runtime forbids exception propagation, and the compiler's reminder of that is turned off.
-5. JavaScript does not compute the splash, the product, the softmax, the loss, or the decision boundary. It reads coordinates and copies numbers out of the module. If the module is missing, not WebAssembly, missing an export, or its stamp differs from the badge, the page says "The Ada module did not load" and still shows the title and the badge. The tensor demo then says it has no product. The training panel says it cannot train.
-6. The network on the splash is not a model. The tensor demo is not a model. The training panel is a model: forward, binary cross-entropy, backprop, and gradient descent, in the MLP unit. It does not tokenize, and it does not run attention.
-7. The MLP is plain Ada. `SPARK_Mode` is off. The finite-difference check is a test, not a proof. There is no Silver claim and no Gold claim on these kernels.
-8. `Float` results are approximate. The tensor test allows `0.000_05`. Softmax of a non-empty vector sums to 1 within that tolerance, because the largest logit becomes `exp(0) = 1`. The gradient check allows `0.002` plus 5 percent of the analytical value, at a central step of `0.001`. The log, square root, sine, and cosine in the MLP body are series, not `Ada.Numerics`.
+5. JavaScript does not compute the splash, the product, the softmax, the loss, the decision boundary, the merges, or the attention. It reads coordinates, copies numbers, and sends UTF-8 bytes. It adds up the weights it already read when it writes the sentence under the heatmap. If the module is missing, not WebAssembly, missing an export, or its stamp differs from the badge, the page says "The Ada module did not load" and still shows the title and the badge. The tensor demo then says it has no product. The training panel says it cannot train. The token panel says it cannot tokenize.
+6. The network on the splash is not a model. The tensor demo is not a model. The training panel is a model: forward, binary cross-entropy, backprop, and gradient descent, in the MLP unit. The token panel tokenizes and runs attention, forward only. Those weights are the seed. They are not trained.
+7. The MLP, the tokenizer, and the attention block are plain Ada. `SPARK_Mode` is off. The finite-difference check and the hand-computed attention pass are tests, not proofs. There is no Silver claim and no Gold claim on these kernels.
+8. `Float` results are approximate. The tensor test and the attention test allow `0.000_05`. Softmax of a non-empty vector sums to 1 within that tolerance, because the largest logit becomes `exp(0) = 1`. The gradient check allows `0.002` plus 5 percent of the analytical value, at a central step of `0.001`. The log, square root, sine, and cosine in the MLP body, and the square root in the attention body, are series, not `Ada.Numerics`. The hand-computed layer-norm values in the attention section are this Newton square root.
 9. Eight hidden units do not solve the spirals. The numbers in the network section are this seed, at the rates named there. They are not a claim about every seed.
-10. The compiler, `wasm-ld`, Chrome, and the Node smokes are trusted tools. They are not verified.
-11. GitHub Pages publishes `site/` from `main` via `.github/workflows/pages.yml`. The cache-bust query is the stamp without the leading `v`.
+10. The BPE rules are whatever this excerpt and this tie-break produce. They are not a published tokenizer. ß is one token here. ä is not. A different excerpt would learn different merges. The 32, 288, and 376 figures are this text.
+11. Attention reads at most 16 tokens. The page still shows later pieces, and it says they are outside the heatmap. The box keeps at most 768 bytes.
+12. The compiler, `wasm-ld`, Chrome, and the Node smokes are trusted tools. They are not verified.
+13. GitHub Pages publishes `site/` from `main` via `.github/workflows/pages.yml`. The cache-bust query is the stamp without the leading `v`.
 
 ## License
 
