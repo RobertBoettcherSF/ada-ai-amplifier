@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    name: native, flow, wasm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - uses: alire-project/setup-alire@v5
+        with:
+          version: "2.1.1"
+          toolchain: gnat_native=16.1.0 gprbuild=26.0.1
+
+      - name: Native hello
+        run: |
+          alr -n build
+          ./tools/check-version.sh
+
+      - name: GNATprove flow
+        run: |
+          alr -n install gnatprove
+          export PATH="$HOME/.alire/bin:$PATH"
+          gnatprove --version
+          ./prove.sh
+          git diff --exit-code -- proof
+
+      - name: WebAssembly
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            rpm2cpio cpio lld libedit2
+          ./tools/get-toolchain.sh
+          ./build.sh

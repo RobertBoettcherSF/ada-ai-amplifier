@@ -1,0 +1,42 @@
+=========================
+Summary of SPARK analysis
+=========================
+
+--------------------------------------------------------------------------------
+SPARK Analysis results        Total        Flow   Provers   Justified   Unproved
+--------------------------------------------------------------------------------
+Data Dependencies                 2           2         .           .          .
+Flow Dependencies                 .           .         .           .          .
+Initialization                    1           1         .           .          .
+Non-Aliasing                      .           .         .           .          .
+Run-time Checks                   .           .         .           .          .
+Assertions                        .           .         .           .          .
+Functional Contracts              .           .         .           .          .
+LSP Verification                  .           .         .           .          .
+Termination                       2           2         .           .          .
+Concurrency                       .           .         .           .          .
+--------------------------------------------------------------------------------
+Total                             5    5 (100%)         .           .          .
+
+
+============================
+Most difficult proved checks
+============================
+
+No check found with max time greater than 1 second
+
+========================
+Detailed analysis report
+========================
+
+Analyzed 3 units
+in unit ai_amplifier, 1 subprograms and packages out of 1 analyzed
+proof skipped for this unit (only flow analysis was requested)
+  AI_Amplifier at ai_amplifier.ads:2 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements)
+in unit ai_amplifier-version, 3 subprograms and packages out of 3 analyzed
+proof skipped for this unit (only flow analysis was requested)
+  AI_Amplifier.Version at ai_amplifier-version.ads:3 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements)
+  AI_Amplifier.Version.Version_Byte at ai_amplifier-version.ads:15 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements)
+  AI_Amplifier.Version.Version_Length at ai_amplifier-version.ads:11 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements)
+in unit hello, 0 subprograms and packages out of 0 analyzed
+proof skipped for this unit (only flow analysis was requested)
