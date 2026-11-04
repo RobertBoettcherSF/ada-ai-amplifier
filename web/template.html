@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<!-- ada-ai-amplifier. Splash motion is Ada (src/ai_amplifier-splash), compiled
-     to WebAssembly and embedded by build.sh. This file only draws, shows the
-     page, and writes F9 / crash files. -->
+<!-- ada-ai-amplifier. Splash motion and the tensor demo are Ada
+     (src/ai_amplifier-splash, src/ai_amplifier-tensors), compiled to
+     WebAssembly and embedded by build.sh. This file only draws, copies
+     numbers into the module, shows the page, and writes F9 / crash files. -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -180,6 +181,48 @@
       cursor: pointer;
     }
     .fine { opacity: 0.75; font-size: 14px; }
+    #demo { margin: 0.2rem 0 1.2rem; }
+    .demo-cols {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      align-items: flex-start;
+    }
+    .mgrid, .vgrid { display: grid; gap: 6px; }
+    .mgrid {
+      grid-template-columns: repeat(3, minmax(0, 5rem));
+      width: min(100%, 16rem);
+    }
+    .vgrid { grid-template-columns: minmax(0, 5rem); }
+    #demo input {
+      width: 100%;
+      min-height: 44px;
+      padding: 8px;
+      border: 1px solid #555;
+      background: #111;
+      color: #f3e6c4;
+      font: 16px/1.2 ui-monospace, monospace;
+    }
+    #compute {
+      min-height: 44px;
+      margin: 12px 0;
+      padding: 10px 14px;
+      border: 0;
+      background: #ffe14a;
+      color: #111;
+      font: 16px/1 ui-sans-serif, system-ui, sans-serif;
+      cursor: pointer;
+    }
+    #compute:disabled { opacity: 0.45; cursor: default; }
+    .out {
+      margin: 0 0 0.6rem;
+      color: #ffe14a;
+      font: 16px/1.4 ui-monospace, monospace;
+    }
+    .out span { display: inline-block; min-width: 5.5rem; }
+    @media (max-width: 520px) {
+      .demo-cols { flex-direction: column; }
+    }
     @media print {
       #ver, #fbbtn, #splash, #fb, #crash { display: none !important; }
       body { background: #fff; color: #000; }
@@ -188,7 +231,7 @@
   </style>
 </head>
 <body>
-  <div id="ver">v0.2.0-splash</div>
+  <div id="ver">v0.3.0-tensors</div>
   <main id="main" tabindex="-1">
     <h1>ada-ai-amplifier</h1>
     <p id="banner" class="err" hidden></p>
@@ -199,9 +242,49 @@
       Ada computes every position. JavaScript only draws.
     </p>
     <p>The network in the splash is a drawing. It is not trained.</p>
+    <h2>Tensor demo</h2>
+    <p>
+      Edit the matrix and the vector, then Compute. Ada multiplies them
+      and runs softmax on the product. JavaScript only passes the numbers.
+      The shapes are 3 and 3, so the shape checks pass. This is plain Ada,
+      not a proved kernel, and it is not a trained network.
+    </p>
+    <div id="demo">
+      <div class="demo-cols">
+        <div>
+          <p class="fine">Matrix</p>
+          <div class="mgrid">
+            <input id="m11" type="text" inputmode="decimal" autocomplete="off" aria-label="Row 1 column 1">
+            <input id="m12" type="text" inputmode="decimal" autocomplete="off" aria-label="Row 1 column 2">
+            <input id="m13" type="text" inputmode="decimal" autocomplete="off" aria-label="Row 1 column 3">
+            <input id="m21" type="text" inputmode="decimal" autocomplete="off" aria-label="Row 2 column 1">
+            <input id="m22" type="text" inputmode="decimal" autocomplete="off" aria-label="Row 2 column 2">
+            <input id="m23" type="text" inputmode="decimal" autocomplete="off" aria-label="Row 2 column 3">
+            <input id="m31" type="text" inputmode="decimal" autocomplete="off" aria-label="Row 3 column 1">
+            <input id="m32" type="text" inputmode="decimal" autocomplete="off" aria-label="Row 3 column 2">
+            <input id="m33" type="text" inputmode="decimal" autocomplete="off" aria-label="Row 3 column 3">
+          </div>
+        </div>
+        <div>
+          <p class="fine">Vector</p>
+          <div class="vgrid">
+            <input id="v1" type="text" inputmode="decimal" autocomplete="off" aria-label="Vector 1">
+            <input id="v2" type="text" inputmode="decimal" autocomplete="off" aria-label="Vector 2">
+            <input id="v3" type="text" inputmode="decimal" autocomplete="off" aria-label="Vector 3">
+          </div>
+        </div>
+      </div>
+      <button id="compute" type="button" disabled>Compute</button>
+      <p id="demoerr" class="err" hidden></p>
+      <p class="fine">Product</p>
+      <p id="product" class="out"><span id="y1">…</span><span id="y2">…</span><span id="y3">…</span></p>
+      <p class="fine">Softmax</p>
+      <p id="softmax" class="out"><span id="s1">…</span><span id="s2">…</span><span id="s3">…</span></p>
+    </div>
     <h2>On this page</h2>
     <ul>
       <li>Tap the splash, or press Enter, to leave it.</li>
+      <li>The tensor demo asks Ada for a matrix-vector product and a softmax.</li>
       <li>F9, or Feedback, writes a feedback file.</li>
       <li>If the previous session did not end cleanly, a crash report is offered.</li>
     </ul>
@@ -209,10 +292,11 @@
     <ol id="backlog">
       <li><span class="n">1.</span><span>Repo skeleton</span> <span class="st done">done</span></li>
       <li><span class="n">2.</span><span>Splash and live page</span> <span class="st done">done</span></li>
-      <li><span class="n">3.</span><span>Core tensor and math, with SPARK kernels</span> <span class="st">not started</span></li>
-      <li><span class="n">4.</span><span>Tiny trainable MLP, live in the browser</span> <span class="st">not started</span></li>
-      <li><span class="n">5.</span><span>Byte-level BPE tokenizer and one transformer attention block</span> <span class="st">not started</span></li>
-      <li><span class="n">6.</span><span>Contributor How-To docs</span> <span class="st">not started</span></li>
+      <li><span class="n">3.</span><span>Core tensor and maths (plain Ada)</span> <span class="st done">done</span></li>
+      <li><span class="n">4.</span><span>SPARK proofs of the kernels</span> <span class="st">not started</span></li>
+      <li><span class="n">5.</span><span>Tiny trainable MLP, live in the browser</span> <span class="st">not started</span></li>
+      <li><span class="n">6.</span><span>Byte-level BPE tokenizer and one transformer attention block</span> <span class="st">not started</span></li>
+      <li><span class="n">7.</span><span>Contributor How-To docs</span> <span class="st">not started</span></li>
     </ol>
     <h2>Links</h2>
     <ul id="links">
@@ -400,6 +484,7 @@ function fail(detail) {
   banner.textContent = text;
   errors.push(text);
   note("error", text);
+  showDemoDown();
 }
 function skip(how) {
   if (splash.hidden) return;
@@ -443,6 +528,75 @@ window.onunhandledrejection = (e) => {
 };
 document.addEventListener("visibilitychange", () => note("visibility", document.visibilityState));
 
+function fmt(x) {
+  if (typeof x !== "number" || !Number.isFinite(x)) return "not a number";
+  return String(Math.round(x * 1e6) / 1e6);
+}
+function box(id) { return document.getElementById(id); }
+const matrixIds = ["m11", "m12", "m13", "m21", "m22", "m23", "m31", "m32", "m33"];
+function readBox(id) {
+  const t = box(id).value.trim();
+  if (t === "") return null;
+  const n = Number(t);
+  if (!Number.isFinite(n)) return null;
+  return n;
+}
+function showDemoDown() {
+  const err = box("demoerr");
+  if (!err) return;
+  err.hidden = false;
+  err.textContent = "The Ada module did not load, so this panel has no product.";
+  const button = box("compute");
+  if (button) button.disabled = true;
+}
+function paintDemo() {
+  box("y1").textContent = fmt(ada.aa_product(1));
+  box("y2").textContent = fmt(ada.aa_product(2));
+  box("y3").textContent = fmt(ada.aa_product(3));
+  box("s1").textContent = fmt(ada.aa_softmax(1));
+  box("s2").textContent = fmt(ada.aa_softmax(2));
+  box("s3").textContent = fmt(ada.aa_softmax(3));
+}
+function fillDemo() {
+  for (let i = 0; i < matrixIds.length; i += 1) {
+    box(matrixIds[i]).value = fmt(ada.aa_get_m(Math.floor(i / 3) + 1, (i % 3) + 1));
+  }
+  box("v1").value = fmt(ada.aa_get_v(1));
+  box("v2").value = fmt(ada.aa_get_v(2));
+  box("v3").value = fmt(ada.aa_get_v(3));
+}
+function computeDemo() {
+  if (!ada) return;
+  const vals = matrixIds.map(readBox);
+  const vector = [readBox("v1"), readBox("v2"), readBox("v3")];
+  const err = box("demoerr");
+  if (vals.some((n) => n === null) || vector.some((n) => n === null)) {
+    err.hidden = false;
+    err.textContent = "Enter a finite number in every box.";
+    note("tensor input");
+    return;
+  }
+  err.hidden = true;
+  try {
+    for (let i = 0; i < matrixIds.length; i += 1) {
+      ada.aa_set_m(Math.floor(i / 3) + 1, (i % 3) + 1, vals[i]);
+    }
+    ada.aa_set_v(1, vector[0]);
+    ada.aa_set_v(2, vector[1]);
+    ada.aa_set_v(3, vector[2]);
+    ada.aa_tensor_run();
+    paintDemo();
+  } catch (e) {
+    const text = "That calculation trapped the Ada module. Reload the page to run it again.";
+    err.hidden = false;
+    err.textContent = text;
+    box("compute").disabled = true;
+    note("tensor trap", String(e && e.message ? e.message : e));
+    return;
+  }
+  note("tensor", box("y1").textContent + " " + box("y2").textContent + " " + box("y3").textContent);
+}
+document.getElementById("compute").addEventListener("click", computeDemo);
 document.getElementById("fbbtn").addEventListener("click", openFeedback);
 document.getElementById("fbcancel").addEventListener("click", closeFeedback);
 document.getElementById("fbsend").addEventListener("click", () => {
@@ -602,7 +756,7 @@ async function boot() {
     fail(String(e && e.message ? e.message : e));
     return;
   }
-  const need = ["aa_version_length", "aa_version_byte", "aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get"];
+  const need = ["aa_version_length", "aa_version_byte", "aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get", "aa_set_m", "aa_get_m", "aa_set_v", "aa_get_v", "aa_tensor_run", "aa_product", "aa_softmax"];
   for (let i = 0; i < need.length; i += 1) {
     if (typeof ada[need[i]] !== "function") {
       ada = null;
@@ -617,6 +771,9 @@ async function boot() {
     return;
   }
   ada.aa_splash_reset();
+  fillDemo();
+  computeDemo();
+  document.getElementById("compute").disabled = false;
   note("wasm loaded", stamp);
   hint.textContent = "Tap or Enter";
   started = true;

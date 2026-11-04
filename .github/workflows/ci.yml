@@ -24,6 +24,7 @@ jobs:
         run: |
           alr -n build
           ./tools/check-version.sh
+          ./bin/tensors_test
 
       - name: Chrome
         run: |

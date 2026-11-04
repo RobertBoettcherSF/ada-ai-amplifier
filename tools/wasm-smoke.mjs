@@ -44,7 +44,8 @@ function fail(msg) {
   console.error(msg);
   process.exit(1);
 }
-const need = ["aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get"];
+const need = ["aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get",
+  "aa_set_m", "aa_get_m", "aa_set_v", "aa_get_v", "aa_tensor_run", "aa_product", "aa_softmax"];
 for (const name of need) {
   if (typeof exp[name] !== "function") fail("missing export " + name);
 }
@@ -118,5 +119,53 @@ for (let i = 1; i <= 56; i += 1) {
 }
 for (let i = 0; i < nodes.length; i += 1) {
   if (exp.aa_get(0, i + 1, 0) !== nodes[i][0]) fail("node drifted");
+}
+
+function near(got, want, tol) {
+  return Math.abs(got - want) <= tol;
+}
+const matrix = [1, 2, 3, 0, 1, 4, 5, 6, 0];
+for (let i = 0; i < matrix.length; i += 1) {
+  const g = exp.aa_get_m(Math.floor(i / 3) + 1, (i % 3) + 1);
+  if (g !== matrix[i]) fail("matrix " + i + " " + g);
+}
+if (exp.aa_get_v(1) !== 1 || exp.aa_get_v(2) !== 2 || exp.aa_get_v(3) !== 3) {
+  fail("vector " + [exp.aa_get_v(1), exp.aa_get_v(2), exp.aa_get_v(3)]);
+}
+if (exp.aa_get_m(0, 1) !== 0 || exp.aa_get_v(4) !== 0 || exp.aa_product(0) !== 0) {
+  fail("tensor clamp");
+}
+exp.aa_tensor_run();
+if (exp.aa_product(1) !== 14 || exp.aa_product(2) !== 14 || exp.aa_product(3) !== 17) {
+  fail("product " + [exp.aa_product(1), exp.aa_product(2), exp.aa_product(3)]);
+}
+const s1 = exp.aa_softmax(1);
+const s2 = exp.aa_softmax(2);
+const s3 = exp.aa_softmax(3);
+if (!near(s1, 0.0452785, 2e-4) || !near(s2, s1, 1e-6) || !near(s3, 0.909443, 2e-4)) {
+  fail("softmax " + [s1, s2, s3]);
+}
+if (!near(s1 + s2 + s3, 1, 1e-5)) fail("softmax sum " + (s1 + s2 + s3));
+exp.aa_set_v(3, 0);
+exp.aa_tensor_run();
+if (exp.aa_product(1) !== 5 || exp.aa_product(2) !== 2 || exp.aa_product(3) !== 17) {
+  fail("edited product " + [exp.aa_product(1), exp.aa_product(2), exp.aa_product(3)]);
+}
+const id = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+for (let i = 0; i < id.length; i += 1) {
+  exp.aa_set_m(Math.floor(i / 3) + 1, (i % 3) + 1, id[i]);
+}
+exp.aa_set_v(1, 1000);
+exp.aa_set_v(2, 1000);
+exp.aa_set_v(3, 1000);
+exp.aa_tensor_run();
+if (exp.aa_product(1) !== 1000 || exp.aa_product(2) !== 1000 || exp.aa_product(3) !== 1000) {
+  fail("identity " + [exp.aa_product(1), exp.aa_product(2), exp.aa_product(3)]);
+}
+const h1 = exp.aa_softmax(1);
+const h2 = exp.aa_softmax(2);
+const h3 = exp.aa_softmax(3);
+if (!near(h1, 1 / 3, 1e-5) || !near(h2, 1 / 3, 1e-5) || !near(h3, 1 / 3, 1e-5)) {
+  fail("large softmax " + [h1, h2, h3]);
 }
 console.log("wasm ok", got);
