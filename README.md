@@ -5,14 +5,16 @@ JavaScript only draws, and writes the feedback and crash files.
 The splash on the live page is a small picture of a network: Ada moves
 the points, and the page plots them.
 
-Visible stamp: **v0.5.0-attention**
+Visible stamp: **v0.6.0-howto**
 
 The same text is `AI_Amplifier.Version.Version_Text`, the yellow badge in
 `web/template.html`, `version.txt`, and the line printed by `bin/hello`.
-The Alire crate version is `0.5.0-attention` (the stamp without the leading
+The Alire crate version is `0.6.0-howto` (the stamp without the leading
 `v`, because Alire versions are semver).
 
-**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.5.0-attention
+**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.6.0-howto
+
+**Guide:** [docs/HOWTO.md](docs/HOWTO.md). The page links there. It is the install path, a walkthrough that adds leaky ReLU, and the code tour.
 
 `.github/workflows/pages.yml` builds `site/` and deploys it with GitHub
 Actions. The query is the cache bust. `version.txt` is published next to
@@ -30,7 +32,9 @@ page. Item 4 is a real network on those kernels: eight tanh units, one
 sigmoid output, trained by gradient descent. Item 5 is a byte-level
 BPE tokenizer and one causal attention block, forward only. The splash
 is still a drawing. It is not trained. The attention weights are a
-seed, not a fit. SPARK proofs of the kernels are the last backlog item.
+seed, not a fit. Item 6 is the contributor guide, and the leaky ReLU
+kernel that guide adds. SPARK proofs of the kernels are the last
+backlog item.
 
 ## Why plain Ada
 
@@ -52,6 +56,7 @@ seed, not a fit. SPARK proofs of the kernels are the last backlog item.
 |---|---|
 | Tap the splash, or Enter | Leaves the splash and shows this project |
 | Tensor demo | Nine matrix boxes, three vector boxes, Compute. Ada returns the product and its softmax |
+| Leaky ReLU | Three boxes and Apply. Ada keeps a positive number and multiplies any other by the slope it reports |
 | Train | Runs gradient descent on the small network. Stop is the same button |
 | Dataset | XOR, two circles, or two spirals. Changing it resets the weights and keeps the learning rate |
 | Learning rate | The step size Ada uses. The page control runs from 0.01 to 2. Lower and raise are the minus and plus buttons |
@@ -76,6 +81,7 @@ omitted when printing.
 | `src/ai_amplifier-splash.ads/.adb` | Splash graph. Plain Ada (`SPARK_Mode => Off`). Exports `aa_splash_reset`, `aa_splash_tick`, `aa_step`, `aa_count`, `aa_get` |
 | `src/ai_amplifier-tensors.ads/.adb` | `Vector`, `Matrix`, and the kernels. Plain Ada. `Max_Extent` is 32 |
 | `src/ai_amplifier-tensors-demo.ads/.adb` | The page's 3 by 3 panel. Calls `Mat_Vec` and `Softmax` |
+| `src/ai_amplifier-tensors-leaky_demo.ads/.adb` | The page's length-3 leaky ReLU. Calls `Leaky_ReLU` at `Negative_Slope` |
 | `src/ai_amplifier-mlp.ads/.adb` | The 2–8–1 network. Init, loss, backprop, gradient descent. Plain Ada |
 | `src/ai_amplifier-mlp-demo.ads/.adb` | The page's copy of that network. Dataset, rate, steps, grid, loss curve |
 | `src/ai_amplifier-bpe.ads/.adb` | Byte-level BPE. Learns merges from one excerpt. Encode and Decode |
@@ -91,8 +97,11 @@ omitted when printing.
 | `build.sh` | AdaWebPack 24 to `obj/wasm/ai_amplifier.wasm`, smoke, then `site/index.html` |
 | `prove.sh` | `gnatprove --mode=flow`, writes `proof/`. Not run by CI |
 | `tools/get-toolchain.sh` | Downloads the wasm compiler into `toolchain/` (gitignored) |
-| `tools/wasm-smoke.mjs` | Node: stamp, no wasm imports, splash numbers, product and softmax, XOR training, BPE round trip, attention rows |
-| `tools/page-smoke.mjs` | Headless Chrome: splash, the tensor panel, the training panel, the token panel, Enter, tap, F9, crash panel, failed module |
+| `tools/wasm-smoke.mjs` | Node: stamp, no wasm imports, splash numbers, product and softmax, leaky ReLU, XOR training, BPE round trip, attention rows |
+| `tools/page-smoke.mjs` | Headless Chrome: splash, the tensor panel, leaky ReLU, the training panel, the token panel, Enter, tap, F9, crash panel, failed module |
+| `tools/howto-steps.sh` | The commands in the How-To. CI job `how-to steps` runs this file |
+| `docs/HOWTO.md` | Newcomer guide |
+| `CONTRIBUTING.md` | Stamp, one item at a time, honesty, the pre-push list, F9 |
 | `tools/wasm-checks.c` | Wasm-only. A failed check traps. Not linked into the native build |
 | `proof/gnatprove.out` | Flow summary from the skeleton. It does not include the splash or the tensors |
 
@@ -113,7 +122,7 @@ alr -n build
 on). Expected line:
 
 ```text
-ada-ai-amplifier v0.5.0-attention
+ada-ai-amplifier v0.6.0-howto
 ```
 
 Then:
@@ -144,7 +153,7 @@ export PATH="$HOME/.alire/bin:$PATH"
 
 `ada_ai_amplifier.gpr` passes `--mode=flow`. `./prove.sh` passes it again.
 Provers are not run. `hello.adb`, `tensors_test.adb`, `mlp_test.adb`, `attention_test.adb`,
-`AI_Amplifier.Splash`, `AI_Amplifier.Tensors` (and its demo child),
+`AI_Amplifier.Splash`, `AI_Amplifier.Tensors` (and its demo children),
 `AI_Amplifier.MLP` (and its demo child), `AI_Amplifier.BPE`, and
 `AI_Amplifier.Attention` (and its demo child) are outside SPARK.
 
@@ -196,8 +205,8 @@ node tools/page-smoke.mjs
 `build.sh` compiles every `src/*.adb` except `hello.adb`,
 `tensors_test.adb`, `mlp_test.adb`, and `attention_test.adb` (Text_IO
 is not part of this runtime), links `--no-entry`, and exports the
-version, splash, tensor-demo, training, and token-attention entry
-points. It also links
+version, splash, tensor-demo, leaky ReLU, training, and
+token-attention entry points. It also links
 `tools/wasm-checks.c`. It does not pass `--allow-undefined`. The module
 this build emits has no imports. Runtime checks stay on. A failed check
 traps that module; it does not propagate.
@@ -205,6 +214,10 @@ traps that module; it does not propagate.
 `./build.sh` writes `site/index.html` and `site/version.txt`. Open
 `site/index.html` in a browser. The Pages workflow builds the same
 directory and deploys it from `main`.
+
+`docs/HOWTO.md` writes this path out for someone new to Ada.
+`tools/howto-steps.sh` is the command list. CI job `how-to steps`
+runs that file on a clean runner.
 
 ## Tensors
 
@@ -222,6 +235,7 @@ is 32. A larger discriminant fails the range check on `Extent`.
 | `Scale` | the same shape | they do not have to agree with anything else |
 | `Transpose` | columns by rows | always defined |
 | `ReLU`, `Sigmoid`, `Tanh`, `Softmax` | the same length | always defined |
+| `Leaky_ReLU` | the same length | the slope must lie in `[0.0, 1.0]`. Outside that, the `Pre` fails |
 
 `pragma Assertion_Policy (Pre => Check, Post => Check)` is in the spec
 and the body, and `ada_ai_amplifier.gpr` passes `-gnata`. A failed `Pre`
@@ -258,6 +272,19 @@ wrapper itself does not raise. The starting numbers are
 
 and softmax of `(14, 14, 17)`. JavaScript copies the boxes in and the
 two results out. It does not multiply.
+
+`Leaky_ReLU` takes a vector and a slope. A positive component is
+copied. Any other component, including zero, is multiplied by the
+slope. Slope `0.0` is ReLU. Slope `1.0` copies the vector. The page
+passes `Negative_Slope`, which is `0.01`, and reads that constant
+back for the caption (`aa_lrelu_slope`). The starting vector is
+`(-2, 0, 3)`, so the output is `(-0.02, 0, 3)` within `Float`.
+`bin/tensors_test` also rejects slopes `-0.1` and `1.5` with
+`Assertion_Error`. The `Post` states the component rule and is
+checked when the function returns. The wrapper is
+`AI_Amplifier.Tensors.Leaky_Demo`. An index outside `1 .. 3` is
+ignored on input and reads as `0.0` on output. The guide's "add a
+layer" section is this kernel, not a second copy of it.
 
 ## The network
 
@@ -503,18 +530,18 @@ sentence under the heatmap. It does not form Q, K, or V.
 3. **Core tensor and maths (plain Ada) — done.** `Vector` and `Matrix`, the kernels above, native tests, and the 3 by 3 panel.
 4. **Tiny trainable MLP, live in the browser — done.** The network above, native tests including a finite-difference gradient check, and the training panel.
 5. **Byte-level BPE tokenizer and one transformer attention block — done.** The tokenizer and the block above, native tests including the hand-computed pass, and the token panel.
-6. **Contributor How-To docs — not started.**
+6. **Contributor How-To docs — done.** `docs/HOWTO.md`, this leaky ReLU kernel, `CONTRIBUTING.md`, and the issue and pull-request templates. CI job `how-to steps` runs the guide's command list.
 7. **SPARK proofs of the kernels — not started.** This stays last.
 
-Items land one at a time. Item 6 has not been started.
+Items land one at a time. Item 7 has not been started.
 
 ## Honesty
 
 1. The splash arithmetic is plain Ada. It is not proved. `SPARK_Mode` is off on that unit so it is not presented as a proof target. The `SPARK_Mode` and contracts on `AI_Amplifier.Version` are unchanged.
-2. The tensor kernels are plain Ada too. `SPARK_Mode` is off. The `Pre` and `Post` are ordinary Ada contracts, checked when the program runs. They were not submitted to a prover. There is no Silver claim and no Gold claim.
+2. The tensor kernels are plain Ada too. `SPARK_Mode` is off. The `Pre` and `Post` are ordinary Ada contracts, checked when the program runs. They were not submitted to a prover. There is no Silver claim and no Gold claim. `Leaky_ReLU` is one of those kernels. Its slope on the page is `0.01`. The component `Post` is a run-time check. It is not a proof of the activation.
 3. CI builds the native program, runs `bin/tensors_test`, `bin/mlp_test`, and `bin/attention_test`, builds the wasm module and the page, then runs the headless smoke. CI does not run GNATprove. `prove.sh` remains. The committed `proof/gnatprove.out` is the skeleton flow run described above, not a proof of the splash, the kernels, the network, the tokenizer, or the attention block.
 4. The wasm module's lack of imports is what this build emits, and `tools/wasm-smoke.mjs` checks it. The tensor body does reference a failed-check path. `tools/wasm-checks.c` defines `__gnat_last_chance_handler` and `system__assertions__raise_assert_failure` as traps, so that path links without an import. On the native runtime the same check raises. `-gnatp` is not used. `-gnatw.X` is the same switch as the native Alire profile: this runtime forbids exception propagation, and the compiler's reminder of that is turned off.
-5. JavaScript does not compute the splash, the product, the softmax, the loss, the decision boundary, the merges, or the attention. It reads coordinates, copies numbers, and sends UTF-8 bytes. It adds up the weights it already read when it writes the sentence under the heatmap. If the module is missing, not WebAssembly, missing an export, or its stamp differs from the badge, the page says "The Ada module did not load" and still shows the title and the badge. The tensor demo then says it has no product. The training panel says it cannot train. The token panel says it cannot tokenize.
+5. JavaScript does not compute the splash, the product, the softmax, the loss, the decision boundary, the merges, or the attention. It reads coordinates, copies numbers, and sends UTF-8 bytes. It adds up the weights it already read when it writes the sentence under the heatmap. If the module is missing, not WebAssembly, missing an export, or its stamp differs from the badge, the page says "The Ada module did not load" and still shows the title and the badge. The tensor demo then says it has no product. The leaky ReLU panel says it has no leaky ReLU. The training panel says it cannot train. The token panel says it cannot tokenize.
 6. The network on the splash is not a model. The tensor demo is not a model. The training panel is a model: forward, binary cross-entropy, backprop, and gradient descent, in the MLP unit. The token panel tokenizes and runs attention, forward only. Those weights are the seed. They are not trained.
 7. The MLP, the tokenizer, and the attention block are plain Ada. `SPARK_Mode` is off. The finite-difference check and the hand-computed attention pass are tests, not proofs. There is no Silver claim and no Gold claim on these kernels.
 8. `Float` results are approximate. The tensor test and the attention test allow `0.000_05`. Softmax of a non-empty vector sums to 1 within that tolerance, because the largest logit becomes `exp(0) = 1`. The gradient check allows `0.002` plus 5 percent of the analytical value, at a central step of `0.001`. The log, square root, sine, and cosine in the MLP body, and the square root in the attention body, are series, not `Ada.Numerics`. The hand-computed layer-norm values in the attention section are this Newton square root.

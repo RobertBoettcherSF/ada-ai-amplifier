@@ -45,7 +45,8 @@ function fail(msg) {
   process.exit(1);
 }
 const need = ["aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get",
-  "aa_set_m", "aa_get_m", "aa_set_v", "aa_get_v", "aa_tensor_run", "aa_product", "aa_softmax"];
+  "aa_set_m", "aa_get_m", "aa_set_v", "aa_get_v", "aa_tensor_run", "aa_product", "aa_softmax",
+  "aa_lrelu_set", "aa_lrelu_in", "aa_lrelu_run", "aa_lrelu_out", "aa_lrelu_slope"];
 for (const name of need) {
   if (typeof exp[name] !== "function") fail("missing export " + name);
 }
@@ -168,6 +169,21 @@ const h3 = exp.aa_softmax(3);
 if (!near(h1, 1 / 3, 1e-5) || !near(h2, 1 / 3, 1e-5) || !near(h3, 1 / 3, 1e-5)) {
   fail("large softmax " + [h1, h2, h3]);
 }
+
+const slope = exp.aa_lrelu_slope();
+if (!near(slope, 0.01, 1e-6)) fail("lrelu slope " + slope);
+if (exp.aa_lrelu_in(1) !== -2 || exp.aa_lrelu_in(2) !== 0 || exp.aa_lrelu_in(3) !== 3) {
+  fail("lrelu in " + [exp.aa_lrelu_in(1), exp.aa_lrelu_in(2), exp.aa_lrelu_in(3)]);
+}
+if (exp.aa_lrelu_in(0) !== 0 || exp.aa_lrelu_out(4) !== 0) fail("lrelu clamp");
+exp.aa_lrelu_run();
+if (!near(exp.aa_lrelu_out(1), slope * -2, 1e-6) || exp.aa_lrelu_out(2) !== 0 || exp.aa_lrelu_out(3) !== 3) {
+  fail("lrelu out " + [exp.aa_lrelu_out(1), exp.aa_lrelu_out(2), exp.aa_lrelu_out(3)]);
+}
+exp.aa_lrelu_set(1, 4);
+exp.aa_lrelu_set(0, 9);
+exp.aa_lrelu_run();
+if (exp.aa_lrelu_out(1) !== 4 || exp.aa_lrelu_in(1) !== 4) fail("lrelu edited");
 
 const mlpNeed = ["aa_mlp_reset", "aa_mlp_set_rate", "aa_mlp_rate", "aa_mlp_train", "aa_mlp_epoch", "aa_mlp_loss", "aa_mlp_predict", "aa_mlp_count", "aa_mlp_x", "aa_mlp_y", "aa_mlp_label", "aa_mlp_lo", "aa_mlp_hi", "aa_mlp_grid_n", "aa_mlp_fill", "aa_mlp_cell", "aa_mlp_curve_n", "aa_mlp_curve", "aa_mlp_kind"];
 for (const name of mlpNeed) {

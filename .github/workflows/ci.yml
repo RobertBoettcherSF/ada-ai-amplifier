@@ -20,6 +20,9 @@ jobs:
           version: "2.1.1"
           toolchain: gnat_native=16.1.0 gprbuild=26.0.1
 
+      - name: Guide quotes
+        run: python3 tools/check-howto-quote.py
+
       - name: Native hello
         run: |
           alr -n build
@@ -46,3 +49,30 @@ jobs:
       # GNATprove is not in CI. The owner wants plain Ada for now.
       # prove.sh and the SPARK annotations on the version unit stay
       # in the tree for a later item.
+
+  # The commands are tools/howto-packages.sh and tools/howto-steps.sh.
+  # docs/HOWTO.md quotes both files. This job is a clean runner so the
+  # guide stays something a newcomer can follow.
+  howto:
+    name: how-to steps
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - uses: alire-project/setup-alire@v5
+        with:
+          version: "2.1.1"
+          toolchain: gnat_native=16.1.0 gprbuild=26.0.1
+
+      - name: Guide quotes
+        run: python3 tools/check-howto-quote.py
+
+      - name: Packages from the guide
+        run: ./tools/howto-packages.sh
+
+      - name: Steps from the guide
+        run: ./tools/howto-steps.sh

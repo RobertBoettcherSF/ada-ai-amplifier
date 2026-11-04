@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<!-- ada-ai-amplifier. Splash motion, the tensor demo, the MLP, the
-     byte-level tokenizer, and the attention block are Ada, compiled to
-     WebAssembly and embedded by build.sh. This file only draws, copies
-     numbers and text bytes into the module, and writes F9 / crash files. -->
+<!-- ada-ai-amplifier. Splash motion, the tensor demo, leaky ReLU,
+     the MLP, the byte-level tokenizer, and the attention block are Ada,
+     compiled to WebAssembly and embedded by build.sh. This file only
+     draws, copies numbers and text bytes into the module, and writes
+     F9 / crash files. -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -194,7 +195,7 @@
       width: min(100%, 16rem);
     }
     .vgrid { grid-template-columns: minmax(0, 5rem); }
-    #demo input {
+    #demo input, #lrelu input {
       width: 100%;
       min-height: 44px;
       padding: 8px;
@@ -203,7 +204,7 @@
       color: #f3e6c4;
       font: 16px/1.2 ui-monospace, monospace;
     }
-    #compute {
+    #compute, #lrelu-apply {
       min-height: 44px;
       margin: 12px 0;
       padding: 10px 14px;
@@ -213,7 +214,14 @@
       font: 16px/1 ui-sans-serif, system-ui, sans-serif;
       cursor: pointer;
     }
-    #compute:disabled { opacity: 0.45; cursor: default; }
+    #compute:disabled, #lrelu-apply:disabled { opacity: 0.45; cursor: default; }
+    #lrelu { margin: 0.2rem 0 1.2rem; }
+    .lrow {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 5rem));
+      gap: 6px;
+      width: min(100%, 16rem);
+    }
     .out {
       margin: 0 0 0.6rem;
       color: #ffe14a;
@@ -344,7 +352,7 @@
   </style>
 </head>
 <body>
-  <div id="ver">v0.5.0-attention</div>
+  <div id="ver">v0.6.0-howto</div>
   <main id="main" tabindex="-1">
     <h1>ada-ai-amplifier</h1>
     <p id="banner" class="err" hidden></p>
@@ -393,6 +401,26 @@
       <p id="product" class="out"><span id="y1">…</span><span id="y2">…</span><span id="y3">…</span></p>
       <p class="fine">Softmax</p>
       <p id="softmax" class="out"><span id="s1">…</span><span id="s2">…</span><span id="s3">…</span></p>
+    </div>
+    <h2>Leaky ReLU</h2>
+    <p>
+      Three numbers go in. Ada applies leaky ReLU: a positive number
+      stays, and any other number is multiplied by the slope. The slope
+      figure is read from Ada. JavaScript only copies the boxes. The
+      How-To walks through this kernel.
+    </p>
+    <div id="lrelu">
+      <p class="fine">Slope <span id="lrslope">…</span></p>
+      <p class="fine">Input</p>
+      <div class="lrow">
+        <input id="lr1" type="text" inputmode="decimal" autocomplete="off" aria-label="Leaky ReLU input 1">
+        <input id="lr2" type="text" inputmode="decimal" autocomplete="off" aria-label="Leaky ReLU input 2">
+        <input id="lr3" type="text" inputmode="decimal" autocomplete="off" aria-label="Leaky ReLU input 3">
+      </div>
+      <button id="lrelu-apply" type="button" disabled>Apply</button>
+      <p id="lreluerr" class="err" hidden></p>
+      <p class="fine">Output</p>
+      <p id="lrelu-out" class="out"><span id="lo1">…</span><span id="lo2">…</span><span id="lo3">…</span></p>
     </div>
     <h2>Train a small network</h2>
     <p>
@@ -460,6 +488,7 @@
     <ul>
       <li>Tap the splash, or press Enter, to leave it.</li>
       <li>The tensor demo asks Ada for a matrix-vector product and a softmax.</li>
+      <li>Leaky ReLU asks Ada to apply that kernel. The slope is Ada's constant.</li>
       <li>Train runs the small network. Reset restores the seeded weights. The learning rate is Ada's step size.</li>
       <li>The text box asks Ada to tokenize and to run attention. JavaScript only paints.</li>
       <li>F9, or Feedback, writes a feedback file.</li>
@@ -472,13 +501,13 @@
       <li><span class="n">3.</span><span>Core tensor and maths (plain Ada)</span> <span class="st done">done</span></li>
       <li><span class="n">4.</span><span>Tiny trainable MLP, live in the browser</span> <span class="st done">done</span></li>
       <li><span class="n">5.</span><span>Byte-level BPE tokenizer and one transformer attention block</span> <span class="st done">done</span></li>
-      <li><span class="n">6.</span><span>Contributor How-To docs</span> <span class="st">not started</span></li>
+      <li><span class="n">6.</span><span>Contributor How-To docs</span> <span class="st done">done</span></li>
       <li><span class="n">7.</span><span>SPARK proofs of the kernels</span> <span class="st">not started</span></li>
     </ol>
     <h2>Links</h2>
     <ul id="links">
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier">Repository</a></li>
-      <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/README.md#using-the-page">How-To</a></li>
+      <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/HOWTO.md">How-To</a></li>
     </ul>
     <noscript>
       <p class="err">JavaScript is off, so the Ada module is not running. Open this page in Safari or Chrome.</p>
@@ -669,6 +698,7 @@ function fail(detail) {
   note("error", text);
   showDemoDown();
   showMlpDown();
+  showLreluDown();
   showAttnDown();
 }
 function skip(how) {
@@ -732,6 +762,14 @@ function showDemoDown() {
   err.hidden = false;
   err.textContent = "The Ada module did not load, so this panel has no product.";
   const button = box("compute");
+  if (button) button.disabled = true;
+}
+function showLreluDown() {
+  const err = box("lreluerr");
+  if (!err) return;
+  err.hidden = false;
+  err.textContent = "The Ada module did not load, so this panel has no leaky ReLU.";
+  const button = box("lrelu-apply");
   if (button) button.disabled = true;
 }
 function safeMlp(name) {
@@ -801,11 +839,56 @@ function computeDemo() {
     box("compute").disabled = true;
     note("tensor trap", String(e && e.message ? e.message : e));
     showMlpDown();
+    showLreluDown();
     return;
   }
   note("tensor", box("y1").textContent + " " + box("y2").textContent + " " + box("y3").textContent);
 }
 document.getElementById("compute").addEventListener("click", computeDemo);
+
+function paintLrelu() {
+  box("lo1").textContent = fmt(ada.aa_lrelu_out(1));
+  box("lo2").textContent = fmt(ada.aa_lrelu_out(2));
+  box("lo3").textContent = fmt(ada.aa_lrelu_out(3));
+}
+function fillLrelu() {
+  box("lr1").value = fmt(ada.aa_lrelu_in(1));
+  box("lr2").value = fmt(ada.aa_lrelu_in(2));
+  box("lr3").value = fmt(ada.aa_lrelu_in(3));
+  box("lrslope").textContent = fmt(ada.aa_lrelu_slope());
+}
+function applyLrelu() {
+  if (!ada) return;
+  const vals = [readBox("lr1"), readBox("lr2"), readBox("lr3")];
+  const err = box("lreluerr");
+  if (vals.some((n) => n === null)) {
+    err.hidden = false;
+    err.textContent = "Enter a finite number in every box.";
+    note("lrelu input");
+    return;
+  }
+  err.hidden = true;
+  try {
+    ada.aa_lrelu_set(1, vals[0]);
+    ada.aa_lrelu_set(2, vals[1]);
+    ada.aa_lrelu_set(3, vals[2]);
+    ada.aa_lrelu_run();
+    paintLrelu();
+  } catch (e) {
+    const text = "That calculation trapped the Ada module. Reload the page to run it again.";
+    err.hidden = false;
+    err.textContent = text;
+    box("lrelu-apply").disabled = true;
+    box("compute").disabled = true;
+    box("train").disabled = true;
+    const area = box("attntext");
+    if (area) area.disabled = true;
+    note("lrelu trap", String(e && e.message ? e.message : e));
+    return;
+  }
+  note("lrelu", box("lo1").textContent + " " + box("lo2").textContent + " " + box("lo3").textContent);
+}
+document.getElementById("lrelu-apply").addEventListener("click", applyLrelu);
 
 const heat = document.createElement("canvas");
 let mlpKind = 0;
@@ -1000,6 +1083,7 @@ function mlpFrame() {
     err.textContent = "Training trapped the Ada module. Reload the page to run it again.";
     box("train").disabled = true;
     box("compute").disabled = true;
+    box("lrelu-apply").disabled = true;
     note("mlp trap", String(e && e.message ? e.message : e));
     return;
   }
@@ -1255,6 +1339,7 @@ function runAttn() {
     box("attntext").disabled = true;
     box("train").disabled = true;
     box("compute").disabled = true;
+    box("lrelu-apply").disabled = true;
     note("attn trap", String(e && e.message ? e.message : e));
   }
 }
@@ -1450,7 +1535,7 @@ async function boot() {
     fail(String(e && e.message ? e.message : e));
     return;
   }
-  const need = ["aa_version_length", "aa_version_byte", "aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get", "aa_set_m", "aa_get_m", "aa_set_v", "aa_get_v", "aa_tensor_run", "aa_product", "aa_softmax", "aa_mlp_reset", "aa_mlp_set_rate", "aa_mlp_rate", "aa_mlp_train", "aa_mlp_epoch", "aa_mlp_loss", "aa_mlp_predict", "aa_mlp_count", "aa_mlp_x", "aa_mlp_y", "aa_mlp_label", "aa_mlp_lo", "aa_mlp_hi", "aa_mlp_grid_n", "aa_mlp_fill", "aa_mlp_cell", "aa_mlp_curve_n", "aa_mlp_curve", "aa_mlp_kind", "aa_bpe_clear", "aa_bpe_push", "aa_bpe_corpus", "aa_attn_run", "aa_attn_tokens", "aa_attn_id", "aa_attn_piece_len", "aa_attn_piece_byte", "aa_attn_vocab", "aa_attn_merges", "aa_attn_used", "aa_attn_weight", "aa_attn_dropped", "aa_attn_bytes"];
+  const need = ["aa_version_length", "aa_version_byte", "aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get", "aa_set_m", "aa_get_m", "aa_set_v", "aa_get_v", "aa_tensor_run", "aa_product", "aa_softmax", "aa_lrelu_set", "aa_lrelu_in", "aa_lrelu_run", "aa_lrelu_out", "aa_lrelu_slope", "aa_mlp_reset", "aa_mlp_set_rate", "aa_mlp_rate", "aa_mlp_train", "aa_mlp_epoch", "aa_mlp_loss", "aa_mlp_predict", "aa_mlp_count", "aa_mlp_x", "aa_mlp_y", "aa_mlp_label", "aa_mlp_lo", "aa_mlp_hi", "aa_mlp_grid_n", "aa_mlp_fill", "aa_mlp_cell", "aa_mlp_curve_n", "aa_mlp_curve", "aa_mlp_kind", "aa_bpe_clear", "aa_bpe_push", "aa_bpe_corpus", "aa_attn_run", "aa_attn_tokens", "aa_attn_id", "aa_attn_piece_len", "aa_attn_piece_byte", "aa_attn_vocab", "aa_attn_merges", "aa_attn_used", "aa_attn_weight", "aa_attn_dropped", "aa_attn_bytes"];
   for (let i = 0; i < need.length; i += 1) {
     if (typeof ada[need[i]] !== "function") {
       ada = null;
@@ -1468,6 +1553,11 @@ async function boot() {
   fillDemo();
   computeDemo();
   document.getElementById("compute").disabled = false;
+  fillLrelu();
+  applyLrelu();
+  if (box("lreluerr").hidden) {
+    document.getElementById("lrelu-apply").disabled = false;
+  }
   bootMlp();
   bootAttn();
   note("wasm loaded", stamp);

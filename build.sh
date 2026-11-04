@@ -42,6 +42,8 @@ ar x "$T/lib/rts-native/adalib/libgnat.a" s-memcop.o s-memmov.o s-memset.o
   --export=aa_set_v --export=aa_get_v \
   --export=aa_tensor_run \
   --export=aa_product --export=aa_softmax \
+  --export=aa_lrelu_set --export=aa_lrelu_in \
+  --export=aa_lrelu_run --export=aa_lrelu_out --export=aa_lrelu_slope \
   --export=aa_mlp_reset --export=aa_mlp_set_rate --export=aa_mlp_rate \
   --export=aa_mlp_train --export=aa_mlp_epoch --export=aa_mlp_loss \
   --export=aa_mlp_predict --export=aa_mlp_count \
