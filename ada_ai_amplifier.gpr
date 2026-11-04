@@ -24,9 +24,13 @@ project Ada_AI_Amplifier is
       for Artifacts (".") use ("share");
    end Install;
 
-   --  prove.sh still asks for flow analysis. CI does not run it.
+   --  prove.sh runs GNATprove at this fixed level. Units with
+   --  SPARK_Mode => Off are not proof targets. CI runs the same
+   --  command. --level=2 is the reproducibility pin: same provers,
+   --  same effort, on every machine.
    package Prove is
-      for Proof_Switches ("Ada") use ("--mode=flow");
+      for Proof_Switches ("Ada") use
+        ("--level=2", "--report=all", "--checks-as-errors=on");
    end Prove;
 
 end Ada_AI_Amplifier;

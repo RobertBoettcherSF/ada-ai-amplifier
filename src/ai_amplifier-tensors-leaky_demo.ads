@@ -1,11 +1,12 @@
 --  Fixed length-3 Leaky ReLU for the live page.
 --
---  Plain Ada, like AI_Amplifier.Tensors. JavaScript writes three
---  numbers, calls Run, and reads three numbers back. The arithmetic
---  is Leaky_ReLU in the parent, at Negative_Slope. This wrapper does
---  not raise: an index outside 1 .. 3 is ignored on the way in and
---  reads as 0.0 on the way out. Slope on the page is the parent
---  constant, so the caption and the kernel are the same number.
+--  Plain Ada. Leaky_ReLU in the parent is a Gold proof of the
+--  component rule. This wrapper is not a proof target. JavaScript
+--  writes three numbers, calls Run, and reads three numbers back.
+--  The call uses Negative_Slope. An index outside 1 .. 3 is ignored
+--  on the way in and reads as 0.0 on the way out. Slope on the page
+--  is the parent constant, so the caption and the kernel are the
+--  same number.
 package AI_Amplifier.Tensors.Leaky_Demo
   with SPARK_Mode => Off
 is

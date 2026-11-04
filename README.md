@@ -1,18 +1,19 @@
 # ada-ai-amplifier
 
-Readable AI building blocks in plain Ada. The logic lives in Ada.
-JavaScript only draws, and writes the feedback and crash files.
+Readable AI building blocks in Ada. The tensor kernels are SPARK.
+The rest of the logic is plain Ada. JavaScript only draws, and writes
+the feedback and crash files.
 The splash on the live page is a small picture of a network: Ada moves
 the points, and the page plots them.
 
-Visible stamp: **v0.6.0-howto**
+Visible stamp: **v0.7.0-spark**
 
 The same text is `AI_Amplifier.Version.Version_Text`, the yellow badge in
 `web/template.html`, `version.txt`, and the line printed by `bin/hello`.
-The Alire crate version is `0.6.0-howto` (the stamp without the leading
+The Alire crate version is `0.7.0-spark` (the stamp without the leading
 `v`, because Alire versions are semver).
 
-**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.6.0-howto
+**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.7.0-spark
 
 **Guide:** [docs/HOWTO.md](docs/HOWTO.md). The page links there. It is the install path, a walkthrough that adds leaky ReLU, and the code tour.
 
@@ -27,14 +28,14 @@ under them, a tiny trainable MLP, a byte-level BPE tokenizer, and one
 transformer attention block. The parts that run in the browser are compiled
 from that Ada to WebAssembly and embedded in one HTML file.
 
-Item 3 is the tensor kernels, in plain Ada, and a 3 by 3 demo on the
-page. Item 4 is a real network on those kernels: eight tanh units, one
+Item 3 is the tensor kernels and a 3 by 3 demo on the page. Item 7
+is the proof of those kernels. Item 4 is a real network on those kernels: eight tanh units, one
 sigmoid output, trained by gradient descent. Item 5 is a byte-level
 BPE tokenizer and one causal attention block, forward only. The splash
 is still a drawing. It is not trained. The attention weights are a
 seed, not a fit. Item 6 is the contributor guide, and the leaky ReLU
-kernel that guide adds. SPARK proofs of the kernels are the last
-backlog item.
+kernel that guide adds. Item 7 proves the tensor kernels. The
+network, the tokenizer, and attention stay plain Ada.
 
 ## Why plain Ada
 
@@ -43,9 +44,10 @@ backlog item.
 2. **Range checks.** A bad index fails at the line that made it. The native
    build leaves checks on. The WebAssembly build does too (`-gnata`, and
    `-gnatp` is not used).
-3. **SPARK, later.** The version unit is still marked `SPARK_Mode`, with the
-   contracts from the skeleton. CI does not run GNATprove. `prove.sh` is
-   still there for a later item.
+3. **SPARK, on the tensor kernels.** `AI_Amplifier.Tensors` and
+   `AI_Amplifier.Version` are `SPARK_Mode`. CI runs GNATprove at level 2
+   (`./prove.sh`). The splash, the page wrappers, the MLP, the tokenizer,
+   and attention are `SPARK_Mode => Off` on purpose.
 4. **No hidden library dependencies.** `alire.toml` depends on no other
    crate. GNAT, GNATprove, AdaWebPack, and `wasm-ld` are build tools. They
    are not linked into the library as a third-party ML stack.
@@ -79,7 +81,7 @@ omitted when printing.
 | `src/ai_amplifier.ads` | Library root. Empty on purpose |
 | `src/ai_amplifier-version.ads/.adb` | Stamp, plus `aa_version_length` and `aa_version_byte` |
 | `src/ai_amplifier-splash.ads/.adb` | Splash graph. Plain Ada (`SPARK_Mode => Off`). Exports `aa_splash_reset`, `aa_splash_tick`, `aa_step`, `aa_count`, `aa_get` |
-| `src/ai_amplifier-tensors.ads/.adb` | `Vector`, `Matrix`, and the kernels. Plain Ada. `Max_Extent` is 32 |
+| `src/ai_amplifier-tensors.ads/.adb` | `Vector`, `Matrix`, and the kernels. SPARK. `Max_Extent` is 32. Levels are in the proof status table |
 | `src/ai_amplifier-tensors-demo.ads/.adb` | The page's 3 by 3 panel. Calls `Mat_Vec` and `Softmax` |
 | `src/ai_amplifier-tensors-leaky_demo.ads/.adb` | The page's length-3 leaky ReLU. Calls `Leaky_ReLU` at `Negative_Slope` |
 | `src/ai_amplifier-mlp.ads/.adb` | The 2–8–1 network. Init, loss, backprop, gradient descent. Plain Ada |
@@ -95,7 +97,7 @@ omitted when printing.
 | `site/index.html` | Built page, gitignored. GitHub Pages publishes the `site/` directory |
 | `version.txt` | The same stamp, one line |
 | `build.sh` | AdaWebPack 24 to `obj/wasm/ai_amplifier.wasm`, smoke, then `site/index.html` |
-| `prove.sh` | `gnatprove --mode=flow`, writes `proof/`. Not run by CI |
+| `prove.sh` | GNATprove level 2 on the SPARK units. Writes `proof/`. CI runs it |
 | `tools/get-toolchain.sh` | Downloads the wasm compiler into `toolchain/` (gitignored) |
 | `tools/wasm-smoke.mjs` | Node: stamp, no wasm imports, splash numbers, product and softmax, leaky ReLU, XOR training, BPE round trip, attention rows |
 | `tools/page-smoke.mjs` | Headless Chrome: splash, the tensor panel, leaky ReLU, the training panel, the token panel, Enter, tap, F9, crash panel, failed module |
@@ -103,7 +105,7 @@ omitted when printing.
 | `docs/HOWTO.md` | Newcomer guide |
 | `CONTRIBUTING.md` | Stamp, one item at a time, honesty, the pre-push list, F9 |
 | `tools/wasm-checks.c` | Wasm-only. A failed check traps. Not linked into the native build |
-| `proof/gnatprove.out` | Flow summary from the skeleton. It does not include the splash or the tensors |
+| `proof/gnatprove.out` | Level 2 proof log for the root, the version unit, and the tensors. No `pragma Annotate`, no `pragma Assume` |
 
 `config/` and `alire/` are generated by Alire and gitignored.
 
@@ -122,7 +124,7 @@ alr -n build
 on). Expected line:
 
 ```text
-ada-ai-amplifier v0.6.0-howto
+ada-ai-amplifier v0.7.0-spark
 ```
 
 Then:
@@ -141,48 +143,98 @@ mlp ok
 attention ok
 ```
 
-## Flow analysis
+## Proof status
 
-Not part of CI. When you want it:
+CI runs `./prove.sh`. That is GNATprove from the `gnatprove=16.1.0`
+crate (tool id `FSF 16.1.0` in `proof/version.txt`). The project file
+passes `--level=2`, `--report=all`, and `--checks-as-errors=on`.
+Level 2 is the pin: the same provers and the same effort on every
+machine. An unproved check fails the run. There is no `pragma Annotate`
+and no `pragma Assume`.
 
 ```sh
-alr -n install gnatprove          # FSF 16.1.0 for the skeleton run
+alr -n install gnatprove=16.1.0
 export PATH="$HOME/.alire/bin:$PATH"
 ./prove.sh
 ```
 
-`ada_ai_amplifier.gpr` passes `--mode=flow`. `./prove.sh` passes it again.
-Provers are not run. `hello.adb`, `tensors_test.adb`, `mlp_test.adb`, `attention_test.adb`,
-`AI_Amplifier.Splash`, `AI_Amplifier.Tensors` (and its demo children),
-`AI_Amplifier.MLP` (and its demo child), `AI_Amplifier.BPE`, and
-`AI_Amplifier.Attention` (and its demo child) are outside SPARK.
+`./prove.sh` installs that crate if `gnatprove` is not already on
+`PATH`, then copies `proof/gnatprove.out`.
 
-The committed `proof/gnatprove.out` is the skeleton run (version unit and
-empty root only). Running `./prove.sh` now rewrites `proof/` and will mention
-the splash and the tensor units as not in SPARK. That file was not
-regenerated for this item.
+Proved units: the empty root `AI_Amplifier`, `AI_Amplifier.Version`,
+and `AI_Amplifier.Tensors` (the kernels and the small helpers in that
+body). `hello.adb`, the three test procedures, `AI_Amplifier.Splash`,
+the tensor demo children, `AI_Amplifier.MLP` and its demo,
+`AI_Amplifier.BPE`, and `AI_Amplifier.Attention` and its demo are
+`SPARK_Mode => Off`. GNATprove lists them and proves nothing in them.
 
-GNATprove's own summary line on that skeleton run:
+| Kernel | Level | What is proved |
+|---|---|---|
+| `Dot` | Silver | No run-time error. The result lies in `[-Acc_Bound, Acc_Bound]`. The value is not proved equal to the mathematical dot product |
+| `Mat_Vec` | Silver | No run-time error. Shape post, and each component in `[-Acc_Bound, Acc_Bound]`. The numeric product is not proved |
+| `Mat_Mat` | Silver | Same as `Mat_Vec`, for each entry of the product |
+| `Add` (vector and matrix) | Gold | No run-time error, and each entry is the sum of the two inputs |
+| `Scale` (vector and matrix) | Gold | No run-time error, and each entry is the input times the factor |
+| `Transpose` | Gold | No run-time error, and entry `(C, R)` of the result is entry `(R, C)` of the input |
+| `ReLU` | Gold | No run-time error. A positive component is copied. Any other component is 0 |
+| `Leaky_ReLU` | Gold | No run-time error. The slope lies in `[0.0, 1.0]`. A positive component is copied. Any other component is the slope times the input |
+| `Sigmoid` | Silver | No run-time error. Each component lies in `[0.0, 1.0]`. The series is not proved equal to the real sigmoid |
+| `Tanh` | Silver | No run-time error. Each component lies in `[-1.0, 1.0]`. The series is not proved equal to the real tanh |
+| `Softmax` | Silver | No run-time error. Each component lies in `[0.0, 1.0]`. The series is not proved equal to the real softmax |
+| Splash | not proved | Plain Ada |
+| MLP, including its demo | not proved | Plain Ada. Tests, not proofs |
+| Tokenizer | not proved | Plain Ada |
+| Attention, including its demo | not proved | Plain Ada. The hand-computed pass is a test |
 
-```text
-Success: all checks proved (5 checks).
-```
+`Summand_Bound` is `1.0E18`. The float value of that literal is a
+little under `1.0E18`, and the real square of that float is a little
+over the float value of `1.0E36`, so `Product_Bound` is `2.0E36`.
+`Max_Extent` is 32. `Acc_Slack` is 2, so a loop invariant allows
+`I * 2 * Product_Bound`. That factor of two is there because a tight
+`I * Product_Bound` comparison is one ulp short in `Float` at the
+extreme. `32 * 2 * 2.0E36` is `1.28E38`. `Acc_Bound` is `2.0E38`,
+which is above that product and below `Float'Last` (about `3.4E38`).
+The precondition is what keeps a sum of products from overflowing.
+The demos, the MLP, and attention stay far inside it. A component
+past the bound fails the `Pre` (`Assertion_Error` natively, a trap
+in the wasm module).
 
-Those five are all in the Flow column of `proof/gnatprove.out`:
+`Logit_Bound` is `1.0E38`. Softmax subtracts two components. Twice
+that bound is about `2.0E38`, still below `Float'Last`. The
+large-logit test uses `1.0E20`. `Exp_Ceiling` is `4.0E36`. The
+softmax sum allows `Acc_Slack` times `Max_Extent` of those, which is
+`2.56E38`. `Softmax_Sum_Bound` is `3.0E38`.
 
-| Check | Total | Flow | Provers |
-|---|---:|---:|---:|
-| Data dependencies | 2 | 2 | . |
-| Initialization | 1 | 1 | . |
-| Termination | 2 | 2 | . |
-| Run-time checks | . | . | . |
-| Functional contracts | . | . | . |
-| Total | 5 | 5 | . |
+`Exp_Clamped` reduces by `ln 2`, takes twelve terms, and scales by
+powers of two, as before. Three guards keep that arithmetic in range
+for the proof: a quotient outside `[-120, 120]` returns 0, a remainder
+outside `[-1, 1]` is clamped, and a scale above `5.0E34` is held
+there before the next doubling. On a reduced argument in `[-80, 80]`
+none of them changes the value. The quotient is about 115, the
+remainder is at most about half of `ln 2` (0.35), and the scale is
+at most `2**115` (about `4.15E34`). A final clamp forces
+`[0, Exp_Ceiling]`. It does not fire on those arguments either.
+The proof is the range and the absence of overflow. It is not a
+proof that the series equals the real exponential.
 
-The two termination rows are the implicit `Always_Terminates` on
-`Version_Length` and `Version_Byte`, discharged during flow analysis.
-The report says "proof skipped for this unit (only flow analysis was
-requested)" on each unit. Tool id in `proof/version.txt`: `FSF 16.1.0`.
+GNATprove reports `Success: all checks proved (419 checks).`
+The committed log's counts:
+
+| Check | Total | Flow | Provers | Unproved |
+|---|---:|---:|---:|---:|
+| Data dependencies | 2 | 2 | . | . |
+| Initialization | 8 | 8 | . | . |
+| Run-time checks | 225 | . | 225 | . |
+| Assertions | 106 | . | 106 | . |
+| Functional contracts | 47 | . | 47 | . |
+| Termination | 31 | 31 | . | . |
+| Total | 419 | 41 | 378 | 0 |
+
+Termination includes the implicit `Always_Terminates` contracts.
+The prover column in `proof/gnatprove.out` names CVC5, Z3, and
+Alt-Ergo. Those percentages are that run. The counts above are the
+contract. A later `./prove.sh` that disagrees with this table means
+the table is stale.
 
 ## Build WebAssembly and the page
 
@@ -221,10 +273,16 @@ runs that file on a clean runner.
 
 ## Tensors
 
-`AI_Amplifier.Tensors` is plain Ada (`SPARK_Mode => Off`). `Vector` and
-`Matrix` carry their shape as a discriminant (`Length`, or `Rows` and
-`Cols`). Components are `Float`, indexed `1 ..` that bound. `Max_Extent`
-is 32. A larger discriminant fails the range check on `Extent`.
+`AI_Amplifier.Tensors` is SPARK. The level of each kernel is in the
+proof status table above. `Vector` and `Matrix` carry their shape as a
+discriminant (`Length`, or `Rows` and `Cols`). Components are `Float`,
+indexed `1 ..` that bound. `Max_Extent` is 32. A larger discriminant
+fails the range check on `Extent`. `Dot`, `Mat_Vec`, `Mat_Mat`, `Add`,
+and `Scale` also require every component inside `Summand_Bound`, and
+`Scale` requires the same of the factor. `Softmax` requires every
+component inside `Logit_Bound`. Those are ordinary `Pre` checks as
+well as proof hypotheses. The reason for each number is in the proof
+status section.
 
 | Kernel | Result | When the shapes disagree |
 |---|---|---|
@@ -280,8 +338,9 @@ passes `Negative_Slope`, which is `0.01`, and reads that constant
 back for the caption (`aa_lrelu_slope`). The starting vector is
 `(-2, 0, 3)`, so the output is `(-0.02, 0, 3)` within `Float`.
 `bin/tensors_test` also rejects slopes `-0.1` and `1.5` with
-`Assertion_Error`. The `Post` states the component rule and is
-checked when the function returns. The wrapper is
+`Assertion_Error`. The `Post` states the component rule. It is checked
+when the function returns, and it is the Gold proof of this kernel.
+The wrapper is
 `AI_Amplifier.Tensors.Leaky_Demo`. An index outside `1 .. 3` is
 ignored on input and reads as `0.0` on output. The guide's "add a
 layer" section is this kernel, not a second copy of it.
@@ -531,19 +590,19 @@ sentence under the heatmap. It does not form Q, K, or V.
 4. **Tiny trainable MLP, live in the browser — done.** The network above, native tests including a finite-difference gradient check, and the training panel.
 5. **Byte-level BPE tokenizer and one transformer attention block — done.** The tokenizer and the block above, native tests including the hand-computed pass, and the token panel.
 6. **Contributor How-To docs — done.** `docs/HOWTO.md`, this leaky ReLU kernel, `CONTRIBUTING.md`, and the issue and pull-request templates. CI job `how-to steps` runs the guide's command list.
-7. **SPARK proofs of the kernels — not started.** This stays last.
+7. **SPARK proofs of the kernels — done.** `AI_Amplifier.Tensors`, at the levels in the proof status table. The MLP, the tokenizer, and attention are still plain Ada.
 
-Items land one at a time. Item 7 has not been started.
+Items landed one at a time. Item 7 is the last one on this list.
 
 ## Honesty
 
-1. The splash arithmetic is plain Ada. It is not proved. `SPARK_Mode` is off on that unit so it is not presented as a proof target. The `SPARK_Mode` and contracts on `AI_Amplifier.Version` are unchanged.
-2. The tensor kernels are plain Ada too. `SPARK_Mode` is off. The `Pre` and `Post` are ordinary Ada contracts, checked when the program runs. They were not submitted to a prover. There is no Silver claim and no Gold claim. `Leaky_ReLU` is one of those kernels. Its slope on the page is `0.01`. The component `Post` is a run-time check. It is not a proof of the activation.
-3. CI builds the native program, runs `bin/tensors_test`, `bin/mlp_test`, and `bin/attention_test`, builds the wasm module and the page, then runs the headless smoke. CI does not run GNATprove. `prove.sh` remains. The committed `proof/gnatprove.out` is the skeleton flow run described above, not a proof of the splash, the kernels, the network, the tokenizer, or the attention block.
+1. The splash arithmetic is plain Ada. It is not proved. `SPARK_Mode` is off on that unit so it is not presented as a proof target. The contracts on `AI_Amplifier.Version` are the ones from the skeleton. The stamp text in that unit is `v0.7.0-spark`.
+2. The tensor kernels are SPARK, at the levels in the proof status table. Silver is absence of run-time error (and, where the table says so, a range). Gold is the component rule. `Leaky_ReLU` is Gold. Its slope on the page is `0.01`. The `Pre` and `Post` are still checked when the program runs. The proof does not replace that check. Sigmoid, tanh, and softmax do not claim to match the real functions.
+3. CI builds the native program, runs `bin/tensors_test`, `bin/mlp_test`, and `bin/attention_test`, runs `./prove.sh` (GNATprove level 2, unproved checks are errors), builds the wasm module and the page, then runs the headless smoke. The committed `proof/gnatprove.out` is that level 2 run. It proves the root, the version unit, and the tensors. It does not prove the splash, the network, the tokenizer, or the attention block.
 4. The wasm module's lack of imports is what this build emits, and `tools/wasm-smoke.mjs` checks it. The tensor body does reference a failed-check path. `tools/wasm-checks.c` defines `__gnat_last_chance_handler` and `system__assertions__raise_assert_failure` as traps, so that path links without an import. On the native runtime the same check raises. `-gnatp` is not used. `-gnatw.X` is the same switch as the native Alire profile: this runtime forbids exception propagation, and the compiler's reminder of that is turned off.
 5. JavaScript does not compute the splash, the product, the softmax, the loss, the decision boundary, the merges, or the attention. It reads coordinates, copies numbers, and sends UTF-8 bytes. It adds up the weights it already read when it writes the sentence under the heatmap. If the module is missing, not WebAssembly, missing an export, or its stamp differs from the badge, the page says "The Ada module did not load" and still shows the title and the badge. The tensor demo then says it has no product. The leaky ReLU panel says it has no leaky ReLU. The training panel says it cannot train. The token panel says it cannot tokenize.
 6. The network on the splash is not a model. The tensor demo is not a model. The training panel is a model: forward, binary cross-entropy, backprop, and gradient descent, in the MLP unit. The token panel tokenizes and runs attention, forward only. Those weights are the seed. They are not trained.
-7. The MLP, the tokenizer, and the attention block are plain Ada. `SPARK_Mode` is off. The finite-difference check and the hand-computed attention pass are tests, not proofs. There is no Silver claim and no Gold claim on these kernels.
+7. The MLP, the tokenizer, and the attention block are plain Ada. `SPARK_Mode` is off. The finite-difference check and the hand-computed attention pass are tests, not proofs. There is no Silver claim and no Gold claim on these units. They call the tensor kernels, so a component outside `Summand_Bound` or a softmax logit outside `Logit_Bound` fails the kernel `Pre` at run time. The seeded nets and the tests stay inside those bounds.
 8. `Float` results are approximate. The tensor test and the attention test allow `0.000_05`. Softmax of a non-empty vector sums to 1 within that tolerance, because the largest logit becomes `exp(0) = 1`. The gradient check allows `0.002` plus 5 percent of the analytical value, at a central step of `0.001`. The log, square root, sine, and cosine in the MLP body, and the square root in the attention body, are series, not `Ada.Numerics`. The hand-computed layer-norm values in the attention section are this Newton square root.
 9. Eight hidden units do not solve the spirals. The numbers in the network section are this seed, at the rates named there. They are not a claim about every seed.
 10. The BPE rules are whatever this excerpt and this tie-break produce. They are not a published tokenizer. ß is one token here. ä is not. A different excerpt would learn different merges. The 32, 288, and 376 figures are this text.

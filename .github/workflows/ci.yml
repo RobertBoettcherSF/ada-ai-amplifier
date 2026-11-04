@@ -31,6 +31,13 @@ jobs:
           ./bin/mlp_test
           ./bin/attention_test
 
+      # Level 2, on the SPARK units only. prove.sh installs FSF
+      # gnatprove 16.1.0 if the runner does not already have it.
+      # --checks-as-errors=on is in the project file, so an unproved
+      # check fails this step. Units with SPARK_Mode => Off are skipped.
+      - name: GNATprove
+        run: ./prove.sh
+
       - name: Chrome
         run: |
           wget -q -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
@@ -45,10 +52,6 @@ jobs:
           npm ci
           ./build.sh
           node tools/page-smoke.mjs
-
-      # GNATprove is not in CI. The owner wants plain Ada for now.
-      # prove.sh and the SPARK annotations on the version unit stay
-      # in the tree for a later item.
 
   # The commands are tools/howto-packages.sh and tools/howto-steps.sh.
   # docs/HOWTO.md quotes both files. This job is a clean runner so the

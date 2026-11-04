@@ -6,8 +6,7 @@ title: ""
 
 ## Which item
 
-One item. Item 7 (SPARK proofs) stays last unless this issue is the
-plan for item 7.
+One item. Items 1 through 7 are done. A new change is still one item.
 
 ## Plan or Go
 
