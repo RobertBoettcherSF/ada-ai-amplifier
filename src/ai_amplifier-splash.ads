@@ -1,7 +1,8 @@
 --  Splash picture for the live page.
 --
---  Plain Ada on purpose (SPARK_Mode off). AI_Amplifier.Version stays in
---  SPARK; this unit is a drawing, not a proof. It does not train anything.
+--  Plain Ada on purpose (SPARK_Mode off). AI_Amplifier.Version and
+--  AI_Amplifier.Tensors are SPARK. This unit is a drawing, not a
+--  proof. It does not train anything.
 --  The picture is a small network: points move along the edges, and more
 --  points travel in from the border, through a node, and on to the output.
 --  JavaScript only reads these numbers and plots them.

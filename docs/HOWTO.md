@@ -4,9 +4,9 @@ A walkthrough for someone new to this repository, and possibly new to
 Ada. The logic lives in Ada. JavaScript only draws. The live page is one
 HTML file with that Ada compiled to WebAssembly inside it.
 
-Visible stamp: **v0.6.0-howto**
+Visible stamp: **v0.7.0-spark**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.6.0-howto
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.7.0-spark
 
 The yellow badge, `version.txt`, and `AI_Amplifier.Version.Version_Text`
 are that same text. The query on the link is the cache bust (the stamp
@@ -16,8 +16,10 @@ This guide is the install path, then a real kernel added end to end
 (leaky ReLU), then a map of `src/`. The kernel in the guide is the
 kernel in the library. There is no second copy to keep in step.
 
-Item 7, SPARK proofs, is not part of this guide. CI does not run
-GNATprove.
+Item 7 proved the tensor kernels. The table is in section 8. CI job
+`native, wasm, page` runs GNATprove at level 2 with a 120 second
+timeout, via `./prove.sh`.
+The how-to job below does not prove a second time.
 
 ## What you are building
 
@@ -104,7 +106,7 @@ mean something:
 | `alr -n toolchain --select …` | Puts GNAT 16.1.0 and gprbuild 26.0.1 on the Alire toolchain |
 | `./tools/get-toolchain.sh` | Downloads AdaWebPack 24 into `toolchain/` (gitignored). Later runs see the compiler and return |
 | `alr -n build` | Native build. Warnings and checks are on, including `-gnata`, so `Pre` and `Post` run |
-| `./bin/hello` | Prints `ada-ai-amplifier v0.6.0-howto` |
+| `./bin/hello` | Prints `ada-ai-amplifier v0.7.0-spark` |
 | `./tools/check-version.sh` | That line, `version.txt`, and the badge in `web/template.html` must be the same stamp |
 | `./bin/tensors_test` | Prints `tensors ok` |
 | `./bin/mlp_test` | Prints `mlp ok` |
@@ -114,7 +116,7 @@ mean something:
 | `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, tokens, F9, crash report, a failed module |
 
 Then open `site/index.html` in a browser yourself. The badge reads
-`v0.6.0-howto`. Leaky ReLU shows slope `0.01` and the output
+`v0.7.0-spark`. Leaky ReLU shows slope `0.01` and the output
 `-0.02`, `0`, `3`. Compute still shows the product `14`, `14`, `17`.
 
 The file, which CI runs as `./tools/howto-steps.sh`:
@@ -174,8 +176,9 @@ the test expects. The page rounds it to six digits and shows `-0.02`.
 Six places, in the order a change touches them:
 
 1. **Spec.** `src/ai_amplifier-tensors.ads`, function `Leaky_ReLU` and
-   the constant `Negative_Slope`. The package is plain Ada
-   (`SPARK_Mode => Off`). `pragma Assertion_Policy (Pre => Check, Post => Check)`
+   the constant `Negative_Slope`. The package is SPARK. The `Post` is
+   the Gold component rule: proved, and still checked when the
+   function returns. `pragma Assertion_Policy (Pre => Check, Post => Check)`
    is what makes the contracts run. The project file also passes
    `-gnata`.
 2. **Body.** `src/ai_amplifier-tensors.adb`, `Leaky_Of` and
@@ -225,7 +228,7 @@ header comment, whether it is in SPARK.
 | `AI_Amplifier` | `src/ai_amplifier.ads` | Empty root. Child units are the library |
 | `AI_Amplifier.Version` | `src/ai_amplifier-version.ads/.adb` | The stamp. Still `SPARK_Mode`. Exports `aa_version_length` and `aa_version_byte`. An index past either end returns the nearer end byte |
 | `AI_Amplifier.Splash` | `src/ai_amplifier-splash.ads/.adb` | The drawing on the black screen. Coordinates `0 .. 1000`. Not a model, and not trained |
-| `AI_Amplifier.Tensors` | `src/ai_amplifier-tensors.ads/.adb` | `Vector`, `Matrix`, and the kernels: dot, products, add, scale, transpose, ReLU, sigmoid, tanh, softmax, leaky ReLU |
+| `AI_Amplifier.Tensors` | `src/ai_amplifier-tensors.ads/.adb` | `Vector`, `Matrix`, and the kernels. SPARK. The level of each one is in section 8 |
 | `AI_Amplifier.Tensors.Demo` | `src/ai_amplifier-tensors-demo.ads/.adb` | The 3 by 3 panel. Calls `Mat_Vec`, then `Softmax` |
 | `AI_Amplifier.Tensors.Leaky_Demo` | `src/ai_amplifier-tensors-leaky_demo.ads/.adb` | The length-3 leaky ReLU panel |
 | `AI_Amplifier.MLP` | `src/ai_amplifier-mlp.ads/.adb` | The 2–8–1 network. Seeded init, binary cross-entropy, backprop, gradient descent |
@@ -278,15 +281,18 @@ Before telling anyone a stamp is live, fetch the page and
 to the stamp without the `v`. A screenshot of the new page shows the
 new badge.
 
-**Plan, then Go, then one item.** Post a numbered plan for one backlog
-item. Wait for Go. Build that item. Report, and stop. Item 7 stays
-last until someone asks for its plan.
+**Plan, then Go, then one item.** Post a numbered plan for one change.
+Wait for Go. Build that item. Report, and stop. Items 1 through 7 are
+done. Do not start a new one in the same change.
 
-**Honesty.** Say what is checked at run time and what a prover has not
-seen. `Pre` and `Post` in this repo are ordinary Ada contracts. CI does
-not run GNATprove. There is no Silver claim and no Gold claim. `Float`
-results are approximate; the tests name the tolerance. The spirals are
-not solved. The attention weights are a seed.
+**Honesty.** Say what is checked at run time and what a prover has
+seen. On the tensor kernels, Silver means no run-time error and Gold
+means the component rule. Sigmoid, tanh, and softmax are Silver: the
+result lies in range, and the series is not the real function. The
+splash, the MLP, the tokenizer, and attention are not proved. `Pre`
+and `Post` are still ordinary Ada contracts, checked when the program
+runs. `Float` results are approximate; the tests name the tolerance.
+The spirals are not solved. The attention weights are a seed.
 
 **Pre-push.** Was the previous behaviour still there (splash, tensor
 demo, leaky ReLU, training, tokens, F9, crash report, badge)? Does the
@@ -302,13 +308,45 @@ refused. A crash report is separate: the previous visit did not end
 cleanly, or the module trapped. Read the stamp in the file first. It
 tells you which build the note is about.
 
-## 8. What is not done
+## 8. Proof status
 
-Item 7, SPARK proofs of the kernels, is not started. `prove.sh` remains
-for that later item. The committed `proof/gnatprove.out` is the old
-skeleton flow run. It does not include the splash, the tensors, the
-network, the tokenizer, or the attention block. Running `./prove.sh`
-would rewrite it. This item did not.
+`./prove.sh` runs GNATprove at level 2, timeout 120 seconds. CI job `native, wasm, page`
+does that. The how-to steps above do not. An unproved check
+fails the run. There is no `pragma Annotate` and no `pragma Assume`.
+The log is `proof/gnatprove.out`. The same table is on the live page.
 
-`AI_Amplifier.Version` is the unit still marked `SPARK_Mode`. The
-contracts there are the ones from the skeleton.
+| Kernel | Level |
+|---|---|
+| Dot | Silver |
+| Mat-vec | Silver |
+| Mat-mat | Silver |
+| Add | Gold |
+| Scale | Gold |
+| Transpose | Gold |
+| ReLU | Gold |
+| Leaky ReLU | Gold |
+| Sigmoid | Silver |
+| Tanh | Silver |
+| Softmax | Silver |
+| Splash | not proved |
+| MLP | not proved |
+| Tokenizer | not proved |
+| Attention | not proved |
+
+Silver on dot and the two products means no run-time error, and the
+numeric result lies in `[-Acc_Bound, Acc_Bound]`. It does not mean the
+value was proved equal to the mathematical product. Silver on sigmoid,
+tanh, and softmax means each component lies in range (`[0, 1]`,
+`[-1, 1]`, and `[0, 1]`) and the arithmetic does not overflow. The
+series is not proved equal to the real function. Gold means the `Post`
+states the component rule and the prover discharged it.
+
+The bounds that make the sums safe are `Summand_Bound` (`1.0E18`),
+`Product_Bound` (`2.0E36`), `Acc_Bound` (`2.0E38`), and `Logit_Bound`
+(`1.0E38`). The README says why each one is that number. A component
+outside the bound fails the `Pre`.
+
+The splash, the page wrappers, the MLP, the tokenizer, and attention
+are plain Ada. Their tests are tests. `AI_Amplifier.Version` is SPARK,
+with the contracts from the skeleton. The stamp there is
+`v0.7.0-spark`.

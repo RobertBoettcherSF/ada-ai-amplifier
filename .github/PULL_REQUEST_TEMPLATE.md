@@ -12,7 +12,8 @@ Alire's version is that text without the leading `v`.
 ## Honesty
 
 What is checked when the program runs, and what is not proved.
-CI does not run GNATprove unless this pull request is item 7.
+CI runs GNATprove at level 2 on the SPARK units. Say if this change
+touches a proved kernel, and which level that kernel is.
 
 ## Pre-push
 

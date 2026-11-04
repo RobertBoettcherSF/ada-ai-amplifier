@@ -123,6 +123,23 @@
       font: 14px/1.4 ui-monospace, monospace;
       color: #9a9488;
     }
+    #proof {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.2rem 0 1rem;
+    }
+    #proof th, #proof td {
+      text-align: left;
+      padding: 0.35rem 0.2rem;
+      border-bottom: 1px solid #2a2a2a;
+      vertical-align: baseline;
+    }
+    #proof th {
+      font: 14px/1.4 ui-monospace, monospace;
+      color: #9a9488;
+      font-weight: 500;
+    }
+    #proof td:first-child { padding-right: 0.8rem; }
     .st {
       flex: none;
       font: 14px/1.4 ui-monospace, monospace;
@@ -352,23 +369,27 @@
   </style>
 </head>
 <body>
-  <div id="ver">v0.6.0-howto</div>
+  <div id="ver">v0.7.0-spark</div>
   <main id="main" tabindex="-1">
     <h1>ada-ai-amplifier</h1>
     <p id="banner" class="err" hidden></p>
     <p id="about">
-      Readable AI building blocks in plain Ada. The parts that run in the
-      browser are compiled from that Ada to WebAssembly. The splash is a
-      picture of that idea: points and weights flow into a small network.
-      Ada computes every position. JavaScript only draws.
+      Readable AI building blocks in Ada. The tensor kernels are SPARK.
+      The network, the tokenizer, and attention are plain Ada. The parts
+      that run in the browser are compiled from that Ada to WebAssembly.
+      The splash is a picture of that idea: points and weights flow into
+      a small network. Ada computes every position. JavaScript only draws.
     </p>
     <p>The network in the splash is a drawing. It is not trained.</p>
     <h2>Tensor demo</h2>
     <p>
       Edit the matrix and the vector, then Compute. Ada multiplies them
       and runs softmax on the product. JavaScript only passes the numbers.
-      The shapes are 3 and 3, so the shape checks pass. This is plain Ada,
-      not a proved kernel, and it is not a trained network.
+      The shapes are 3 and 3, so the shape checks pass. Mat-vec and
+      softmax are Silver: no run-time error, and softmax stays in range.
+      The numeric product is not proved. A component past 1e18 fails the
+      product check, and on this page the module stops. The panel wrapper
+      is plain Ada. This is not a trained network.
     </p>
     <div id="demo">
       <div class="demo-cols">
@@ -405,9 +426,9 @@
     <h2>Leaky ReLU</h2>
     <p>
       Three numbers go in. Ada applies leaky ReLU: a positive number
-      stays, and any other number is multiplied by the slope. The slope
-      figure is read from Ada. JavaScript only copies the boxes. The
-      How-To walks through this kernel.
+      stays, and any other number is multiplied by the slope. That
+      component rule is a Gold proof. The slope figure is read from Ada.
+      JavaScript only copies the boxes. The How-To walks through this kernel.
     </p>
     <div id="lrelu">
       <p class="fine">Slope <span id="lrslope">…</span></p>
@@ -502,8 +523,38 @@
       <li><span class="n">4.</span><span>Tiny trainable MLP, live in the browser</span> <span class="st done">done</span></li>
       <li><span class="n">5.</span><span>Byte-level BPE tokenizer and one transformer attention block</span> <span class="st done">done</span></li>
       <li><span class="n">6.</span><span>Contributor How-To docs</span> <span class="st done">done</span></li>
-      <li><span class="n">7.</span><span>SPARK proofs of the kernels</span> <span class="st">not started</span></li>
+      <li><span class="n">7.</span><span>SPARK proofs of the kernels</span> <span class="st done">done</span></li>
     </ol>
+    <h2>Proof status</h2>
+    <p>
+      GNATprove level 2, on <code>AI_Amplifier.Tensors</code>. Silver is
+      absence of run-time error. Gold is that, plus the component rule.
+      Sigmoid, tanh, and softmax are Silver: each result lies in the
+      range below, and the series is not proved equal to the real
+      function. Nothing else in the library is proved.
+    </p>
+    <table id="proof">
+      <thead>
+        <tr><th>Kernel</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Dot</td><td class="st done">Silver</td></tr>
+        <tr><td>Mat-vec</td><td class="st done">Silver</td></tr>
+        <tr><td>Mat-mat</td><td class="st done">Silver</td></tr>
+        <tr><td>Add</td><td class="st done">Gold</td></tr>
+        <tr><td>Scale</td><td class="st done">Gold</td></tr>
+        <tr><td>Transpose</td><td class="st done">Gold</td></tr>
+        <tr><td>ReLU</td><td class="st done">Gold</td></tr>
+        <tr><td>Leaky ReLU</td><td class="st done">Gold</td></tr>
+        <tr><td>Sigmoid</td><td class="st done">Silver</td></tr>
+        <tr><td>Tanh</td><td class="st done">Silver</td></tr>
+        <tr><td>Softmax</td><td class="st done">Silver</td></tr>
+        <tr><td>Splash</td><td class="st">not proved</td></tr>
+        <tr><td>MLP</td><td class="st">not proved</td></tr>
+        <tr><td>Tokenizer</td><td class="st">not proved</td></tr>
+        <tr><td>Attention</td><td class="st">not proved</td></tr>
+      </tbody>
+    </table>
     <h2>Links</h2>
     <ul id="links">
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier">Repository</a></li>

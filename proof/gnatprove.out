@@ -2,41 +2,91 @@
 Summary of SPARK analysis
 =========================
 
---------------------------------------------------------------------------------
-SPARK Analysis results        Total        Flow   Provers   Justified   Unproved
---------------------------------------------------------------------------------
-Data Dependencies                 2           2         .           .          .
-Flow Dependencies                 .           .         .           .          .
-Initialization                    1           1         .           .          .
-Non-Aliasing                      .           .         .           .          .
-Run-time Checks                   .           .         .           .          .
-Assertions                        .           .         .           .          .
-Functional Contracts              .           .         .           .          .
-LSP Verification                  .           .         .           .          .
-Termination                       2           2         .           .          .
-Concurrency                       .           .         .           .          .
---------------------------------------------------------------------------------
-Total                             5    5 (100%)         .           .          .
+------------------------------------------------------------------------------------------------------------------------
+SPARK Analysis results        Total        Flow                                           Provers   Justified   Unproved
+------------------------------------------------------------------------------------------------------------------------
+Data Dependencies                 2           2                                                 .           .          .
+Flow Dependencies                 .           .                                                 .           .          .
+Initialization                    8           8                                                 .           .          .
+Non-Aliasing                      .           .                                                 .           .          .
+Run-time Checks                 225           .    225 (CVC5 36%, Trivial 2%, Z3 61%, altergo 1%)           .          .
+Assertions                      106           .    106 (CVC5 40%, Trivial 6%, Z3 52%, altergo 2%)           .          .
+Functional Contracts             47           .                 47 (CVC5 40%, Z3 59%, altergo 1%)           .          .
+LSP Verification                  .           .                                                 .           .          .
+Termination                      31          31                                                 .           .          .
+Concurrency                       .           .                                                 .           .          .
+------------------------------------------------------------------------------------------------------------------------
+Total                           419    41 (10%)                                         378 (90%)           .          .
 
+
+max steps used for successful proof: 24233
 
 ============================
 Most difficult proved checks
 ============================
 
-No check found with max time greater than 1 second
+ai_amplifier-tensors.adb:84:33: loop invariant after first iteration proved in max 4 seconds
+ai_amplifier-tensors.adb:542:13: loop invariant after first iteration proved in max 4 seconds
+ai_amplifier-tensors.adb:410:52: fp_overflow check proved in max 4 seconds
+ai_amplifier-tensors.adb:326:16: loop invariant after first iteration proved in max 2 seconds
+ai_amplifier-tensors.adb:408:13: loop invariant after first iteration proved in max 2 seconds
+ai_amplifier-tensors.adb:300:13: loop invariant after first iteration proved in max 1 seconds
+ai_amplifier-tensors.adb:528:13: loop invariant after first iteration proved in max 1 seconds
+ai_amplifier-tensors.adb:65:19: postcondition proved in max 1 seconds
+ai_amplifier-tensors.adb:456:13: loop invariant after first iteration proved in max 1 seconds
+ai_amplifier-tensors.adb:374:13: loop invariant after first iteration proved in max 1 seconds
 
 ========================
 Detailed analysis report
 ========================
 
-Analyzed 3 units
+Analyzed 15 units
 in unit ai_amplifier, 1 subprograms and packages out of 1 analyzed
-proof skipped for this unit (only flow analysis was requested)
-  AI_Amplifier at ai_amplifier.ads:2 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements)
+  AI_Amplifier at ai_amplifier.ads:2 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
+in unit ai_amplifier-attention, 0 subprograms and packages out of 0 analyzed
+in unit ai_amplifier-attention-demo, 0 subprograms and packages out of 0 analyzed
+in unit ai_amplifier-bpe, 0 subprograms and packages out of 0 analyzed
+in unit ai_amplifier-mlp, 0 subprograms and packages out of 0 analyzed
+in unit ai_amplifier-mlp-demo, 0 subprograms and packages out of 0 analyzed
+in unit ai_amplifier-splash, 0 subprograms and packages out of 0 analyzed
+in unit ai_amplifier-tensors, 30 subprograms and packages out of 30 analyzed
+  AI_Amplifier.Tensors at ai_amplifier-tensors.ads:48 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (8 checks)
+  AI_Amplifier.Tensors.Acc_Step at ai_amplifier-tensors.adb:60 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (7 checks)
+  AI_Amplifier.Tensors.Add at ai_amplifier-tensors.ads:111 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (18 checks)
+  AI_Amplifier.Tensors.Add at ai_amplifier-tensors.ads:119 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (39 checks)
+  AI_Amplifier.Tensors.Bounded_Add at ai_amplifier-tensors.adb:32 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (3 checks)
+  AI_Amplifier.Tensors.Bounded_Mul at ai_amplifier-tensors.adb:23 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (3 checks)
+  AI_Amplifier.Tensors.Checked_Length at ai_amplifier-tensors.adb:247 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (6 checks)
+  AI_Amplifier.Tensors.Dot at ai_amplifier-tensors.ads:87 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (10 checks)
+  AI_Amplifier.Tensors.Exp_Clamped at ai_amplifier-tensors.adb:133 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (10 checks)
+  AI_Amplifier.Tensors.Exp_Series at ai_amplifier-tensors.adb:73 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (12 checks)
+  AI_Amplifier.Tensors.Leaky_Of at ai_amplifier-tensors.adb:231 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (3 checks)
+  AI_Amplifier.Tensors.Leaky_ReLU at ai_amplifier-tensors.ads:167 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (18 checks)
+  AI_Amplifier.Tensors.Mat_Mat at ai_amplifier-tensors.ads:101 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (28 checks)
+  AI_Amplifier.Tensors.Mat_Vec at ai_amplifier-tensors.ads:93 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (18 checks)
+  AI_Amplifier.Tensors.Pow2_Scale at ai_amplifier-tensors.adb:89 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (8 checks)
+  AI_Amplifier.Tensors.ReLU at ai_amplifier-tensors.ads:154 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (13 checks)
+  AI_Amplifier.Tensors.ReLU_Of at ai_amplifier-tensors.adb:218 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (1 checks)
+  AI_Amplifier.Tensors.Scale at ai_amplifier-tensors.ads:131 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (14 checks)
+  AI_Amplifier.Tensors.Scale at ai_amplifier-tensors.ads:138 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (29 checks)
+  AI_Amplifier.Tensors.Sigmoid at ai_amplifier-tensors.ads:175 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (11 checks)
+  AI_Amplifier.Tensors.Sigmoid_Of at ai_amplifier-tensors.adb:179 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (7 checks)
+  AI_Amplifier.Tensors.Softmax at ai_amplifier-tensors.ads:193 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (55 checks)
+  AI_Amplifier.Tensors.Sum_Step at ai_amplifier-tensors.adb:43 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (7 checks)
+  AI_Amplifier.Tensors.Tanh at ai_amplifier-tensors.ads:181 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (11 checks)
+  AI_Amplifier.Tensors.Tanh_Of at ai_amplifier-tensors.adb:201 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (4 checks)
+  AI_Amplifier.Tensors.Transpose at ai_amplifier-tensors.ads:147 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (25 checks)
+  AI_Amplifier.Tensors.Within_Bound at ai_amplifier-tensors.ads:80 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (1 checks)
+  AI_Amplifier.Tensors.Within_Bound at ai_amplifier-tensors.ads:83 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (2 checks)
+  AI_Amplifier.Tensors.Zero_Matrix at ai_amplifier-tensors.adb:263 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (4 checks)
+  AI_Amplifier.Tensors.Zero_Vector at ai_amplifier-tensors.adb:257 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (3 checks)
+in unit ai_amplifier-tensors-demo, 0 subprograms and packages out of 0 analyzed
+in unit ai_amplifier-tensors-leaky_demo, 0 subprograms and packages out of 0 analyzed
 in unit ai_amplifier-version, 3 subprograms and packages out of 3 analyzed
-proof skipped for this unit (only flow analysis was requested)
-  AI_Amplifier.Version at ai_amplifier-version.ads:3 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements)
-  AI_Amplifier.Version.Version_Byte at ai_amplifier-version.ads:15 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements)
-  AI_Amplifier.Version.Version_Length at ai_amplifier-version.ads:11 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements)
+  AI_Amplifier.Version at ai_amplifier-version.ads:3 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
+  AI_Amplifier.Version.Version_Byte at ai_amplifier-version.ads:15 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
+  AI_Amplifier.Version.Version_Length at ai_amplifier-version.ads:11 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
+in unit attention_test, 0 subprograms and packages out of 0 analyzed
 in unit hello, 0 subprograms and packages out of 0 analyzed
-proof skipped for this unit (only flow analysis was requested)
+in unit mlp_test, 0 subprograms and packages out of 0 analyzed
+in unit tensors_test, 0 subprograms and packages out of 0 analyzed

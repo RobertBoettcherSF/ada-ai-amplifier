@@ -353,6 +353,56 @@ begin
          end;
    end;
 
+   declare
+      Ok : constant T.Vector :=
+        (Length => 1, Data => (1 => T.Summand_Bound));
+      Summed : constant T.Vector := T.Add (Ok, Ok);
+      Scaled : constant T.Vector := T.Scale (Ok, T.Summand_Bound);
+      One : constant T.Vector :=
+        T.Softmax ((Length => 1, Data => (1 => T.Logit_Bound)));
+      Big : T.Vector (T.Max_Extent);
+      D : Float;
+      Raised : Boolean := False;
+   begin
+      if Summed.Data (1) /= T.Summand_Bound + T.Summand_Bound then
+         Fail ("bound add");
+      end if;
+      if Scaled.Data (1) /= T.Summand_Bound * T.Summand_Bound then
+         Fail ("bound scale");
+      end if;
+      Expect ("softmax at logit bound", One.Data (1), 1.0);
+      for I in 1 .. Big.Length loop
+         Big.Data (I) := T.Summand_Bound;
+      end loop;
+      D := T.Dot (Big, Big);
+      if abs D > T.Acc_Bound then
+         Fail ("full dot exceeds Acc_Bound");
+      end if;
+      for I in 1 .. Big.Length loop
+         Big.Data (I) := -T.Summand_Bound;
+      end loop;
+      D := T.Dot (Big, Big);
+      if abs D > T.Acc_Bound then
+         Fail ("negative full dot exceeds Acc_Bound");
+      end if;
+      begin
+         D := T.Dot
+           ((Length => 1, Data => (1 => T.Summand_Bound * 2.0)), Ok);
+         Fail ("big dot returned " & Float'Image (D));
+      exception
+         when Ada.Assertions.Assertion_Error =>
+            Raised := True;
+      end;
+      Raised_Assertion ("big dot", Raised);
+      begin
+         D := T.Softmax ((Length => 1, Data => (1 => Float'Last))).Data (1);
+         Fail ("softmax last returned " & Float'Image (D));
+      exception
+         when Ada.Assertions.Assertion_Error =>
+            null;
+      end;
+   end;
+
    AI_Amplifier.Tensors.Demo.Run;
    Expect ("demo y1", AI_Amplifier.Tensors.Demo.Product (1), 14.0);
    Expect ("demo y2", AI_Amplifier.Tensors.Demo.Product (2), 14.0);

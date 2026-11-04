@@ -1,8 +1,9 @@
 # Contributing
 
-The logic in this repository is plain Ada. JavaScript only draws, and
-writes the feedback and crash files. `docs/HOWTO.md` is the install
-path and the map of `src/`. This file is the house rules for a change.
+The tensor kernels are SPARK. The rest of the logic is plain Ada.
+JavaScript only draws, and writes the feedback and crash files.
+`docs/HOWTO.md` is the install path and the map of `src/`. This file
+is the house rules for a change.
 
 They follow the owner's How-To: a visible stamp, plan then Go, one
 item, honesty, a pre-push list, and F9. This project publishes with
@@ -16,10 +17,12 @@ GitHub Pages from `main`, not with a secret gist.
 4. Report what landed, what the checks did, and what is still open.
 5. Stop. Do not start the next item in the same change.
 
-Item 7 is SPARK proofs of the kernels. It stays last until someone
-asks for its plan. CI does not run GNATprove. `prove.sh` stays in the
-tree for that item. Do not regenerate `proof/gnatprove.out` as a side
-effect of another item.
+Items 1 through 7 are done. Item 7 is the SPARK proof of the tensor
+kernels. CI runs `./prove.sh` (GNATprove level 2, timeout 120 seconds). If a change touches
+a proved unit, `./prove.sh` must still pass and `proof/gnatprove.out`
+is part of that change. Do not regenerate it as a side effect of a
+change that does not touch a proved unit. There is no `pragma Annotate`
+and no `pragma Assume`.
 
 ## Visible stamp
 
@@ -31,7 +34,7 @@ These four are the same text:
 
 | Place | Text |
 |---|---|
-| `AI_Amplifier.Version.Version_Text` | `v0.6.0-howto` on this tree |
+| `AI_Amplifier.Version.Version_Text` | `v0.7.0-spark` on this tree |
 | `web/template.html`, the `#ver` badge | the same, so it shows with JavaScript off |
 | `version.txt` | the same, one line |
 | `alire.toml` `version` | the same without the leading `v` |
@@ -42,7 +45,7 @@ Bump the stamp when the page, or the Ada a visitor runs, would differ.
 Do not reuse a stamp. Pages deploys from `main` only, so the bump lands
 with the change that deploys. The link you send is
 
-`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.6.0-howto`
+`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.7.0-spark`
 
 with `?v=` set to the stamp without the leading `v`. Before you say
 that stamp is live, fetch the page and `version.txt` and see the text
@@ -55,8 +58,13 @@ Say what is checked when the program runs, and what a prover has not
 seen.
 
 - `Pre` and `Post` on the kernels are ordinary Ada contracts. `-gnata`
-  and `Assertion_Policy` check them. They are not a proof.
-- There is no Silver claim and no Gold claim.
+  and `Assertion_Policy` check them when the program runs. On
+  `AI_Amplifier.Tensors` they are also proved, at the level in the
+  proof status table (Silver or Gold). The splash, the MLP, the
+  tokenizer, and attention are not proved.
+- Silver is absence of run-time error. Gold is the component rule.
+  Sigmoid, tanh, and softmax are Silver: the result lies in range.
+  The series is not the real function.
 - The WebAssembly module has no imports. A failed check traps it. The
   native tests are where a bad shape or a bad slope raises.
 - `Float` results are approximate. Name the tolerance the test uses.
@@ -81,9 +89,9 @@ seen.
 5. **Do the docs name the numbers the code uses?** The How-To quotes
    `tools/howto-packages.sh` and `tools/howto-steps.sh`.
    `python3 tools/check-howto-quote.py` fails if a quote drifts.
-6. **Is item 7 still untouched?** No GNATprove step in CI, and
-   `proof/gnatprove.out` still the skeleton run, unless this change
-   is item 7.
+6. **If a proved unit changed,** `./prove.sh` passes and
+   `proof/gnatprove.out` matches that run. No `pragma Annotate`. No
+   `pragma Assume`.
 
 ## F9
 
