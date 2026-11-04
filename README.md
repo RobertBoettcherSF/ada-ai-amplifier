@@ -12,10 +12,14 @@ The same text is `AI_Amplifier.Version.Version_Text`, the yellow badge in
 The Alire crate version is `0.2.0-splash` (the stamp without the leading
 `v`, because Alire versions are semver).
 
-**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.2.0-splash
+**Intended live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.2.0-splash
 
-Open that link on a phone or a desktop. The query is the cache bust for
-this stamp. `version.txt` is published next to the page.
+`.github/workflows/pages.yml` builds `site/` and deploys it with GitHub
+Actions. That URL is not serving yet. Creating the Pages site needs a
+repository admin, and the Actions token cannot (`Resource not accessible
+by integration` on `configure-pages`). Turn it on once: Settings → Pages →
+Source: GitHub Actions. The next push to `main` publishes this stamp. The
+query is the cache bust. `version.txt` is published next to the page.
 
 ## Goal
 
@@ -163,7 +167,7 @@ directory and deploys it from `main`.
 ## Backlog
 
 1. **Repo skeleton — done.** Crate, stamp, native hello, wasm target, placeholder page.
-2. **Splash and live page — done.** One HTML file, Ada in WebAssembly, JavaScript draws. Version badge, F9 feedback, crash report, GitHub Pages.
+2. **Splash and live page — done in the repo.** One HTML file, Ada in WebAssembly, JavaScript draws. Version badge, F9 feedback, crash report, Pages workflow. The GitHub Pages site itself is not switched on yet (see above).
 3. **Core tensor and math, with SPARK kernels — not started.**
 4. **Tiny trainable MLP, live in the browser — not started.**
 5. **Byte-level BPE tokenizer and one transformer attention block — not started.**
@@ -180,6 +184,7 @@ Items land one at a time. Item 3 has not been started.
 5. JavaScript does not compute the splash. It reads coordinates from the module and plots pixels. If the module is missing, not WebAssembly, missing an export, or its stamp differs from the badge, the page says "The Ada module did not load" and still shows the title and the badge.
 6. The network on the splash is not a model. Nothing in this repository trains, tokenizes, or runs a learned network.
 7. The compiler, `wasm-ld`, Chrome, and the Node smokes are trusted tools. They are not verified.
+8. GitHub Pages is not live. The workflow is on `main` and the page build succeeds. `actions/configure-pages` cannot create the site: the token lacks administration permission. Until a repository admin selects GitHub Actions as the Pages source, https://robertboettchersf.github.io/ada-ai-amplifier/ returns 404, and the Pages workflow stays red.
 
 ## License
 
