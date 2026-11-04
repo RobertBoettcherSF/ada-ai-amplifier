@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<!-- ada-ai-amplifier. Splash motion and the tensor demo are Ada
-     (src/ai_amplifier-splash, src/ai_amplifier-tensors), compiled to
+<!-- ada-ai-amplifier. Splash motion, the tensor demo, the MLP, the
+     byte-level tokenizer, and the attention block are Ada, compiled to
      WebAssembly and embedded by build.sh. This file only draws, copies
-     numbers into the module, shows the page, and writes F9 / crash files. -->
+     numbers and text bytes into the module, and writes F9 / crash files. -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -282,6 +282,54 @@
       border: 1px solid #2a2a2a;
       touch-action: manipulation;
     }
+    #attn { margin: 0.2rem 0 1.2rem; min-width: 0; }
+    #attn label {
+      display: block;
+      margin: 0 0 6px;
+      font: 16px/1.3 ui-sans-serif, system-ui, sans-serif;
+    }
+    #attntext {
+      width: 100%;
+      min-height: 88px;
+      margin: 0 0 8px;
+      padding: 8px;
+      border: 1px solid #555;
+      background: #111;
+      color: #f3e6c4;
+      font: 16px/1.35 ui-monospace, monospace;
+      resize: vertical;
+    }
+    #attntext:disabled { opacity: 0.45; }
+    #tokens {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 8px 0;
+    }
+    .tok {
+      min-height: 44px;
+      max-width: 100%;
+      padding: 8px 10px;
+      border: 0;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.28);
+      color: #111;
+      font: 16px/1.2 ui-monospace, monospace;
+      overflow-wrap: anywhere;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .tok[aria-pressed="true"] { outline: 2px solid #fff; outline-offset: 1px; }
+    .tok .id { font-weight: 700; }
+    .heat-wrap { width: 100%; max-width: 28rem; margin: 8px 0; }
+    #heat {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: #0c0c0c;
+      border: 1px solid #2a2a2a;
+      touch-action: manipulation;
+    }
+    #attnread { margin-top: 0.4rem; }
     @media (max-width: 640px) {
       .mlp-views { grid-template-columns: minmax(0, 1fr); }
     }
@@ -296,7 +344,7 @@
   </style>
 </head>
 <body>
-  <div id="ver">v0.4.0-mlp</div>
+  <div id="ver">v0.5.0-attention</div>
   <main id="main" tabindex="-1">
     <h1>ada-ai-amplifier</h1>
     <p id="banner" class="err" hidden></p>
@@ -382,11 +430,38 @@
         stays a rough one.
       </p>
     </div>
+    <h2>Tokens and attention</h2>
+    <p>
+      Type in the box. JavaScript sends the UTF-8 bytes. Ada learns a
+      small byte-level vocabulary from a public-domain excerpt, splits
+      the text into those pieces, and runs one causal attention block.
+      The colours and the heatmap are a drawing of what Ada returned.
+      The block is not trained. Its weights are a fixed seed.
+    </p>
+    <div id="attn">
+      <label for="attntext">Text</label>
+      <textarea id="attntext" maxlength="2000" autocomplete="off" disabled>Alice was beginning süß</textarea>
+      <p id="attnerr" class="err" hidden></p>
+      <p id="attnstat" class="out">Waiting for the Ada module.</p>
+      <div id="tokens"></div>
+      <div class="heat-wrap">
+        <canvas id="heat" width="320" height="320" aria-label="Attention heatmap"></canvas>
+      </div>
+      <p id="attnread" class="fine" aria-live="polite">Waiting for the Ada module.</p>
+      <p class="fine">
+        Each chip is one token, with its id. A gold cell is the weight
+        that token gives an earlier one, including itself. Dark cells
+        are the future, and the mask sets them to zero. A row adds up
+        to one. In this vocabulary ß is one learned piece and ä is still
+        two bytes.
+      </p>
+    </div>
     <h2>On this page</h2>
     <ul>
       <li>Tap the splash, or press Enter, to leave it.</li>
       <li>The tensor demo asks Ada for a matrix-vector product and a softmax.</li>
       <li>Train runs the small network. Reset restores the seeded weights. The learning rate is Ada's step size.</li>
+      <li>The text box asks Ada to tokenize and to run attention. JavaScript only paints.</li>
       <li>F9, or Feedback, writes a feedback file.</li>
       <li>If the previous session did not end cleanly, a crash report is offered.</li>
     </ul>
@@ -396,7 +471,7 @@
       <li><span class="n">2.</span><span>Splash and live page</span> <span class="st done">done</span></li>
       <li><span class="n">3.</span><span>Core tensor and maths (plain Ada)</span> <span class="st done">done</span></li>
       <li><span class="n">4.</span><span>Tiny trainable MLP, live in the browser</span> <span class="st done">done</span></li>
-      <li><span class="n">5.</span><span>Byte-level BPE tokenizer and one transformer attention block</span> <span class="st">not started</span></li>
+      <li><span class="n">5.</span><span>Byte-level BPE tokenizer and one transformer attention block</span> <span class="st done">done</span></li>
       <li><span class="n">6.</span><span>Contributor How-To docs</span> <span class="st">not started</span></li>
       <li><span class="n">7.</span><span>SPARK proofs of the kernels</span> <span class="st">not started</span></li>
     </ol>
@@ -543,6 +618,8 @@ function feedbackBody(text) {
     adaStep: step,
     mlpEpoch: ada && typeof ada.aa_mlp_epoch === "function" ? safeMlp("aa_mlp_epoch") : null,
     mlpLoss: ada && typeof ada.aa_mlp_loss === "function" ? safeMlp("aa_mlp_loss") : null,
+    attnTokens: ada && typeof ada.aa_attn_tokens === "function" ? safeMlp("aa_attn_tokens") : null,
+    attnUsed: ada && typeof ada.aa_attn_used === "function" ? safeMlp("aa_attn_used") : null,
     errors: errors.slice(),
     eventLogDropped: dropped,
     eventLogNote: "max 200 events; t is ms since this page was loaded",
@@ -592,6 +669,7 @@ function fail(detail) {
   note("error", text);
   showDemoDown();
   showMlpDown();
+  showAttnDown();
 }
 function skip(how) {
   if (splash.hidden) return;
@@ -966,6 +1044,250 @@ box("reset").addEventListener("click", () => {
   loadDataset(mlpKind);
   note("mlp reset");
 });
+
+const attnColors = ["#ffe14a", "#9ad7ff", "#ffb085", "#b6f0c2", "#e7c1ff", "#ffd6e0", "#d5f28a", "#ffd27a"];
+let attnRow = 0;
+let attnDead = false;
+function showAttnDown() {
+  const err = box("attnerr");
+  if (!err) return;
+  err.hidden = false;
+  err.textContent = "The Ada module did not load, so this panel cannot tokenize.";
+  const area = box("attntext");
+  if (area) area.disabled = true;
+}
+function pieceBytes(index) {
+  const n = ada.aa_attn_piece_len(index);
+  const out = [];
+  for (let p = 1; p <= n; p += 1) out.push(ada.aa_attn_piece_byte(index, p) & 255);
+  return out;
+}
+function pieceLabel(bytes) {
+  if (!bytes.length) return "empty";
+  try {
+    const text = new TextDecoder("utf-8", {fatal: true}).decode(Uint8Array.from(bytes));
+    let shown = "";
+    for (const ch of text) {
+      if (ch === " ") shown += "␣";
+      else if (ch === "\n") shown += "⏎";
+      else shown += ch;
+    }
+    return shown || "empty";
+  } catch (e) {
+    return bytes.map((b) => b.toString(16).padStart(2, "0")).join(" ");
+  }
+}
+function paintReadout() {
+  const info = window.__attn;
+  const el = box("attnread");
+  if (!info || info.tokens < 1) {
+    el.textContent = "No tokens yet. Type a few letters.";
+    return;
+  }
+  if (info.used < 1) {
+    el.textContent = "Ada returned tokens, and none of them fit in the attention window.";
+    return;
+  }
+  if (attnRow < 1 || attnRow > info.used) attnRow = info.used;
+  const parts = [];
+  let sum = 0;
+  for (let j = 1; j <= info.used; j += 1) {
+    const w = info.weights[attnRow - 1][j - 1];
+    sum += w;
+    if (j <= attnRow) parts.push(info.labels[j - 1] + " " + fmt(w));
+  }
+  let extra = "";
+  if (info.tokens > info.used) {
+    extra = " Attention reads the first " + info.used + " tokens. "
+      + (info.tokens - info.used) + " later pieces are drawn above and are not in the heatmap.";
+  }
+  el.textContent = "Token " + attnRow + " (" + info.labels[attnRow - 1]
+    + ") attends to: " + parts.join(", ")
+    + ". Those weights add to " + fmt(sum)
+    + ". Later columns are masked, so their weight is 0." + extra;
+}
+function paintHeat() {
+  const info = window.__attn;
+  const canvas = box("heat");
+  const n = info && info.used ? info.used : 0;
+  const label = 36;
+  const cell = 22;
+  const side = label + Math.max(n, 1) * cell;
+  canvas.width = side;
+  canvas.height = side;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#0c0c0c";
+  ctx.fillRect(0, 0, side, side);
+  if (!n) {
+    canvas.setAttribute("aria-label", "Attention heatmap, no tokens yet");
+    return;
+  }
+  for (let i = 1; i <= n; i += 1) {
+    for (let j = 1; j <= n; j += 1) {
+      const w = info.weights[i - 1][j - 1];
+      const x = label + (j - 1) * cell;
+      const y = label + (i - 1) * cell;
+      if (j > i) ctx.fillStyle = "#161616";
+      else {
+        const t = Math.max(0, Math.min(1, w));
+        const r = Math.round(28 + 227 * t);
+        const g = Math.round(22 + 203 * t);
+        const b = Math.round(12 + 62 * t);
+        ctx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+      }
+      ctx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
+    }
+  }
+  if (attnRow >= 1 && attnRow <= n) {
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(label + 0.5, label + (attnRow - 1) * cell + 0.5, n * cell - 1, cell - 1);
+  }
+  ctx.fillStyle = "#f3e6c4";
+  ctx.font = "11px ui-monospace, monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  for (let i = 1; i <= n; i += 1) {
+    const lab = info.labels[i - 1].slice(0, 4);
+    ctx.fillText(lab, label + (i - 0.5) * cell, 16);
+    ctx.save();
+    ctx.translate(16, label + (i - 0.5) * cell);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText(lab, 0, 0);
+    ctx.restore();
+  }
+  canvas.setAttribute("aria-label",
+    "Attention heatmap, " + n + " tokens. Each row is one token and each column is what it attends to.");
+}
+function paintTokens() {
+  const info = window.__attn;
+  const host = box("tokens");
+  host.replaceChildren();
+  if (!info) return;
+  for (let i = 0; i < info.tokens; i += 1) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "tok";
+    button.dataset.i = String(i + 1);
+    button.style.background = attnColors[info.ids[i] % attnColors.length];
+    button.setAttribute("aria-pressed", info.used >= 1 && attnRow === i + 1 ? "true" : "false");
+    const piece = document.createElement("span");
+    piece.textContent = info.labels[i] + " ";
+    const id = document.createElement("span");
+    id.className = "id";
+    id.textContent = String(info.ids[i]);
+    button.append(piece, id);
+    button.addEventListener("click", () => {
+      const index = i + 1;
+      if (index <= info.used) {
+        attnRow = index;
+        paintTokens();
+        paintHeat();
+        paintReadout();
+        note("attn row", index);
+      }
+    });
+    host.append(button);
+  }
+}
+function runAttn() {
+  if (!ada || attnDead) return;
+  const err = box("attnerr");
+  try {
+    ada.aa_bpe_clear();
+    const bytes = new TextEncoder().encode(box("attntext").value);
+    for (let i = 0; i < bytes.length; i += 1) ada.aa_bpe_push(bytes[i]);
+    const tokens = ada.aa_attn_run();
+    const used = ada.aa_attn_used();
+    const labels = [];
+    const ids = [];
+    const flat = [];
+    for (let i = 1; i <= tokens; i += 1) {
+      const raw = pieceBytes(i);
+      labels.push(pieceLabel(raw));
+      ids.push(ada.aa_attn_id(i));
+      for (let b = 0; b < raw.length; b += 1) flat.push(raw[b]);
+    }
+    const weights = [];
+    for (let i = 1; i <= used; i += 1) {
+      const row = [];
+      for (let j = 1; j <= used; j += 1) row.push(ada.aa_attn_weight(i, j));
+      weights.push(row);
+    }
+    if (attnRow < 1 || attnRow > used) attnRow = used;
+    window.__attn = {
+      tokens: tokens,
+      used: used,
+      merges: ada.aa_attn_merges(),
+      vocab: ada.aa_attn_vocab(),
+      corpus: ada.aa_bpe_corpus(),
+      dropped: ada.aa_attn_dropped(),
+      bytesIn: ada.aa_attn_bytes(),
+      ids: ids,
+      labels: labels,
+      bytes: flat,
+      weights: weights
+    };
+    let stat = tokens + " tokens · vocabulary " + window.__attn.vocab
+      + " · " + window.__attn.merges + " merges · from " + window.__attn.corpus + " bytes";
+    if (tokens === 0) {
+      stat = "0 tokens · vocabulary " + window.__attn.vocab
+        + " · " + window.__attn.merges + " merges · from " + window.__attn.corpus + " bytes";
+    } else if (tokens <= used) {
+      stat += " · attention on all " + tokens;
+    } else {
+      stat += " · attention on the first " + used;
+    }
+    if (window.__attn.dropped > 0) {
+      stat += " · " + window.__attn.dropped + " bytes did not fit";
+    }
+    box("attnstat").textContent = stat;
+    if (err) err.hidden = true;
+    paintTokens();
+    paintHeat();
+    paintReadout();
+  } catch (e) {
+    attnDead = true;
+    if (err) {
+      err.hidden = false;
+      err.textContent = "The tokenizer trapped the Ada module. Reload the page to run it again.";
+    }
+    box("attntext").disabled = true;
+    box("train").disabled = true;
+    box("compute").disabled = true;
+    note("attn trap", String(e && e.message ? e.message : e));
+  }
+}
+function bootAttn() {
+  attnDead = false;
+  const area = box("attntext");
+  area.disabled = false;
+  const err = box("attnerr");
+  if (err) err.hidden = true;
+  runAttn();
+  note("attn", box("attnstat").textContent);
+}
+box("attntext").addEventListener("input", () => {
+  runAttn();
+  note("attn text", box("attntext").value.length);
+});
+box("heat").addEventListener("click", (e) => {
+  const info = window.__attn;
+  if (!info || !info.used) return;
+  const canvas = box("heat");
+  const rect = canvas.getBoundingClientRect();
+  const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+  const label = 36;
+  const cell = (canvas.height - label) / info.used;
+  const row = Math.floor((y - label) / cell) + 1;
+  if (row >= 1 && row <= info.used) {
+    attnRow = row;
+    paintTokens();
+    paintHeat();
+    paintReadout();
+    note("attn heat", row);
+  }
+});
 addEventListener("resize", () => {
   if (ada && !fatal) paintMlp();
 });
@@ -1128,7 +1450,7 @@ async function boot() {
     fail(String(e && e.message ? e.message : e));
     return;
   }
-  const need = ["aa_version_length", "aa_version_byte", "aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get", "aa_set_m", "aa_get_m", "aa_set_v", "aa_get_v", "aa_tensor_run", "aa_product", "aa_softmax", "aa_mlp_reset", "aa_mlp_set_rate", "aa_mlp_rate", "aa_mlp_train", "aa_mlp_epoch", "aa_mlp_loss", "aa_mlp_predict", "aa_mlp_count", "aa_mlp_x", "aa_mlp_y", "aa_mlp_label", "aa_mlp_lo", "aa_mlp_hi", "aa_mlp_grid_n", "aa_mlp_fill", "aa_mlp_cell", "aa_mlp_curve_n", "aa_mlp_curve", "aa_mlp_kind"];
+  const need = ["aa_version_length", "aa_version_byte", "aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get", "aa_set_m", "aa_get_m", "aa_set_v", "aa_get_v", "aa_tensor_run", "aa_product", "aa_softmax", "aa_mlp_reset", "aa_mlp_set_rate", "aa_mlp_rate", "aa_mlp_train", "aa_mlp_epoch", "aa_mlp_loss", "aa_mlp_predict", "aa_mlp_count", "aa_mlp_x", "aa_mlp_y", "aa_mlp_label", "aa_mlp_lo", "aa_mlp_hi", "aa_mlp_grid_n", "aa_mlp_fill", "aa_mlp_cell", "aa_mlp_curve_n", "aa_mlp_curve", "aa_mlp_kind", "aa_bpe_clear", "aa_bpe_push", "aa_bpe_corpus", "aa_attn_run", "aa_attn_tokens", "aa_attn_id", "aa_attn_piece_len", "aa_attn_piece_byte", "aa_attn_vocab", "aa_attn_merges", "aa_attn_used", "aa_attn_weight", "aa_attn_dropped", "aa_attn_bytes"];
   for (let i = 0; i < need.length; i += 1) {
     if (typeof ada[need[i]] !== "function") {
       ada = null;
@@ -1147,6 +1469,7 @@ async function boot() {
   computeDemo();
   document.getElementById("compute").disabled = false;
   bootMlp();
+  bootAttn();
   note("wasm loaded", stamp);
   hint.textContent = "Tap or Enter";
   started = true;

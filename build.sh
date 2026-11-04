@@ -19,7 +19,7 @@ rm -rf obj/wasm && mkdir -p obj/wasm
 cd obj/wasm
 for F in ../../src/*.adb; do
   case $(basename "$F") in
-    hello.adb|tensors_test.adb|mlp_test.adb) continue ;;
+    hello.adb|tensors_test.adb|mlp_test.adb|attention_test.adb) continue ;;
   esac
   # -gnatw.X: this runtime forbids exception propagation, and the
   # compiler warns that a check would call Last_Chance_Handler. The
@@ -49,6 +49,11 @@ ar x "$T/lib/rts-native/adalib/libgnat.a" s-memcop.o s-memmov.o s-memset.o
   --export=aa_mlp_lo --export=aa_mlp_hi --export=aa_mlp_grid_n \
   --export=aa_mlp_fill --export=aa_mlp_cell \
   --export=aa_mlp_curve_n --export=aa_mlp_curve --export=aa_mlp_kind \
+  --export=aa_bpe_clear --export=aa_bpe_push --export=aa_bpe_corpus \
+  --export=aa_attn_run --export=aa_attn_tokens --export=aa_attn_id \
+  --export=aa_attn_piece_len --export=aa_attn_piece_byte \
+  --export=aa_attn_vocab --export=aa_attn_merges --export=aa_attn_used \
+  --export=aa_attn_weight --export=aa_attn_dropped --export=aa_attn_bytes \
   -z stack-size=2097152 --initial-memory=16777216 \
   -o ai_amplifier.wasm *.o
 cd ../..

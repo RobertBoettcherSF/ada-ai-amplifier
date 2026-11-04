@@ -124,7 +124,7 @@ try {
   assert(items[1].includes("Splash and live page") && items[1].includes("done"), items[1]);
   assert(items[2].includes("Core tensor and maths") && items[2].includes("done"), items[2]);
   assert(items[3].includes("Tiny trainable MLP") && items[3].includes("done"), items[3]);
-  assert(items[4].includes("Byte-level BPE") && items[4].includes("not started"), items[4]);
+  assert(items[4].includes("Byte-level BPE") && items[4].includes("done"), items[4]);
   assert(items[5].includes("Contributor How-To") && items[5].includes("not started"), items[5]);
   assert(items[6].includes("SPARK proofs of the kernels") && items[6].includes("not started"), items[6]);
   const hrefs = await page.$$eval("#links a", (els) => els.map((a) => a.href));
@@ -199,6 +199,78 @@ try {
   await page.click("#set-xor");
   assert(await page.$eval("#mlpout", (el) => el.textContent.includes("points 4")), "back to xor");
 
+  await page.evaluate(() => document.getElementById("attn").scrollIntoView({ block: "center" }));
+  const attnStat = await page.$eval("#attnstat", (el) => el.textContent);
+  assert(attnStat.includes("32 merges"), "attn stat " + attnStat);
+  assert(attnStat.includes("vocabulary 288"), "attn vocab " + attnStat);
+  assert(attnStat.includes("attention on all 15"), "attn all " + attnStat);
+  const attnInfo = await page.evaluate(() => window.__attn);
+  assert(attnInfo.tokens === 15 && attnInfo.used === 15, "attn counts " + attnInfo.tokens + " " + attnInfo.used);
+  const chipText = await page.$eval("#tokens", (el) => el.textContent);
+  assert(chipText.includes("ß"), "eszett chip " + chipText);
+  assert(chipText.includes("c3"), "split umlaut " + chipText);
+  assert(chipText.includes("284"), "merged id " + chipText);
+  const round = await page.evaluate(() => {
+    const want = Array.from(new TextEncoder().encode(document.getElementById("attntext").value));
+    const got = window.__attn.bytes;
+    if (want.length !== got.length) return "len " + want.length + " " + got.length;
+    for (let i = 0; i < want.length; i += 1) if (want[i] !== got[i]) return "byte " + i;
+    return "ok";
+  });
+  assert(round === "ok", "attn round trip " + round);
+  const causal = await page.evaluate(() => {
+    const w = window.__attn.weights;
+    for (let i = 0; i < w.length; i += 1) {
+      let sum = 0;
+      for (let j = 0; j < w.length; j += 1) {
+        sum += w[i][j];
+        if (j > i && w[i][j] !== 0) return "future " + i + " " + j;
+      }
+      if (Math.abs(sum - 1) > 1e-4) return "sum " + i + " " + sum;
+    }
+    return "ok";
+  });
+  assert(causal === "ok", "attn causal " + causal);
+  const heatSpread = await page.evaluate(() => {
+    const c = document.getElementById("heat");
+    const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+    let min = 255;
+    let max = 0;
+    for (let i = 0; i < d.length; i += 16) {
+      if (d[i] < min) min = d[i];
+      if (d[i] > max) max = d[i];
+    }
+    return max - min;
+  });
+  assert(heatSpread > 40, "heat spread " + heatSpread);
+  const attnFont = await page.$eval("#attntext", (el) => parseFloat(getComputedStyle(el).fontSize));
+  assert(attnFont >= 16, "attn font " + attnFont);
+  await page.click("#attntext");
+  await page.evaluate(() => {
+    const el = document.getElementById("attntext");
+    el.focus();
+    el.select();
+  });
+  await page.keyboard.press("Backspace");
+  await page.keyboard.type("hi äß");
+  await page.waitForFunction(() => window.__attn && window.__attn.bytes.length >= 2);
+  const typed = await page.evaluate(() => {
+    const want = Array.from(new TextEncoder().encode("hi äß"));
+    const got = window.__attn.bytes;
+    if (want.length !== got.length) return "len " + want.length + " " + got.length + " text " + document.getElementById("attntext").value;
+    for (let i = 0; i < want.length; i += 1) if (want[i] !== got[i]) return "byte " + i;
+    let sum = 0;
+    const row = window.__attn.weights[0];
+    for (let j = 0; j < row.length; j += 1) sum += row[j];
+    if (Math.abs(sum - 1) > 1e-4) return "sum " + sum;
+    if (window.__attn.weights[0][window.__attn.used - 1] !== 0 && window.__attn.used > 1) return "future";
+    return "ok";
+  });
+  assert(typed === "ok", "typed attn " + typed);
+  await page.click("#tokens .tok");
+  const pressed = await page.$eval("#tokens .tok", (el) => el.getAttribute("aria-pressed"));
+  assert(pressed === "true", "token press " + pressed);
+
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   const covered = await page.evaluate(() => {
     const link = document.querySelector("#links a[href*='using-the-page']").getBoundingClientRect();
@@ -247,6 +319,16 @@ try {
   assert(phoneTrain >= 44, "phone train height " + phoneTrain);
   const phoneFont = await phonePage.$eval("#rate", (el) => parseFloat(getComputedStyle(el).fontSize));
   assert(phoneFont >= 16, "phone rate font " + phoneFont);
+  const phoneAttnFont = await phonePage.$eval("#attntext", (el) => parseFloat(getComputedStyle(el).fontSize));
+  assert(phoneAttnFont >= 16, "phone attn font " + phoneAttnFont);
+  await phonePage.evaluate(() => document.getElementById("attn").scrollIntoView({ block: "center" }));
+  const phoneAttn = await phonePage.$eval("#attnstat", (el) => el.textContent);
+  assert(phoneAttn.includes("32 merges"), "phone attn " + phoneAttn);
+  const phoneChip = await phonePage.$eval(".tok", (el) => el.getBoundingClientRect().height);
+  assert(phoneChip >= 44, "phone token height " + phoneChip);
+  await phonePage.tap("#tokens .tok");
+  const phoneRead = await phonePage.$eval("#attnread", (el) => el.textContent);
+  assert(phoneRead.includes("attends to"), "phone readout " + phoneRead);
   await phonePage.evaluate(() => document.getElementById("mlp").scrollIntoView({ block: "center" }));
   await phonePage.tap("#train");
   await phonePage.waitForFunction(() => {
@@ -295,6 +377,8 @@ try {
   assert(await badPage.$eval("#compute", (el) => el.disabled), "compute still enabled");
   assert(await badPage.$eval("#mlperr", (el) => !el.hidden && el.textContent.includes("cannot train")), "mlp down");
   assert(await badPage.$eval("#train", (el) => el.disabled), "train still enabled");
+  assert(await badPage.$eval("#attnerr", (el) => !el.hidden && el.textContent.includes("cannot tokenize")), "attn down");
+  assert(await badPage.$eval("#attntext", (el) => el.disabled), "attn text still enabled");
   assert(badErrors.length === 0, "nowasm errors " + badErrors);
 
   const html = readFileSync(resolve(root, "site/index.html"), "utf8");

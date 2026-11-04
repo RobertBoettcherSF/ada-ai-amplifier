@@ -217,4 +217,84 @@ exp.aa_mlp_reset(2);
 if (exp.aa_mlp_kind() !== 2 || exp.aa_mlp_count() !== 96) fail("spirals");
 exp.aa_mlp_reset(9);
 if (exp.aa_mlp_kind() !== 0 || exp.aa_mlp_count() !== 4) fail("unknown dataset");
+
+const attnNeed = ["aa_bpe_clear", "aa_bpe_push", "aa_bpe_corpus", "aa_attn_run", "aa_attn_tokens", "aa_attn_id", "aa_attn_piece_len", "aa_attn_piece_byte", "aa_attn_vocab", "aa_attn_merges", "aa_attn_used", "aa_attn_weight", "aa_attn_dropped", "aa_attn_bytes"];
+for (const name of attnNeed) {
+  if (typeof exp[name] !== "function") fail("missing export " + name);
+}
+if (exp.aa_bpe_corpus() !== 563 || exp.aa_attn_merges() !== 32 || exp.aa_attn_vocab() !== 288) {
+  fail("bpe census " + [exp.aa_bpe_corpus(), exp.aa_attn_merges(), exp.aa_attn_vocab()]);
+}
+exp.aa_bpe_clear();
+if (exp.aa_attn_run() !== 0 || exp.aa_attn_tokens() !== 0 || exp.aa_attn_used() !== 0) {
+  fail("attn empty");
+}
+if (exp.aa_attn_id(1) !== 0 || exp.aa_attn_weight(1, 1) !== 0 || exp.aa_attn_piece_byte(1, 1) !== 0) {
+  fail("attn clamp");
+}
+function pushText(text) {
+  exp.aa_bpe_clear();
+  const bytes = new TextEncoder().encode(text);
+  for (const b of bytes) exp.aa_bpe_push(b);
+  return exp.aa_attn_run();
+}
+function pulledBytes() {
+  const out = [];
+  const n = exp.aa_attn_tokens();
+  for (let i = 1; i <= n; i += 1) {
+    const len = exp.aa_attn_piece_len(i);
+    for (let j = 1; j <= len; j += 1) out.push(exp.aa_attn_piece_byte(i, j) & 255);
+  }
+  return out;
+}
+function sameBytes(text) {
+  const want = Array.from(new TextEncoder().encode(text));
+  const gotBytes = pulledBytes();
+  if (want.length !== gotBytes.length) return false;
+  for (let i = 0; i < want.length; i += 1) if (want[i] !== gotBytes[i]) return false;
+  return true;
+}
+if (pushText("hi") < 1 || !sameBytes("hi")) fail("wasm hi");
+if (pushText("") !== 0) fail("wasm blank");
+if (pushText("äß") < 2 || !sameBytes("äß")) fail("wasm umlauts");
+exp.aa_bpe_clear();
+exp.aa_bpe_push(0xc3);
+exp.aa_bpe_push(0x9f);
+if (exp.aa_attn_run() !== 1) fail("wasm eszett count " + exp.aa_attn_tokens());
+if ((exp.aa_attn_piece_byte(1, 1) & 255) !== 0xc3 || (exp.aa_attn_piece_byte(1, 2) & 255) !== 0x9f) {
+  fail("wasm eszett bytes");
+}
+exp.aa_bpe_clear();
+exp.aa_bpe_push(0xc3);
+exp.aa_bpe_push(0xa4);
+if (exp.aa_attn_run() !== 2 || exp.aa_attn_id(1) !== 0xc3 || exp.aa_attn_id(2) !== 0xa4) {
+  fail("wasm a-umlaut " + [exp.aa_attn_tokens(), exp.aa_attn_id(1), exp.aa_attn_id(2)]);
+}
+const nAttn = pushText("Alice was beginning süß");
+if (nAttn !== 15 || exp.aa_attn_used() !== 15) fail("wasm phrase " + nAttn + " " + exp.aa_attn_used());
+if (!sameBytes("Alice was beginning süß")) fail("wasm phrase bytes");
+for (let i = 1; i <= 15; i += 1) {
+  let sum = 0;
+  for (let j = 1; j <= 15; j += 1) {
+    const w = exp.aa_attn_weight(i, j);
+    if (j > i && w !== 0) fail("wasm future " + i + " " + j);
+    sum += w;
+  }
+  if (Math.abs(sum - 1) > 1e-4) fail("wasm row " + i + " " + sum);
+}
+if (exp.aa_attn_weight(1, 2) !== 0) fail("wasm mask");
+exp.aa_bpe_clear();
+exp.aa_bpe_push(-1);
+exp.aa_bpe_push(256);
+exp.aa_bpe_push(65);
+if (exp.aa_attn_bytes() !== 1 || exp.aa_attn_run() !== 1 || exp.aa_attn_id(1) !== 65) {
+  fail("wasm push filter");
+}
+exp.aa_bpe_clear();
+for (let i = 0; i < 771; i += 1) exp.aa_bpe_push(97);
+if (exp.aa_attn_bytes() !== 768 || exp.aa_attn_dropped() !== 3) {
+  fail("wasm dropped " + exp.aa_attn_bytes() + " " + exp.aa_attn_dropped());
+}
+const longN = exp.aa_attn_run();
+if (longN < 1 || exp.aa_attn_used() > 16 || exp.aa_attn_used() < 1) fail("wasm long " + longN);
 console.log("wasm ok", got);

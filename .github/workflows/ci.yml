@@ -26,6 +26,7 @@ jobs:
           ./tools/check-version.sh
           ./bin/tensors_test
           ./bin/mlp_test
+          ./bin/attention_test
 
       - name: Chrome
         run: |
