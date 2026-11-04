@@ -220,6 +220,71 @@
       font: 16px/1.4 ui-monospace, monospace;
     }
     .out span { display: inline-block; min-width: 5.5rem; }
+    #mlp { margin: 0.2rem 0 1.2rem; }
+    .mlp-sets, .mlp-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin: 8px 0;
+    }
+    .mlp-sets button, .mlp-controls button, #rate {
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 1px solid #555;
+      background: #1c1c1c;
+      color: #f3e6c4;
+      font: 16px/1 ui-sans-serif, system-ui, sans-serif;
+      touch-action: manipulation;
+    }
+    .mlp-sets button[aria-pressed="true"] {
+      background: #ffe14a;
+      color: #111;
+      border-color: #ffe14a;
+    }
+    #rate {
+      width: 5.5rem;
+      padding: 8px;
+      background: #111;
+      font-family: ui-monospace, monospace;
+    }
+    #train {
+      background: #ffe14a;
+      color: #111;
+      border: 0;
+      font-weight: 600;
+    }
+    #train:disabled, #reset:disabled, #rate:disabled,
+    .mlp-sets button:disabled, #rate-down:disabled, #rate-up:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+    .mlp-views {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .plot {
+      position: relative;
+      min-width: 0;
+      width: 100%;
+    }
+    .plot:first-child { aspect-ratio: 1; }
+    .plot:last-child { aspect-ratio: 8 / 5; }
+    #boundary, #losscurve {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #000;
+      border: 1px solid #2a2a2a;
+      touch-action: manipulation;
+    }
+    @media (max-width: 640px) {
+      .mlp-views { grid-template-columns: minmax(0, 1fr); }
+    }
     @media (max-width: 520px) {
       .demo-cols { flex-direction: column; }
     }
@@ -231,7 +296,7 @@
   </style>
 </head>
 <body>
-  <div id="ver">v0.3.0-tensors</div>
+  <div id="ver">v0.4.0-mlp</div>
   <main id="main" tabindex="-1">
     <h1>ada-ai-amplifier</h1>
     <p id="banner" class="err" hidden></p>
@@ -281,10 +346,47 @@
       <p class="fine">Softmax</p>
       <p id="softmax" class="out"><span id="s1">…</span><span id="s2">…</span><span id="s3">…</span></p>
     </div>
+    <h2>Train a small network</h2>
+    <p>
+      Two inputs, eight tanh units, one sigmoid output. Ada initializes
+      the weights from a fixed seed, then runs the forward pass, binary
+      cross-entropy, and gradient descent. JavaScript draws the loss and
+      the decision boundary. It does not train. The splash above is still
+      only a drawing.
+    </p>
+    <div id="mlp">
+      <div class="mlp-sets" role="group" aria-label="Dataset">
+        <button id="set-xor" type="button" aria-pressed="true" disabled>XOR</button>
+        <button id="set-circles" type="button" aria-pressed="false" disabled>Two circles</button>
+        <button id="set-spirals" type="button" aria-pressed="false" disabled>Two spirals</button>
+      </div>
+      <div class="mlp-controls">
+        <label for="rate">Learning rate</label>
+        <button id="rate-down" type="button" aria-label="Lower learning rate" disabled>−</button>
+        <input id="rate" type="number" min="0.01" max="2" step="0.01" value="0.50" inputmode="decimal" disabled>
+        <button id="rate-up" type="button" aria-label="Raise learning rate" disabled>+</button>
+        <button id="train" type="button" aria-pressed="false" disabled>Train</button>
+        <button id="reset" type="button" disabled>Reset</button>
+      </div>
+      <p id="mlperr" class="err" hidden></p>
+      <p id="mlpstat" class="out">step 0 · loss … · rate 0.50</p>
+      <p id="mlpout" class="fine">Waiting for the Ada module.</p>
+      <div class="mlp-views">
+        <div class="plot"><canvas id="boundary" width="48" height="48" aria-label="Decision boundary"></canvas></div>
+        <div class="plot"><canvas id="losscurve" width="48" height="30" aria-label="Loss curve"></canvas></div>
+      </div>
+      <p class="fine">
+        Gold is class 1, blue is class 0. The heat is the network's
+        probability. Eight hidden units separate XOR and the two circles.
+        The spirals are a harder cut: the loss falls, and the boundary
+        stays a rough one.
+      </p>
+    </div>
     <h2>On this page</h2>
     <ul>
       <li>Tap the splash, or press Enter, to leave it.</li>
       <li>The tensor demo asks Ada for a matrix-vector product and a softmax.</li>
+      <li>Train runs the small network. Reset restores the seeded weights. The learning rate is Ada's step size.</li>
       <li>F9, or Feedback, writes a feedback file.</li>
       <li>If the previous session did not end cleanly, a crash report is offered.</li>
     </ul>
@@ -293,10 +395,10 @@
       <li><span class="n">1.</span><span>Repo skeleton</span> <span class="st done">done</span></li>
       <li><span class="n">2.</span><span>Splash and live page</span> <span class="st done">done</span></li>
       <li><span class="n">3.</span><span>Core tensor and maths (plain Ada)</span> <span class="st done">done</span></li>
-      <li><span class="n">4.</span><span>SPARK proofs of the kernels</span> <span class="st">not started</span></li>
-      <li><span class="n">5.</span><span>Tiny trainable MLP, live in the browser</span> <span class="st">not started</span></li>
-      <li><span class="n">6.</span><span>Byte-level BPE tokenizer and one transformer attention block</span> <span class="st">not started</span></li>
-      <li><span class="n">7.</span><span>Contributor How-To docs</span> <span class="st">not started</span></li>
+      <li><span class="n">4.</span><span>Tiny trainable MLP, live in the browser</span> <span class="st done">done</span></li>
+      <li><span class="n">5.</span><span>Byte-level BPE tokenizer and one transformer attention block</span> <span class="st">not started</span></li>
+      <li><span class="n">6.</span><span>Contributor How-To docs</span> <span class="st">not started</span></li>
+      <li><span class="n">7.</span><span>SPARK proofs of the kernels</span> <span class="st">not started</span></li>
     </ol>
     <h2>Links</h2>
     <ul id="links">
@@ -351,6 +453,8 @@ const view = document.getElementById("view");
 
 let ada = null;
 let fatal = false;
+let training = false;
+let mlpRaf = 0;
 let started = false;
 let splashOn = true;
 let raf = 0;
@@ -437,6 +541,8 @@ function feedbackBody(text) {
     phase: splash.hidden ? "main" : "splash",
     fps: fps,
     adaStep: step,
+    mlpEpoch: ada && typeof ada.aa_mlp_epoch === "function" ? safeMlp("aa_mlp_epoch") : null,
+    mlpLoss: ada && typeof ada.aa_mlp_loss === "function" ? safeMlp("aa_mlp_loss") : null,
     errors: errors.slice(),
     eventLogDropped: dropped,
     eventLogNote: "max 200 events; t is ms since this page was loaded",
@@ -485,6 +591,7 @@ function fail(detail) {
   errors.push(text);
   note("error", text);
   showDemoDown();
+  showMlpDown();
 }
 function skip(how) {
   if (splash.hidden) return;
@@ -549,6 +656,29 @@ function showDemoDown() {
   const button = box("compute");
   if (button) button.disabled = true;
 }
+function safeMlp(name) {
+  try { return ada[name](); } catch (e) { return null; }
+}
+const mlpIds = ["set-xor", "set-circles", "set-spirals", "rate", "rate-down", "rate-up", "train", "reset"];
+function showMlpDown() {
+  const err = box("mlperr");
+  if (!err) return;
+  err.hidden = false;
+  err.textContent = "The Ada module did not load, so this panel cannot train.";
+  mlpIds.forEach((id) => {
+    const el = box(id);
+    if (el) el.disabled = true;
+  });
+  stopTrain();
+}
+function enableMlp() {
+  mlpIds.forEach((id) => {
+    const el = box(id);
+    if (el) el.disabled = false;
+  });
+  const err = box("mlperr");
+  if (err) err.hidden = true;
+}
 function paintDemo() {
   box("y1").textContent = fmt(ada.aa_product(1));
   box("y2").textContent = fmt(ada.aa_product(2));
@@ -592,11 +722,253 @@ function computeDemo() {
     err.textContent = text;
     box("compute").disabled = true;
     note("tensor trap", String(e && e.message ? e.message : e));
+    showMlpDown();
     return;
   }
   note("tensor", box("y1").textContent + " " + box("y2").textContent + " " + box("y3").textContent);
 }
 document.getElementById("compute").addEventListener("click", computeDemo);
+
+const heat = document.createElement("canvas");
+let mlpKind = 0;
+function syncRateBox() {
+  const r = ada.aa_mlp_rate();
+  box("rate").value = Number.isFinite(r) ? r.toFixed(2) : "0.50";
+}
+function commitRate() {
+  const n = Number(box("rate").value);
+  if (Number.isFinite(n)) ada.aa_mlp_set_rate(n);
+  syncRateBox();
+  paintMlp();
+  note("mlp rate", box("rate").value);
+}
+function bumpRate(delta) {
+  const n = Number(box("rate").value);
+  const base = Number.isFinite(n) ? n : ada.aa_mlp_rate();
+  const next = Math.round((base + delta) * 100) / 100;
+  box("rate").value = Math.min(2, Math.max(0.01, next)).toFixed(2);
+  commitRate();
+}
+function markSet(kind) {
+  mlpKind = kind;
+  box("set-xor").setAttribute("aria-pressed", kind === 0 ? "true" : "false");
+  box("set-circles").setAttribute("aria-pressed", kind === 1 ? "true" : "false");
+  box("set-spirals").setAttribute("aria-pressed", kind === 2 ? "true" : "false");
+}
+function stopTrain() {
+  training = false;
+  if (mlpRaf) cancelAnimationFrame(mlpRaf);
+  mlpRaf = 0;
+  const b = box("train");
+  if (b) {
+    b.textContent = "Train";
+    b.setAttribute("aria-pressed", "false");
+  }
+}
+function paintMlp() {
+  if (!ada) return;
+  const epoch = ada.aa_mlp_epoch();
+  const loss = ada.aa_mlp_loss();
+  const rate = ada.aa_mlp_rate();
+  const lossText = Number.isFinite(loss) ? loss.toFixed(4) : "not a number";
+  const rateText = Number.isFinite(rate) ? rate.toFixed(2) : "—";
+  box("mlpstat").textContent = "step " + epoch + " · loss " + lossText + " · rate " + rateText;
+  const n = ada.aa_mlp_count();
+  let correct = 0;
+  const bits = [];
+  for (let i = 1; i <= n; i += 1) {
+    const p = ada.aa_mlp_predict(ada.aa_mlp_x(i), ada.aa_mlp_y(i));
+    const label = ada.aa_mlp_label(i);
+    if ((p >= 0.5) === (label >= 0.5)) correct += 1;
+    if (n <= 4 && Number.isFinite(p)) bits.push(p.toFixed(3));
+  }
+  let line = "points " + n + " · past 0.5: " + correct + "/" + n;
+  if (bits.length) line += " · " + bits.join("  ");
+  box("mlpout").textContent = line;
+  window.__mlp = {epoch: epoch, loss: loss, rate: rate, kind: ada.aa_mlp_kind(), correct: correct, points: n};
+  drawBoundary();
+  drawLoss();
+}
+function drawBoundary() {
+  const canvas = box("boundary");
+  const cssW = canvas.clientWidth;
+  const cssH = canvas.clientHeight;
+  if (cssW < 2 || cssH < 2) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = Math.max(2, Math.round(cssW * dpr));
+  const h = Math.max(2, Math.round(cssH * dpr));
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+  }
+  const side = ada.aa_mlp_grid_n();
+  heat.width = side;
+  heat.height = side;
+  const hctx = heat.getContext("2d", {alpha: false});
+  const img = hctx.createImageData(side, side);
+  const px = img.data;
+  for (let row = 1; row <= side; row += 1) {
+    for (let col = 1; col <= side; col += 1) {
+      const t = Math.max(0, Math.min(1, ada.aa_mlp_cell(row, col)));
+      const o = ((row - 1) * side + (col - 1)) * 4;
+      px[o] = 30 + (255 - 30) * t;
+      px[o + 1] = 64 + (214 - 64) * t;
+      px[o + 2] = 140 + (90 - 140) * t;
+      px[o + 3] = 255;
+    }
+  }
+  hctx.putImageData(img, 0, 0);
+  const ctx = canvas.getContext("2d", {alpha: false});
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(heat, 0, 0, w, h);
+  const lo = ada.aa_mlp_lo();
+  const hi = ada.aa_mlp_hi();
+  const scaleX = w / (hi - lo);
+  const scaleY = h / (hi - lo);
+  const count = ada.aa_mlp_count();
+  const radius = Math.max(4, Math.min(w, h) / 70);
+  for (let i = 1; i <= count; i += 1) {
+    const x = (ada.aa_mlp_x(i) - lo) * scaleX;
+    const y = (hi - ada.aa_mlp_y(i)) * scaleY;
+    const label = ada.aa_mlp_label(i) >= 0.5;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = label ? "#1a1200" : "#071018";
+    ctx.fill();
+    ctx.lineWidth = Math.max(2, radius / 3);
+    ctx.strokeStyle = label ? "#ffe14a" : "#d6ecff";
+    ctx.stroke();
+  }
+}
+function drawLoss() {
+  const canvas = box("losscurve");
+  const cssW = canvas.clientWidth;
+  const cssH = canvas.clientHeight;
+  if (cssW < 2 || cssH < 2) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = Math.max(2, Math.round(cssW * dpr));
+  const h = Math.max(2, Math.round(cssH * dpr));
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+  }
+  const ctx = canvas.getContext("2d", {alpha: false});
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, w, h);
+  const n = ada.aa_mlp_curve_n();
+  let peak = 0.05;
+  const vals = [];
+  for (let i = 1; i <= n; i += 1) {
+    const v = ada.aa_mlp_curve(i);
+    vals.push(Number.isFinite(v) ? v : 0);
+    if (vals[vals.length - 1] > peak) peak = vals[vals.length - 1];
+  }
+  const pad = Math.max(8, Math.round(h * 0.08));
+  ctx.strokeStyle = "#333";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(pad, h - pad);
+  ctx.lineTo(w - pad, h - pad);
+  ctx.stroke();
+  if (!vals.length) return;
+  ctx.strokeStyle = "#ffe14a";
+  ctx.fillStyle = "#ffe14a";
+  ctx.lineWidth = Math.max(2, dpr);
+  if (vals.length === 1) {
+    const y = (h - pad) - (vals[0] / peak) * (h - pad * 2);
+    ctx.beginPath();
+    ctx.arc(pad, y, Math.max(3, dpr * 2), 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
+  ctx.beginPath();
+  for (let i = 0; i < vals.length; i += 1) {
+    const x = vals.length === 1 ? pad : pad + (i / (vals.length - 1)) * (w - pad * 2);
+    const y = (h - pad) - (vals[i] / peak) * (h - pad * 2);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+}
+function loadDataset(kind) {
+  if (!ada) return;
+  stopTrain();
+  ada.aa_mlp_reset(kind);
+  markSet(ada.aa_mlp_kind());
+  syncRateBox();
+  ada.aa_mlp_fill();
+  paintMlp();
+  note("mlp dataset", ada.aa_mlp_kind());
+}
+function mlpFrame() {
+  if (!training || !ada) return;
+  try {
+    ada.aa_mlp_train(2);
+    const loss = ada.aa_mlp_loss();
+    if (!Number.isFinite(loss)) {
+      stopTrain();
+      const err = box("mlperr");
+      err.hidden = false;
+      err.textContent = "The loss stopped being a finite number. Reset, or lower the rate.";
+      note("mlp loss", loss);
+      return;
+    }
+    ada.aa_mlp_fill();
+    paintMlp();
+  } catch (e) {
+    stopTrain();
+    const err = box("mlperr");
+    err.hidden = false;
+    err.textContent = "Training trapped the Ada module. Reload the page to run it again.";
+    box("train").disabled = true;
+    box("compute").disabled = true;
+    note("mlp trap", String(e && e.message ? e.message : e));
+    return;
+  }
+  mlpRaf = requestAnimationFrame(mlpFrame);
+}
+function startTrain() {
+  if (!ada || box("train").disabled) return;
+  const err = box("mlperr");
+  if (err) err.hidden = true;
+  training = true;
+  box("train").textContent = "Stop";
+  box("train").setAttribute("aria-pressed", "true");
+  note("mlp train", ada.aa_mlp_kind());
+  mlpRaf = requestAnimationFrame(mlpFrame);
+}
+function bootMlp() {
+  ada.aa_mlp_reset(0);
+  markSet(0);
+  syncRateBox();
+  ada.aa_mlp_fill();
+  enableMlp();
+  paintMlp();
+  requestAnimationFrame(() => {
+    if (ada && !fatal) paintMlp();
+  });
+}
+box("set-xor").addEventListener("click", () => loadDataset(0));
+box("set-circles").addEventListener("click", () => loadDataset(1));
+box("set-spirals").addEventListener("click", () => loadDataset(2));
+box("rate-down").addEventListener("click", () => bumpRate(-0.05));
+box("rate-up").addEventListener("click", () => bumpRate(0.05));
+box("rate").addEventListener("change", commitRate);
+box("train").addEventListener("click", () => {
+  if (training) {
+    stopTrain();
+    note("mlp stop");
+  } else {
+    startTrain();
+  }
+});
+box("reset").addEventListener("click", () => {
+  loadDataset(mlpKind);
+  note("mlp reset");
+});
+addEventListener("resize", () => {
+  if (ada && !fatal) paintMlp();
+});
 document.getElementById("fbbtn").addEventListener("click", openFeedback);
 document.getElementById("fbcancel").addEventListener("click", closeFeedback);
 document.getElementById("fbsend").addEventListener("click", () => {
@@ -756,7 +1128,7 @@ async function boot() {
     fail(String(e && e.message ? e.message : e));
     return;
   }
-  const need = ["aa_version_length", "aa_version_byte", "aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get", "aa_set_m", "aa_get_m", "aa_set_v", "aa_get_v", "aa_tensor_run", "aa_product", "aa_softmax"];
+  const need = ["aa_version_length", "aa_version_byte", "aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get", "aa_set_m", "aa_get_m", "aa_set_v", "aa_get_v", "aa_tensor_run", "aa_product", "aa_softmax", "aa_mlp_reset", "aa_mlp_set_rate", "aa_mlp_rate", "aa_mlp_train", "aa_mlp_epoch", "aa_mlp_loss", "aa_mlp_predict", "aa_mlp_count", "aa_mlp_x", "aa_mlp_y", "aa_mlp_label", "aa_mlp_lo", "aa_mlp_hi", "aa_mlp_grid_n", "aa_mlp_fill", "aa_mlp_cell", "aa_mlp_curve_n", "aa_mlp_curve", "aa_mlp_kind"];
   for (let i = 0; i < need.length; i += 1) {
     if (typeof ada[need[i]] !== "function") {
       ada = null;
@@ -774,6 +1146,7 @@ async function boot() {
   fillDemo();
   computeDemo();
   document.getElementById("compute").disabled = false;
+  bootMlp();
   note("wasm loaded", stamp);
   hint.textContent = "Tap or Enter";
   started = true;

@@ -168,4 +168,53 @@ const h3 = exp.aa_softmax(3);
 if (!near(h1, 1 / 3, 1e-5) || !near(h2, 1 / 3, 1e-5) || !near(h3, 1 / 3, 1e-5)) {
   fail("large softmax " + [h1, h2, h3]);
 }
+
+const mlpNeed = ["aa_mlp_reset", "aa_mlp_set_rate", "aa_mlp_rate", "aa_mlp_train", "aa_mlp_epoch", "aa_mlp_loss", "aa_mlp_predict", "aa_mlp_count", "aa_mlp_x", "aa_mlp_y", "aa_mlp_label", "aa_mlp_lo", "aa_mlp_hi", "aa_mlp_grid_n", "aa_mlp_fill", "aa_mlp_cell", "aa_mlp_curve_n", "aa_mlp_curve", "aa_mlp_kind"];
+for (const name of mlpNeed) {
+  if (typeof exp[name] !== "function") fail("missing export " + name);
+}
+exp.aa_mlp_reset(0);
+exp.aa_mlp_set_rate(1);
+if (exp.aa_mlp_kind() !== 0 || exp.aa_mlp_count() !== 4 || exp.aa_mlp_epoch() !== 0) {
+  fail("mlp reset " + [exp.aa_mlp_kind(), exp.aa_mlp_count(), exp.aa_mlp_epoch()]);
+}
+const labels = [0, 1, 1, 0];
+for (let i = 0; i < 4; i += 1) {
+  if (exp.aa_mlp_label(i + 1) !== labels[i]) fail("mlp label " + i);
+}
+let loss = exp.aa_mlp_loss();
+if (!(loss > 0.2 && loss < 1.5)) fail("mlp init loss " + loss);
+if (exp.aa_mlp_curve_n() < 1 || !near(exp.aa_mlp_curve(1), loss, 1e-5)) fail("mlp curve");
+for (let n = 0; n < 20 && loss >= 0.05; n += 1) loss = exp.aa_mlp_train(32);
+if (loss >= 0.05) fail("mlp xor loss " + loss);
+const outs = [];
+for (let i = 1; i <= 4; i += 1) outs.push(exp.aa_mlp_predict(exp.aa_mlp_x(i), exp.aa_mlp_y(i)));
+if (!(outs[0] < 0.2 && outs[1] > 0.8 && outs[2] > 0.8 && outs[3] < 0.2)) {
+  fail("mlp xor outs " + outs);
+}
+exp.aa_mlp_fill();
+if (exp.aa_mlp_grid_n() !== 48) fail("grid " + exp.aa_mlp_grid_n());
+const lo = exp.aa_mlp_lo();
+const hi = exp.aa_mlp_hi();
+const span = (hi - lo) / 48;
+if (!near(exp.aa_mlp_cell(1, 1), exp.aa_mlp_predict(lo + 0.5 * span, hi - 0.5 * span), 1e-5)) {
+  fail("grid corner");
+}
+if (exp.aa_mlp_cell(0, 1) !== 0 || exp.aa_mlp_x(0) !== 0 || exp.aa_mlp_curve(0) !== 0) {
+  fail("mlp clamp");
+}
+exp.aa_mlp_set_rate(0);
+if (!near(exp.aa_mlp_rate(), 1, 1e-5)) fail("rate 0 stuck " + exp.aa_mlp_rate());
+exp.aa_mlp_set_rate(0.25);
+if (!near(exp.aa_mlp_rate(), 0.25, 1e-6)) fail("rate " + exp.aa_mlp_rate());
+const epoch = exp.aa_mlp_epoch();
+exp.aa_mlp_train(1000);
+if (exp.aa_mlp_epoch() !== epoch + 32) fail("step cap " + exp.aa_mlp_epoch());
+exp.aa_mlp_reset(1);
+if (exp.aa_mlp_kind() !== 1 || exp.aa_mlp_count() !== 72 || exp.aa_mlp_epoch() !== 0) fail("circles");
+if (!near(exp.aa_mlp_rate(), 0.25, 1e-6)) fail("rate not kept");
+exp.aa_mlp_reset(2);
+if (exp.aa_mlp_kind() !== 2 || exp.aa_mlp_count() !== 96) fail("spirals");
+exp.aa_mlp_reset(9);
+if (exp.aa_mlp_kind() !== 0 || exp.aa_mlp_count() !== 4) fail("unknown dataset");
 console.log("wasm ok", got);

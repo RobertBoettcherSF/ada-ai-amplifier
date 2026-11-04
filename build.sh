@@ -1,5 +1,5 @@
 #!/bin/sh
-# Compiles the library bodies (not hello.adb) to WebAssembly with
+# Compiles the library bodies (not hello.adb or the native tests) to WebAssembly with
 # AdaWebPack 24 / GNAT-LLVM and wasm-ld, the same route as
 # murmuration-spark and symmetry-visualizations, then embeds the module
 # into site/index.html.
@@ -19,7 +19,7 @@ rm -rf obj/wasm && mkdir -p obj/wasm
 cd obj/wasm
 for F in ../../src/*.adb; do
   case $(basename "$F") in
-    hello.adb|tensors_test.adb) continue ;;
+    hello.adb|tensors_test.adb|mlp_test.adb) continue ;;
   esac
   # -gnatw.X: this runtime forbids exception propagation, and the
   # compiler warns that a check would call Last_Chance_Handler. The
@@ -42,6 +42,13 @@ ar x "$T/lib/rts-native/adalib/libgnat.a" s-memcop.o s-memmov.o s-memset.o
   --export=aa_set_v --export=aa_get_v \
   --export=aa_tensor_run \
   --export=aa_product --export=aa_softmax \
+  --export=aa_mlp_reset --export=aa_mlp_set_rate --export=aa_mlp_rate \
+  --export=aa_mlp_train --export=aa_mlp_epoch --export=aa_mlp_loss \
+  --export=aa_mlp_predict --export=aa_mlp_count \
+  --export=aa_mlp_x --export=aa_mlp_y --export=aa_mlp_label \
+  --export=aa_mlp_lo --export=aa_mlp_hi --export=aa_mlp_grid_n \
+  --export=aa_mlp_fill --export=aa_mlp_cell \
+  --export=aa_mlp_curve_n --export=aa_mlp_curve --export=aa_mlp_kind \
   -z stack-size=2097152 --initial-memory=16777216 \
   -o ai_amplifier.wasm *.o
 cd ../..

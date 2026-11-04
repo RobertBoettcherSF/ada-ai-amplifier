@@ -25,6 +25,7 @@ jobs:
           alr -n build
           ./tools/check-version.sh
           ./bin/tensors_test
+          ./bin/mlp_test
 
       - name: Chrome
         run: |

@@ -123,8 +123,10 @@ try {
   assert(items.length === 7, "backlog length " + items.length);
   assert(items[1].includes("Splash and live page") && items[1].includes("done"), items[1]);
   assert(items[2].includes("Core tensor and maths") && items[2].includes("done"), items[2]);
-  assert(items[3].includes("SPARK proofs of the kernels") && items[3].includes("not started"), items[3]);
-  assert(items[6].includes("Contributor How-To") && items[6].includes("not started"), items[6]);
+  assert(items[3].includes("Tiny trainable MLP") && items[3].includes("done"), items[3]);
+  assert(items[4].includes("Byte-level BPE") && items[4].includes("not started"), items[4]);
+  assert(items[5].includes("Contributor How-To") && items[5].includes("not started"), items[5]);
+  assert(items[6].includes("SPARK proofs of the kernels") && items[6].includes("not started"), items[6]);
   const hrefs = await page.$$eval("#links a", (els) => els.map((a) => a.href));
   assert(hrefs.some((h) => h === "https://github.com/RobertBoettcherSF/ada-ai-amplifier"), "repo link " + hrefs);
   assert(hrefs.some((h) => h.includes("README.md#using-the-page")), "howto link " + hrefs);
@@ -147,6 +149,56 @@ try {
   await page.click("#compute");
   const restored = await page.$eval("#y1", (el) => el.textContent.trim());
   assert(restored === "14", "restored " + restored);
+
+  const mlpInit = await page.$eval("#mlpstat", (el) => el.textContent);
+  assert(mlpInit.startsWith("step 0"), "mlp init " + mlpInit);
+  assert(await page.$eval("#mlpout", (el) => el.textContent.includes("points 4")), "mlp points");
+  const trainH = await page.$eval("#train", (el) => el.getBoundingClientRect().height);
+  assert(trainH >= 44, "train height " + trainH);
+  await page.click("#train");
+  await page.waitForFunction(() => {
+    const stat = document.getElementById("mlpstat").textContent;
+    const out = document.getElementById("mlpout").textContent;
+    const loss = /loss ([0-9.]+)/.exec(stat);
+    return loss && Number(loss[1]) < 0.05 && out.includes("4/4");
+  }, { timeout: 20000 });
+  const spread = await page.evaluate(() => {
+    const c = document.getElementById("boundary");
+    const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+    let min = 255;
+    let max = 0;
+    for (let i = 0; i < d.length; i += 16) {
+      if (d[i] < min) min = d[i];
+      if (d[i] > max) max = d[i];
+    }
+    return max - min;
+  });
+  assert(spread > 40, "boundary spread " + spread);
+  const curveLit = await page.evaluate(() => {
+    const c = document.getElementById("losscurve");
+    const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+    let n = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i] > 180 && d[i + 1] > 140) n += 1;
+    }
+    return n;
+  });
+  assert(curveLit > 8, "loss curve " + curveLit);
+  await page.click("#train");
+  assert(await page.$eval("#train", (el) => el.textContent.trim() === "Train"), "train did not stop");
+  await page.click("#rate-down");
+  const lowered = await page.$eval("#mlpstat", (el) => el.textContent);
+  assert(lowered.includes("rate 0.45"), "rate " + lowered);
+  await page.click("#set-circles");
+  await page.waitForFunction(() => document.getElementById("mlpstat").textContent.startsWith("step 0"));
+  assert(await page.$eval("#mlpout", (el) => el.textContent.includes("points 72")), "circles");
+  await page.click("#set-spirals");
+  assert(await page.$eval("#mlpout", (el) => el.textContent.includes("points 96")), "spirals");
+  await page.click("#reset");
+  assert(await page.$eval("#mlpstat", (el) => el.textContent.startsWith("step 0")), "spiral reset");
+  await page.click("#set-xor");
+  assert(await page.$eval("#mlpout", (el) => el.textContent.includes("points 4")), "back to xor");
+
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   const covered = await page.evaluate(() => {
     const link = document.querySelector("#links a[href*='using-the-page']").getBoundingClientRect();
@@ -191,6 +243,21 @@ try {
   await phonePage.waitForFunction(() => document.getElementById("splash").hidden);
   const phoneProduct = await phonePage.$eval("#y1", (el) => el.textContent.trim());
   assert(phoneProduct === "14", "phone product " + phoneProduct);
+  const phoneTrain = await phonePage.$eval("#train", (el) => el.getBoundingClientRect().height);
+  assert(phoneTrain >= 44, "phone train height " + phoneTrain);
+  const phoneFont = await phonePage.$eval("#rate", (el) => parseFloat(getComputedStyle(el).fontSize));
+  assert(phoneFont >= 16, "phone rate font " + phoneFont);
+  await phonePage.evaluate(() => document.getElementById("mlp").scrollIntoView({ block: "center" }));
+  await phonePage.tap("#train");
+  await phonePage.waitForFunction(() => {
+    const m = /step (\d+)/.exec(document.getElementById("mlpstat").textContent);
+    return m && Number(m[1]) > 8;
+  }, { timeout: 8000 });
+  const phoneSpread = await phonePage.evaluate(() => {
+    const c = document.getElementById("boundary");
+    return c.width > 40 && c.height > 40;
+  });
+  assert(phoneSpread, "phone boundary canvas");
   const phoneOverflow = await phonePage.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
   assert(phoneOverflow, "phone main overflows");
   await phonePage.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
@@ -226,6 +293,8 @@ try {
   assert(await badPage.$eval("#banner", (el) => !el.hidden && el.textContent.includes("did not load")), "banner");
   assert(await badPage.$eval("#demoerr", (el) => !el.hidden && el.textContent.includes("no product")), "demo down");
   assert(await badPage.$eval("#compute", (el) => el.disabled), "compute still enabled");
+  assert(await badPage.$eval("#mlperr", (el) => !el.hidden && el.textContent.includes("cannot train")), "mlp down");
+  assert(await badPage.$eval("#train", (el) => el.disabled), "train still enabled");
   assert(badErrors.length === 0, "nowasm errors " + badErrors);
 
   const html = readFileSync(resolve(root, "site/index.html"), "utf8");
