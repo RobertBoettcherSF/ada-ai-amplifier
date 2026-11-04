@@ -24,13 +24,18 @@ project Ada_AI_Amplifier is
       for Artifacts (".") use ("share");
    end Install;
 
-   --  prove.sh runs GNATprove at this fixed level. Units with
+   --  prove.sh runs GNATprove with these switches. Units with
    --  SPARK_Mode => Off are not proof targets. CI runs the same
-   --  command. --level=2 is the reproducibility pin: same provers,
-   --  same effort, on every machine.
+   --  command. --level=2 selects the provers. Its own timeout is a
+   --  few seconds, which was not enough for three checks on the CI
+   --  runner. --timeout=120 is the wall-clock pin for that machine.
+   --  Steps stay at the level-2 default (no separate step cap).
    package Prove is
       for Proof_Switches ("Ada") use
-        ("--level=2", "--report=all", "--checks-as-errors=on");
+        ("--level=2",
+         "--timeout=120",
+         "--report=all",
+         "--checks-as-errors=on");
    end Prove;
 
 end Ada_AI_Amplifier;

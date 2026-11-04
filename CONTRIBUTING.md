@@ -18,7 +18,7 @@ GitHub Pages from `main`, not with a secret gist.
 5. Stop. Do not start the next item in the same change.
 
 Items 1 through 7 are done. Item 7 is the SPARK proof of the tensor
-kernels. CI runs `./prove.sh` (GNATprove level 2). If a change touches
+kernels. CI runs `./prove.sh` (GNATprove level 2, timeout 120 seconds). If a change touches
 a proved unit, `./prove.sh` must still pass and `proof/gnatprove.out`
 is part of that change. Do not regenerate it as a side effect of a
 change that does not touch a proved unit. There is no `pragma Annotate`

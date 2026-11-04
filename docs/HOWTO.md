@@ -17,7 +17,8 @@ This guide is the install path, then a real kernel added end to end
 kernel in the library. There is no second copy to keep in step.
 
 Item 7 proved the tensor kernels. The table is in section 8. CI job
-`native, wasm, page` runs GNATprove at level 2, via `./prove.sh`.
+`native, wasm, page` runs GNATprove at level 2 with a 120 second
+timeout, via `./prove.sh`.
 The how-to job below does not prove a second time.
 
 ## What you are building
@@ -309,7 +310,7 @@ tells you which build the note is about.
 
 ## 8. Proof status
 
-`./prove.sh` runs GNATprove at level 2. CI job `native, wasm, page`
+`./prove.sh` runs GNATprove at level 2, timeout 120 seconds. CI job `native, wasm, page`
 does that. The how-to steps above do not. An unproved check
 fails the run. There is no `pragma Annotate` and no `pragma Assume`.
 The log is `proof/gnatprove.out`. The same table is on the live page.

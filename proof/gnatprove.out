@@ -9,9 +9,9 @@ Data Dependencies                 2           2                                 
 Flow Dependencies                 .           .                                                 .           .          .
 Initialization                    8           8                                                 .           .          .
 Non-Aliasing                      .           .                                                 .           .          .
-Run-time Checks                 225           .    225 (CVC5 86%, Trivial 2%, Z3 12%, altergo 0%)           .          .
-Assertions                      106           .    106 (CVC5 77%, Trivial 6%, Z3 14%, altergo 3%)           .          .
-Functional Contracts             47           .                             47 (CVC5 71%, Z3 29%)           .          .
+Run-time Checks                 225           .    225 (CVC5 36%, Trivial 2%, Z3 61%, altergo 1%)           .          .
+Assertions                      106           .    106 (CVC5 40%, Trivial 6%, Z3 52%, altergo 2%)           .          .
+Functional Contracts             47           .                 47 (CVC5 40%, Z3 59%, altergo 1%)           .          .
 LSP Verification                  .           .                                                 .           .          .
 Termination                      31          31                                                 .           .          .
 Concurrency                       .           .                                                 .           .          .
@@ -25,7 +25,16 @@ max steps used for successful proof: 24233
 Most difficult proved checks
 ============================
 
-No check found with max time greater than 1 second
+ai_amplifier-tensors.adb:84:33: loop invariant after first iteration proved in max 4 seconds
+ai_amplifier-tensors.adb:542:13: loop invariant after first iteration proved in max 4 seconds
+ai_amplifier-tensors.adb:410:52: fp_overflow check proved in max 4 seconds
+ai_amplifier-tensors.adb:326:16: loop invariant after first iteration proved in max 2 seconds
+ai_amplifier-tensors.adb:408:13: loop invariant after first iteration proved in max 2 seconds
+ai_amplifier-tensors.adb:300:13: loop invariant after first iteration proved in max 1 seconds
+ai_amplifier-tensors.adb:528:13: loop invariant after first iteration proved in max 1 seconds
+ai_amplifier-tensors.adb:65:19: postcondition proved in max 1 seconds
+ai_amplifier-tensors.adb:456:13: loop invariant after first iteration proved in max 1 seconds
+ai_amplifier-tensors.adb:374:13: loop invariant after first iteration proved in max 1 seconds
 
 ========================
 Detailed analysis report

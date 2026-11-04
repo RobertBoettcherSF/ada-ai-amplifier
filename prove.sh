@@ -1,8 +1,9 @@
 #!/bin/sh
 # Prove the SPARK units: the empty root, AI_Amplifier.Version, and
 # AI_Amplifier.Tensors. Every other unit is SPARK_Mode => Off and is
-# not a proof target. The project file passes --level=2 and
-# --report=all. Level 2 is fixed so a re-run asks for the same effort.
+# not a proof target. The project file passes --level=2,
+# --timeout=120, and --report=all. Level 2 selects the provers.
+# The timeout is long enough for the CI runner.
 set -e
 cd "$(dirname "$0")"
 if [ ! -f config/ada_ai_amplifier_config.gpr ]; then

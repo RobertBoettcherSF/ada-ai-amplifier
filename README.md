@@ -147,10 +147,12 @@ attention ok
 
 CI runs `./prove.sh`. That is GNATprove from the `gnatprove=16.1.0`
 crate (tool id `FSF 16.1.0` in `proof/version.txt`). The project file
-passes `--level=2`, `--report=all`, and `--checks-as-errors=on`.
-Level 2 is the pin: the same provers and the same effort on every
-machine. An unproved check fails the run. There is no `pragma Annotate`
-and no `pragma Assume`.
+passes `--level=2`, `--timeout=120`, `--report=all`, and
+`--checks-as-errors=on`. Level 2 selects the provers. The timeout is
+120 seconds because level 2's own few-second timeout stopped three
+checks on the CI runner that had already proved on a faster machine.
+An unproved check fails the run. There is no `pragma Annotate` and
+no `pragma Assume`.
 
 ```sh
 alr -n install gnatprove=16.1.0
