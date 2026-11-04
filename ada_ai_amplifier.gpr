@@ -21,8 +21,7 @@ project Ada_AI_Amplifier is
       for Artifacts (".") use ("share");
    end Install;
 
-   --  Item 1 asks for flow analysis only. Later items raise this when
-   --  there is something to prove.
+   --  prove.sh still asks for flow analysis. CI does not run it.
    package Prove is
       for Proof_Switches ("Ada") use ("--mode=flow");
    end Prove;

@@ -15,5 +15,5 @@ if [ "$got" != "ada-ai-amplifier $stamp" ]; then
   echo "hello printed: $got" >&2
   exit 1
 fi
-grep -F "id=\"ver\">${stamp}<" web/index.html >/dev/null
-echo "stamp $stamp matches hello, version.txt, and web/index.html"
+grep -F "id=\"ver\">${stamp}<" web/template.html >/dev/null
+echo "stamp $stamp matches hello, version.txt, and web/template.html"

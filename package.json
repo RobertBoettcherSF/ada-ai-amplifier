@@ -1,0 +1,7 @@
+{
+  "name": "ada-ai-amplifier",
+  "private": true,
+  "dependencies": {
+    "puppeteer-core": "24.15.0"
+  }
+}

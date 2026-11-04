@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<!-- ada-ai-amplifier. Splash motion is Ada (src/ai_amplifier-splash), compiled
+     to WebAssembly and embedded by build.sh. This file only draws, shows the
+     page, and writes F9 / crash files. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <title>ada-ai-amplifier</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect fill='%23ffe14a' width='16' height='16'/%3E%3C/svg%3E">
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: #000; color: #e6e0d4; }
+    body {
+      font: 18px/1.45 Georgia, "Iowan Old Style", Palatino, serif;
+      min-height: 100dvh;
+    }
+    #ver {
+      position: fixed;
+      right: 8px;
+      bottom: calc(8px + env(safe-area-inset-bottom));
+      z-index: 99999;
+      pointer-events: none;
+      background: #ffe14a;
+      color: #111;
+      font: 700 14px/1.2 ui-monospace, monospace;
+      padding: 4px 8px;
+    }
+    #splash {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      background: #000;
+      touch-action: manipulation;
+      cursor: pointer;
+      user-select: none;
+    }
+    #splash canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+    #splash h1 {
+      position: absolute;
+      top: calc(18px + env(safe-area-inset-top));
+      left: 12px;
+      right: 12px;
+      margin: 0;
+      text-align: center;
+      color: #f3e6c4;
+      font: 500 clamp(32px, 7vw, 72px)/1.05 Georgia, "Iowan Old Style", Palatino, serif;
+      letter-spacing: 0.01em;
+      text-shadow: 0 2px 0 #000, 0 0 16px #000;
+      pointer-events: none;
+    }
+    #hint, #wasmerr {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: calc(64px + env(safe-area-inset-bottom));
+      margin: 0;
+      padding: 0 8px;
+      text-align: center;
+      color: rgba(243, 230, 196, 0.82);
+      font: 16px/1.35 ui-sans-serif, system-ui, sans-serif;
+      text-shadow: 0 1px 0 #000;
+      pointer-events: none;
+    }
+    #wasmerr {
+      color: #ffd0d0;
+      background: rgba(80, 0, 0, 0.72);
+      padding: 10px 12px;
+      pointer-events: auto;
+    }
+    #cont {
+      position: absolute;
+      left: 50%;
+      bottom: calc(128px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      min-height: 44px;
+      padding: 12px 18px;
+      border: 0;
+      background: #ffe14a;
+      color: #111;
+      font: 16px/1 ui-sans-serif, system-ui, sans-serif;
+      cursor: pointer;
+    }
+    main {
+      max-width: 40rem;
+      margin: 0 auto;
+      padding:
+        calc(20px + env(safe-area-inset-top))
+        16px
+        calc(112px + env(safe-area-inset-bottom));
+    }
+    main h1 {
+      margin: 0 0 0.6rem;
+      font-size: clamp(32px, 8vw, 48px);
+      font-weight: 500;
+      color: #f3e6c4;
+    }
+    a { color: #ffe14a; }
+    #backlog {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    #backlog li {
+      display: grid;
+      grid-template-columns: 1.6rem 1fr auto;
+      gap: 0.5rem;
+      align-items: baseline;
+      padding: 0.45rem 0;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    #backlog .n {
+      font: 14px/1.4 ui-monospace, monospace;
+      color: #9a9488;
+    }
+    .st {
+      flex: none;
+      font: 14px/1.4 ui-monospace, monospace;
+      color: #9a9488;
+    }
+    .st.done { color: #ffe14a; }
+    .err {
+      background: #3a1010;
+      color: #ffd0d0;
+      padding: 10px 12px;
+      font: 16px/1.35 ui-sans-serif, system-ui, sans-serif;
+    }
+    #fbbtn {
+      position: fixed;
+      left: 8px;
+      bottom: calc(8px + env(safe-area-inset-bottom));
+      z-index: 100000;
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 1px solid #555;
+      background: #1c1c1c;
+      color: #f3e6c4;
+      font: 16px/1 ui-sans-serif, system-ui, sans-serif;
+      cursor: pointer;
+    }
+    #fb, #crash {
+      position: fixed;
+      z-index: 100001;
+      left: 12px;
+      right: 12px;
+      bottom: calc(64px + env(safe-area-inset-bottom));
+      max-width: 28rem;
+      margin: 0 auto;
+      padding: 14px;
+      background: #161616ee;
+      border: 1px solid #555;
+      color: #eee;
+      font: 16px/1.4 ui-sans-serif, system-ui, sans-serif;
+    }
+    #crash { background: #600e; }
+    #fb h2, #crash p { margin: 0 0 8px; }
+    #fb textarea {
+      width: 100%;
+      min-height: 6.5rem;
+      margin: 8px 0;
+      padding: 8px;
+      font: 16px/1.35 ui-sans-serif, system-ui, sans-serif;
+      color: #111;
+      background: #fff;
+      border: 0;
+    }
+    #fb button, #crash button {
+      min-height: 44px;
+      margin: 8px 8px 0 0;
+      padding: 10px 14px;
+      font: 16px/1 ui-sans-serif, system-ui, sans-serif;
+      cursor: pointer;
+    }
+    .fine { opacity: 0.75; font-size: 14px; }
+    @media print {
+      #ver, #fbbtn, #splash, #fb, #crash { display: none !important; }
+      body { background: #fff; color: #000; }
+      a { color: #000; }
+    }
+  </style>
+</head>
+<body>
+  <div id="ver">v0.2.0-splash</div>
+  <main id="main" tabindex="-1">
+    <h1>ada-ai-amplifier</h1>
+    <p id="banner" class="err" hidden></p>
+    <p id="about">
+      Readable AI building blocks in plain Ada. The parts that run in the
+      browser are compiled from that Ada to WebAssembly. The splash is a
+      picture of that idea: points and weights flow into a small network.
+      Ada computes every position. JavaScript only draws.
+    </p>
+    <p>The network in the splash is a drawing. It is not trained.</p>
+    <h2>On this page</h2>
+    <ul>
+      <li>Tap the splash, or press Enter, to leave it.</li>
+      <li>F9, or Feedback, writes a feedback file.</li>
+      <li>If the previous session did not end cleanly, a crash report is offered.</li>
+    </ul>
+    <h2>Backlog</h2>
+    <ol id="backlog">
+      <li><span class="n">1.</span><span>Repo skeleton</span> <span class="st done">done</span></li>
+      <li><span class="n">2.</span><span>Splash and live page</span> <span class="st done">done</span></li>
+      <li><span class="n">3.</span><span>Core tensor and math, with SPARK kernels</span> <span class="st">not started</span></li>
+      <li><span class="n">4.</span><span>Tiny trainable MLP, live in the browser</span> <span class="st">not started</span></li>
+      <li><span class="n">5.</span><span>Byte-level BPE tokenizer and one transformer attention block</span> <span class="st">not started</span></li>
+      <li><span class="n">6.</span><span>Contributor How-To docs</span> <span class="st">not started</span></li>
+    </ol>
+    <h2>Links</h2>
+    <ul id="links">
+      <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier">Repository</a></li>
+      <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/README.md#using-the-page">How-To</a></li>
+    </ul>
+    <noscript>
+      <p class="err">JavaScript is off, so the Ada module is not running. Open this page in Safari or Chrome.</p>
+    </noscript>
+  </main>
+  <div id="splash" role="button" tabindex="0" aria-label="ada-ai-amplifier. Tap or press Enter to continue.">
+    <canvas id="view"></canvas>
+    <h1>ada-ai-amplifier</h1>
+    <p id="hint">Loading the Ada module…</p>
+    <p id="wasmerr" hidden></p>
+    <button id="cont" type="button" hidden>Continue</button>
+  </div>
+  <div id="crash" hidden>
+    <p id="crashmsg">The last session did not end cleanly.</p>
+    <button id="crashdl" type="button">Download crash report</button>
+    <button id="crashx" type="button">Dismiss</button>
+  </div>
+  <div id="fb" hidden role="dialog" aria-labelledby="fbh">
+    <h2 id="fbh">Feedback</h2>
+    <p>What did you expect, what happened, or what do you wish for?</p>
+    <textarea id="fbtext" maxlength="4000"></textarea>
+    <p id="fberr" hidden>Please write something short.</p>
+    <p class="fine">The file has the version, the browser, the screen, and the recent UI events, plus this note.</p>
+    <button id="fbsend" type="button">Create file</button>
+    <button id="fbcancel" type="button">Cancel</button>
+  </div>
+  <button id="fbbtn" type="button">Feedback</button>
+  <noscript><style>#splash{display:none}</style></noscript>
+  <script>
+"use strict";
+const WASM_B64 = "__WASM_BASE64__";
+const LOG_MAX = 200;
+const verEl = document.getElementById("ver");
+const splash = document.getElementById("splash");
+const mainEl = document.getElementById("main");
+const hint = document.getElementById("hint");
+const wasmerr = document.getElementById("wasmerr");
+const cont = document.getElementById("cont");
+const banner = document.getElementById("banner");
+const crash = document.getElementById("crash");
+const crashmsg = document.getElementById("crashmsg");
+const crashdl = document.getElementById("crashdl");
+const fb = document.getElementById("fb");
+const fbtext = document.getElementById("fbtext");
+const fberr = document.getElementById("fberr");
+const view = document.getElementById("view");
+
+let ada = null;
+let fatal = false;
+let started = false;
+let splashOn = true;
+let raf = 0;
+let frames = 0;
+let fps = 0;
+const errors = [];
+const params = new URLSearchParams(location.search);
+
+function storeGet(key) {
+  try { return localStorage.getItem(key); } catch (e) { return null; }
+}
+function storeSet(key, value) {
+  try { localStorage.setItem(key, value); } catch (e) {}
+}
+function loadLog() {
+  try {
+    const v = JSON.parse(storeGet("aaa.log") || "[]");
+    return Array.isArray(v) ? v.slice(-LOG_MAX) : [];
+  } catch (e) {
+    return [];
+  }
+}
+const previousLog = loadLog();
+let log = previousLog.slice();
+let dropped = 0;
+function note(ev, data) {
+  log.push({
+    t: Math.round(performance.now()),
+    ev: ev,
+    data: data === undefined ? null : data
+  });
+  if (log.length > LOG_MAX) {
+    log.shift();
+    dropped += 1;
+  }
+  storeSet("aaa.log", JSON.stringify(log));
+}
+function badgeText() { return verEl.textContent.trim(); }
+function screenInfo() {
+  let standalone = false;
+  try {
+    standalone = window.matchMedia("(display-mode: standalone)").matches
+      || navigator.standalone === true;
+  } catch (e) {}
+  return {
+    width: innerWidth,
+    height: innerHeight,
+    dpr: window.devicePixelRatio || 1,
+    standalone: standalone
+  };
+}
+function stampName() {
+  return new Date().toISOString().replace(/[:.]/g, "-");
+}
+function crashBody() {
+  let heartbeat = null;
+  const raw = storeGet("aaa.heartbeat");
+  if (raw && !Number.isNaN(Number(raw))) heartbeat = new Date(Number(raw)).toISOString();
+  return {
+    type: "ada-ai-amplifier-crash",
+    appVersion: badgeText(),
+    time: new Date().toISOString(),
+    userAgent: navigator.userAgent,
+    screen: screenInfo(),
+    lastHeartbeat: heartbeat,
+    errors: errors.slice(),
+    eventsBeforeCrash: previousLog,
+    eventsThisVisit: log.slice()
+  };
+}
+function feedbackBody(text) {
+  let step = null;
+  if (ada && typeof ada.aa_step === "function") {
+    try { step = ada.aa_step(); } catch (e) { step = null; }
+  }
+  return {
+    type: "ada-ai-amplifier-feedback",
+    appVersion: badgeText(),
+    lang: navigator.language || "",
+    timestamp: new Date().toISOString(),
+    localTime: String(new Date()),
+    userAgent: navigator.userAgent,
+    screen: screenInfo(),
+    phase: splash.hidden ? "main" : "splash",
+    fps: fps,
+    adaStep: step,
+    errors: errors.slice(),
+    eventLogDropped: dropped,
+    eventLogNote: "max 200 events; t is ms since this page was loaded",
+    eventLog: log.slice(),
+    feedback: text
+  };
+}
+async function deliver(name, obj) {
+  const text = JSON.stringify(obj, null, 1);
+  window.__lastDownload = {name: name, text: text};
+  const file = new File([text], name, {type: "application/json"});
+  if (navigator.canShare && navigator.canShare({files: [file]})) {
+    try {
+      await navigator.share({files: [file], title: name});
+      note("shared", name);
+      return;
+    } catch (e) {
+      if (e && e.name === "AbortError") {
+        note("share cancel", name);
+        return;
+      }
+    }
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], {type: "application/json"}));
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  note("download", name);
+}
+function showCrash(message) {
+  if (message) crashmsg.textContent = message;
+  crash.hidden = false;
+  crashdl.onclick = () => deliver("crash-report-" + stampName() + ".json", crashBody());
+}
+function fail(detail) {
+  fatal = true;
+  const text = "The Ada module did not load. " + detail;
+  wasmerr.textContent = text;
+  wasmerr.hidden = false;
+  hint.hidden = true;
+  cont.hidden = false;
+  banner.hidden = false;
+  banner.textContent = text;
+  errors.push(text);
+  note("error", text);
+}
+function skip(how) {
+  if (splash.hidden) return;
+  splashOn = false;
+  splash.hidden = true;
+  if (raf) cancelAnimationFrame(raf);
+  note("skip", how || "pointer");
+  mainEl.focus();
+}
+function openFeedback() {
+  fb.hidden = false;
+  fberr.hidden = true;
+  note("feedback open");
+  fbtext.focus();
+}
+function closeFeedback() {
+  fb.hidden = true;
+  note("feedback close");
+}
+
+const crashedBefore = storeGet("aaa.clean") === "0";
+storeSet("aaa.clean", "0");
+note("start", {version: badgeText(), crashedBefore: crashedBefore});
+if (crashedBefore) showCrash("The last session did not end cleanly.");
+addEventListener("pagehide", () => {
+  if (!fatal) {
+    note("clean exit");
+    storeSet("aaa.clean", "1");
+  }
+});
+setInterval(() => storeSet("aaa.heartbeat", String(Date.now())), 2000);
+window.onerror = (msg, src, line) => {
+  const t = String(msg) + " @" + line;
+  errors.push(t);
+  note("error", t);
+};
+window.onunhandledrejection = (e) => {
+  const t = String(e.reason);
+  errors.push(t);
+  note("rejection", t);
+};
+document.addEventListener("visibilitychange", () => note("visibility", document.visibilityState));
+
+document.getElementById("fbbtn").addEventListener("click", openFeedback);
+document.getElementById("fbcancel").addEventListener("click", closeFeedback);
+document.getElementById("fbsend").addEventListener("click", () => {
+  const text = fbtext.value.trim();
+  if (!text) {
+    fberr.hidden = false;
+    note("feedback empty");
+    return;
+  }
+  fberr.hidden = true;
+  deliver("feedback-" + stampName() + ".json", feedbackBody(text));
+  closeFeedback();
+});
+document.getElementById("crashx").addEventListener("click", () => {
+  crash.hidden = true;
+  note("crash dismiss");
+});
+cont.addEventListener("click", () => skip("continue"));
+splash.addEventListener("pointerdown", (e) => {
+  if (e.target.closest("button, a, textarea, input")) return;
+  skip("pointer");
+});
+addEventListener("keydown", (e) => {
+  if (e.key === "F9") {
+    e.preventDefault();
+    openFeedback();
+    return;
+  }
+  if (e.key === "Escape") {
+    if (!fb.hidden) { closeFeedback(); e.preventDefault(); }
+    else if (!crash.hidden) { crash.hidden = true; note("crash dismiss"); e.preventDefault(); }
+    return;
+  }
+  if (e.key === "Enter" && splashOn && fb.hidden && e.target.tagName !== "TEXTAREA") {
+    e.preventDefault();
+    skip("enter");
+  }
+});
+
+function readStamp() {
+  const n = ada.aa_version_length();
+  let s = "";
+  for (let i = 1; i <= n; i += 1) s += String.fromCharCode(ada.aa_version_byte(i) & 255);
+  return s;
+}
+function plot(px, w, h, x, y, r, g, b, a) {
+  x = x | 0; y = y | 0;
+  if (x < 0 || y < 0 || x >= w || y >= h || a <= 0) return;
+  const o = (y * w + x) * 4;
+  const k = a / 255;
+  px[o] = px[o] * (1 - k) + r * k;
+  px[o + 1] = px[o + 1] * (1 - k) + g * k;
+  px[o + 2] = px[o + 2] * (1 - k) + b * k;
+}
+function square(px, w, h, x, y, s, r, g, b, a) {
+  const half = (s / 2) | 0;
+  for (let dy = -half; dy < s - half; dy += 1) {
+    for (let dx = -half; dx < s - half; dx += 1) plot(px, w, h, x + dx, y + dy, r, g, b, a);
+  }
+}
+function line(px, w, h, x0, y0, x1, y1, r, g, b, a) {
+  x0 |= 0; y0 |= 0; x1 |= 0; y1 |= 0;
+  let dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+  let dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+  let err = dx + dy;
+  for (let n = 0; n < 4096; n += 1) {
+    plot(px, w, h, x0, y0, r, g, b, a);
+    if (x0 === x1 && y0 === y1) break;
+    const e2 = 2 * err;
+    if (e2 >= dy) { err += dy; x0 += sx; }
+    if (e2 <= dx) { err += dx; y0 += sy; }
+  }
+}
+function draw() {
+  const scale = Math.max(2, Math.min(4, Math.round(Math.min(innerWidth, innerHeight) / 280))) || 2;
+  const w = Math.max(1, Math.floor(innerWidth / scale));
+  const h = Math.max(1, Math.floor(innerHeight / scale));
+  if (view.width !== w || view.height !== h) {
+    view.width = w;
+    view.height = h;
+  }
+  const ctx = view.getContext("2d", {alpha: false});
+  const img = ctx.createImageData(w, h);
+  const px = img.data;
+  for (let i = 0; i < px.length; i += 4) {
+    px[i + 3] = 255;
+  }
+  const tall = h > w * 1.15;
+  const marginX = Math.max(6, Math.round(w * 0.07));
+  const marginY = Math.max(8, Math.round(h * (tall ? 0.16 : 0.2)));
+  const bottom = Math.max(8, Math.round(h * 0.14));
+  const spanX = Math.max(1, w - marginX * 2);
+  const spanY = Math.max(1, h - marginY - bottom);
+  const X = (v) => marginX + (v / 1000) * spanX;
+  const Y = (v) => marginY + (v / 1000) * spanY;
+  const edges = ada.aa_count(1);
+  for (let i = 1; i <= edges; i += 1) {
+    const weight = ada.aa_get(1, i, 4);
+    line(px, w, h,
+      X(ada.aa_get(1, i, 0)), Y(ada.aa_get(1, i, 1)),
+      X(ada.aa_get(1, i, 2)), Y(ada.aa_get(1, i, 3)),
+      243, 230, 196, Math.max(40, Math.min(210, 40 + (weight | 0))));
+  }
+  const points = ada.aa_count(2);
+  for (let i = 1; i <= points; i += 1) {
+    const bright = ada.aa_get(2, i, 2);
+    const size = ada.aa_get(2, i, 3);
+    if (size <= 0) continue;
+    square(px, w, h, X(ada.aa_get(2, i, 0)), Y(ada.aa_get(2, i, 1)), size, 255, 214, 90, bright);
+  }
+  const nodes = ada.aa_count(0);
+  for (let i = 1; i <= nodes; i += 1) {
+    const pulse = ada.aa_get(0, i, 2);
+    const size = pulse > 180 ? 5 : 3;
+    square(px, w, h, X(ada.aa_get(0, i, 0)), Y(ada.aa_get(0, i, 1)), size, 255, 248, 231, 255);
+  }
+  ctx.putImageData(img, 0, 0);
+}
+function frame() {
+  if (!splashOn || fatal || !ada) return;
+  try {
+    ada.aa_splash_tick();
+    draw();
+    frames += 1;
+  } catch (e) {
+    fatal = true;
+    const text = String(e && e.message ? e.message : e);
+    errors.push(text);
+    note("wasm trap", text);
+    showCrash("The visualization crashed: " + text + ". ");
+    return;
+  }
+  raf = requestAnimationFrame(frame);
+}
+setInterval(() => { fps = frames; frames = 0; }, 1000);
+
+async function boot() {
+  if (params.has("nowasm")) {
+    fail("It was not started because the address has ?nowasm=1.");
+    return;
+  }
+  let bytes;
+  try {
+    bytes = Uint8Array.from(atob(WASM_B64), (c) => c.charCodeAt(0));
+  } catch (e) {
+    fail("The embedded module text is not valid base64.");
+    return;
+  }
+  if (bytes.length < 8 || bytes[0] !== 0 || bytes[1] !== 0x61 || bytes[2] !== 0x73 || bytes[3] !== 0x6d) {
+    fail("The embedded module is not WebAssembly.");
+    return;
+  }
+  try {
+    const result = await WebAssembly.instantiate(bytes, {});
+    ada = result.instance.exports;
+  } catch (e) {
+    fail(String(e && e.message ? e.message : e));
+    return;
+  }
+  const need = ["aa_version_length", "aa_version_byte", "aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get"];
+  for (let i = 0; i < need.length; i += 1) {
+    if (typeof ada[need[i]] !== "function") {
+      ada = null;
+      fail("The module has no export " + need[i] + ".");
+      return;
+    }
+  }
+  const stamp = readStamp();
+  if (stamp !== badgeText()) {
+    ada = null;
+    fail("Its stamp is " + stamp + " and the badge says " + badgeText() + ".");
+    return;
+  }
+  ada.aa_splash_reset();
+  note("wasm loaded", stamp);
+  hint.textContent = "Tap or Enter";
+  started = true;
+  window.__adaReady = true;
+  raf = requestAnimationFrame(frame);
+}
+setTimeout(() => {
+  if (!started && wasmerr.hidden) fail("It did not start within 8 seconds.");
+}, 8000);
+boot().catch((e) => fail(String(e && e.message ? e.message : e)));
+  </script>
+</body>
+</html>

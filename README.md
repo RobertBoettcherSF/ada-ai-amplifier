@@ -1,16 +1,21 @@
 # ada-ai-amplifier
 
-Readable AI building blocks in plain Ada/SPARK. The logic lives in Ada.
-JavaScript, when a later item adds it, only draws. This tree is item 1:
-the crate, a version stamp, a native program, a WebAssembly build of that
-stamp, and a placeholder page.
+Readable AI building blocks in plain Ada. The logic lives in Ada.
+JavaScript only draws, and writes the feedback and crash files.
+The splash on the live page is a small picture of a network: Ada moves
+the points, and the page plots them.
 
-Visible stamp: **v0.1.0-skeleton**
+Visible stamp: **v0.2.0-splash**
 
 The same text is `AI_Amplifier.Version.Version_Text`, the yellow badge in
-`web/index.html`, `version.txt`, and the line printed by `bin/hello`.
-The Alire crate version is `0.1.0-skeleton` (the stamp without the leading
+`web/template.html`, `version.txt`, and the line printed by `bin/hello`.
+The Alire crate version is `0.2.0-splash` (the stamp without the leading
 `v`, because Alire versions are semver).
+
+**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.2.0-splash
+
+Open that link on a phone or a desktop. The query is the cache bust for
+this stamp. `version.txt` is published next to the page.
 
 ## Goal
 
@@ -19,7 +24,8 @@ under them, a tiny trainable MLP, a byte-level BPE tokenizer, and one
 transformer attention block. The parts that run in the browser are compiled
 from that Ada to WebAssembly and embedded in one HTML file.
 
-Item 1 is the skeleton those parts will sit in. It does not contain them.
+Item 2 is the splash and the live page. It does not contain those blocks.
+The network in the splash is a drawing. It is not trained.
 
 ## Why plain Ada
 
@@ -28,32 +34,51 @@ Item 1 is the skeleton those parts will sit in. It does not contain them.
 2. **Range checks.** A bad index fails at the line that made it. The native
    build leaves checks on. The WebAssembly build does too (`-gnata`, and
    `-gnatp` is not used).
-3. **SPARK proofs.** The same units can be given to GNATprove. This item
-   runs flow analysis only. The result is in `proof/gnatprove.out`.
+3. **SPARK, later.** The version unit is still marked `SPARK_Mode`, with the
+   contracts from the skeleton. CI does not run GNATprove. `prove.sh` is
+   still there for a later item.
 4. **No hidden library dependencies.** `alire.toml` depends on no other
    crate. GNAT, GNATprove, AdaWebPack, and `wasm-ld` are build tools. They
    are not linked into the library as a third-party ML stack.
+
+## Using the page
+
+| Control | What it does |
+|---|---|
+| Tap the splash, or Enter | Leaves the splash and shows this project |
+| Feedback, or F9 | Asks for a short note, then writes `feedback-*.json` (version, browser, screen, the recent UI events, and the note). On a phone that can share files, it offers the share sheet |
+| Crash report | If the previous visit did not end cleanly, or the module traps, a panel offers `crash-report-*.json` |
+| Yellow badge | The stamp, on every screen, including when JavaScript is off |
+
+If the WebAssembly module does not load, the page says so in words. It does
+not stay blank. Continue still opens the text below the splash.
+
+The badge is `position: fixed` at the bottom right, above the splash. It is
+omitted when printing.
 
 ## Layout
 
 | Path | What it is |
 |---|---|
-| `src/ai_amplifier.ads` | Library root. Empty on purpose. |
-| `src/ai_amplifier-version.ads/.adb` | Stamp, plus `aa_version_length` and `aa_version_byte` for WebAssembly |
-| `src/hello.adb` | Native program. Prints the stamp. `SPARK_Mode => Off` because it calls `Ada.Text_IO` |
-| `web/index.html` | Placeholder page with the stamp badge. Item 2 fills this file |
+| `src/ai_amplifier.ads` | Library root. Empty on purpose |
+| `src/ai_amplifier-version.ads/.adb` | Stamp, plus `aa_version_length` and `aa_version_byte` |
+| `src/ai_amplifier-splash.ads/.adb` | Splash graph. Plain Ada (`SPARK_Mode => Off`). Exports `aa_splash_reset`, `aa_splash_tick`, `aa_step`, `aa_count`, `aa_get` |
+| `src/hello.adb` | Native program. Prints the stamp. Also calls the splash so the native build compiles it |
+| `web/template.html` | Page source. `build.sh` replaces `__WASM_BASE64__` |
+| `site/index.html` | Built page, gitignored. GitHub Pages publishes the `site/` directory |
 | `version.txt` | The same stamp, one line |
-| `build.sh` | AdaWebPack 24 to `obj/wasm/ai_amplifier.wasm`, then `tools/wasm-smoke.mjs` |
-| `prove.sh` | `gnatprove --mode=flow`, writes `proof/` |
+| `build.sh` | AdaWebPack 24 to `obj/wasm/ai_amplifier.wasm`, smoke, then `site/index.html` |
+| `prove.sh` | `gnatprove --mode=flow`, writes `proof/`. Not run by CI |
 | `tools/get-toolchain.sh` | Downloads the wasm compiler into `toolchain/` (gitignored) |
-| `proof/gnatprove.out` | Flow summary committed with this skeleton |
+| `tools/wasm-smoke.mjs` | Node: stamp, no wasm imports, splash numbers |
+| `tools/page-smoke.mjs` | Headless Chrome: splash paints and moves, Enter, tap, F9, crash panel, failed module |
+| `proof/gnatprove.out` | Flow summary from the skeleton. It does not include the splash |
 
 `config/` and `alire/` are generated by Alire and gitignored.
 
 ## Build the native program
 
-Tools used for this skeleton: Alire 2.1.1, `gnat_native` 16.1.0, `gprbuild`
-26.0.1.
+Tools used here: Alire 2.1.1, `gnat_native` 16.1.0, `gprbuild` 26.0.1.
 
 ```sh
 alr -n toolchain --select gnat_native=16.1.0 gprbuild=26.0.1
@@ -66,21 +91,27 @@ alr -n build
 on). Expected line:
 
 ```text
-ada-ai-amplifier v0.1.0-skeleton
+ada-ai-amplifier v0.2.0-splash
 ```
 
 ## Flow analysis
 
+Not part of CI. When you want it:
+
 ```sh
-alr -n install gnatprove          # FSF 16.1.0 for this skeleton
+alr -n install gnatprove          # FSF 16.1.0 for the skeleton run
 export PATH="$HOME/.alire/bin:$PATH"
 ./prove.sh
 ```
 
 `ada_ai_amplifier.gpr` passes `--mode=flow`. `./prove.sh` passes it again.
-Provers are not run. `hello.adb` is outside SPARK.
+Provers are not run. `hello.adb` and `AI_Amplifier.Splash` are outside SPARK.
 
-GNATprove's own summary line on this tree:
+The committed `proof/gnatprove.out` is the skeleton run (version unit and
+empty root only). Running `./prove.sh` now rewrites `proof/` and will mention
+the splash unit as not in SPARK. That file was not regenerated for this item.
+
+GNATprove's own summary line on that skeleton run:
 
 ```text
 Success: all checks proved (5 checks).
@@ -102,50 +133,53 @@ The two termination rows are the implicit `Always_Terminates` on
 The report says "proof skipped for this unit (only flow analysis was
 requested)" on each unit. Tool id in `proof/version.txt`: `FSF 16.1.0`.
 
-## Build WebAssembly
+## Build WebAssembly and the page
 
 Same compiler route as
 [murmuration-spark](https://github.com/RobertBoettcherSF/murmuration-spark)
 and
 [symmetry-visualizations](https://github.com/RobertBoettcherSF/symmetry-visualizations):
 AdaWebPack 24 (GNAT-LLVM), linked with `wasm-ld`. On Debian/Ubuntu the
-download step needs `rpm2cpio`, `cpio`, `lld`, and `libedit2`. The smoke
-step needs Node.js.
+download step needs `rpm2cpio`, `cpio`, `lld`, and `libedit2`. The smokes
+need Node.js. The page smoke also needs Chrome and `puppeteer-core`.
 
 ```sh
 sudo apt install rpm2cpio cpio lld libedit2
 ./tools/get-toolchain.sh
+npm ci
 ./build.sh
+node tools/page-smoke.mjs
 ```
 
 `build.sh` compiles every `src/*.adb` except `hello.adb` (Text_IO is not
-part of this runtime), links `--no-entry`, and exports `aa_version_length`
-and `aa_version_byte`. It does not rewrite `web/index.html`.
+part of this runtime), links `--no-entry`, and exports the version and
+splash entry points. It does not pass `--allow-undefined`. The module this
+build emits has no imports. Runtime checks stay on.
 
-The module built here has no imports. Node instantiates it and checks every
-stamp byte, plus the out-of-range rule: index below 1 returns the first
-byte, index past the end returns the last byte. That rule is the body of
-`Version_Byte`.
+`./build.sh` writes `site/index.html` and `site/version.txt`. Open
+`site/index.html` in a browser. The Pages workflow builds the same
+directory and deploys it from `main`.
 
 ## Backlog
 
-1. **Repo skeleton — done.** Crate, stamp, native hello, wasm target, placeholder page, flow-level CI.
-2. **Splash and live page — not started.** Fills `web/index.html`. One HTML file, Ada in WebAssembly, JavaScript draws.
+1. **Repo skeleton — done.** Crate, stamp, native hello, wasm target, placeholder page.
+2. **Splash and live page — done.** One HTML file, Ada in WebAssembly, JavaScript draws. Version badge, F9 feedback, crash report, GitHub Pages.
 3. **Core tensor and math, with SPARK kernels — not started.**
 4. **Tiny trainable MLP, live in the browser — not started.**
 5. **Byte-level BPE tokenizer and one transformer attention block — not started.**
 6. **Contributor How-To docs — not started.**
 
-Items land one at a time: a numbered plan, then a Go. Item 2 has not been started.
+Items land one at a time. Item 3 has not been started.
 
 ## Honesty
 
-1. Flow analysis of `AI_Amplifier` and `AI_Amplifier.Version` completed as in the table above. The committed `proof/gnatprove.out` is that run. CI runs `./prove.sh` again and fails if `proof/` changes.
-2. Run-time checks were not submitted to the provers. Functional contracts were not written and were not proved. There is no Silver claim and no Gold claim.
-3. The wasm module's lack of imports is what GNAT-LLVM emitted for this body. It is an observation about this build. It is not a proof that a later unit will link against the same three runtime objects (`s-memcop`, `s-memmov`, `s-memset`), and `-gnatp` is not used to force that outcome.
-4. `web/index.html` does not load the module. Opening the page runs no Ada. GitHub Pages is not configured.
-5. The compiler, `wasm-ld`, and the Node smoke are trusted tools. They are not verified.
-6. Nothing in this repository trains, tokenizes, or runs a network.
+1. The splash arithmetic is plain Ada. It is not proved. `SPARK_Mode` is off on that unit so it is not presented as a proof target. The `SPARK_Mode` and contracts on `AI_Amplifier.Version` are unchanged.
+2. CI builds the native program, the wasm module, and the page, then runs the headless smoke. CI does not run GNATprove. `prove.sh` remains. The committed `proof/gnatprove.out` is the skeleton flow run described above, not a new proof of the splash.
+3. Run-time checks were not submitted to the provers. There is no Silver claim and no Gold claim.
+4. The wasm module's lack of imports is what this build emits, and `tools/wasm-smoke.mjs` checks it. It is an observation about this build. It is not a promise that a later unit will link against the same three runtime objects (`s-memcop`, `s-memmov`, `s-memset`). `-gnatp` is not used. `-gnatw.X` is the same switch as the native Alire profile: this runtime forbids exception propagation, and the compiler's reminder of that is turned off. A check that actually needs the exception runtime still fails the link.
+5. JavaScript does not compute the splash. It reads coordinates from the module and plots pixels. If the module is missing, not WebAssembly, missing an export, or its stamp differs from the badge, the page says "The Ada module did not load" and still shows the title and the badge.
+6. The network on the splash is not a model. Nothing in this repository trains, tokenizes, or runs a learned network.
+7. The compiler, `wasm-ld`, Chrome, and the Node smokes are trusted tools. They are not verified.
 
 ## License
 

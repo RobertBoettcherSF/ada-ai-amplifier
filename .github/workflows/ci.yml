@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    name: native, flow, wasm
+    name: native, wasm, page
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,18 +25,21 @@ jobs:
           alr -n build
           ./tools/check-version.sh
 
-      - name: GNATprove flow
+      - name: Chrome
         run: |
-          alr -n install gnatprove
-          export PATH="$HOME/.alire/bin:$PATH"
-          gnatprove --version
-          ./prove.sh
-          git diff --exit-code -- proof
+          wget -q -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo DEBIAN_FRONTEND=noninteractive apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y /tmp/chrome.deb
 
-      - name: WebAssembly
+      - name: WebAssembly and page
         run: |
-          sudo apt-get update
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
             rpm2cpio cpio lld libedit2
           ./tools/get-toolchain.sh
+          npm ci
           ./build.sh
+          node tools/page-smoke.mjs
+
+      # GNATprove is not in CI. The owner wants plain Ada for now.
+      # prove.sh and the SPARK annotations on the version unit stay
+      # in the tree for a later item.
