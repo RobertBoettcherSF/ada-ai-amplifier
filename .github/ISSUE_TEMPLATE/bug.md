@@ -6,7 +6,7 @@ title: ""
 
 ## Stamp
 
-The yellow badge, bottom right. Example: `v0.7.0-spark`.
+The yellow badge, bottom right. Example: `v0.8.0-weights`.
 
 ## What you expected
 

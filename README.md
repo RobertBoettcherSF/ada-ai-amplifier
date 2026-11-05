@@ -6,14 +6,14 @@ the feedback and crash files.
 The splash on the live page is a small picture of a network: Ada moves
 the points, and the page plots them.
 
-Visible stamp: **v0.7.0-spark**
+Visible stamp: **v0.8.0-weights**
 
 The same text is `AI_Amplifier.Version.Version_Text`, the yellow badge in
 `web/template.html`, `version.txt`, and the line printed by `bin/hello`.
-The Alire crate version is `0.7.0-spark` (the stamp without the leading
+The Alire crate version is `0.8.0-weights` (the stamp without the leading
 `v`, because Alire versions are semver).
 
-**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.7.0-spark
+**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.8.0-weights
 
 **Guide:** [docs/HOWTO.md](docs/HOWTO.md). The page links there. It is the install path, a walkthrough that adds leaky ReLU, and the code tour.
 
@@ -35,7 +35,11 @@ BPE tokenizer and one causal attention block, forward only. The splash
 is still a drawing. It is not trained. The attention weights are a
 seed, not a fit. Item 6 is the contributor guide, and the leaky ReLU
 kernel that guide adds. Item 7 proves the tensor kernels. The
-network, the tokenizer, and attention stay plain Ada.
+network, the tokenizer, and attention stay plain Ada. Item 8 writes
+that network's weights as text, loads a hand-written XOR net that was
+never trained, and edits one weight at a time on the page.
+[docs/WEIGHT_SPACE.md](docs/WEIGHT_SPACE.md) says what that does and
+does not show. Item 9 is planned and not started.
 
 ## Why plain Ada
 
@@ -63,6 +67,11 @@ network, the tokenizer, and attention stay plain Ada.
 | Dataset | XOR, two circles, or two spirals. Changing it resets the weights and keeps the learning rate |
 | Learning rate | The step size Ada uses. The page control runs from 0.01 to 2. Lower and raise are the minus and plus buttons |
 | Reset | Restores the seeded weights for the current dataset |
+| Weights | Slider and number for every weight. Ada stores the value and redraws the boundary |
+| Reset to trained | Puts back the last training step, or the seeded start if training has not run |
+| Hand-written XOR | Loads weights that solve XOR with no training step. Hidden 1 is OR, hidden 2 is AND |
+| Download / Upload | Ada writes the weight text, and Ada checks a file before it replaces the net |
+| Flip, Silence, Invert | Three fixed edits. Each one changes weights and does not train |
 | Text box | Sends the text to Ada as UTF-8 bytes. Ada splits it with byte-level BPE and runs one causal attention block. The page paints the pieces and the heatmap |
 | Feedback, or F9 | Asks for a short note, then writes `feedback-*.json` (version, browser, screen, the recent UI events, and the note). On a phone that can share files, it offers the share sheet |
 | Crash report | If the previous visit did not end cleanly, or the module traps, a panel offers `crash-report-*.json` |
@@ -84,14 +93,15 @@ omitted when printing.
 | `src/ai_amplifier-tensors.ads/.adb` | `Vector`, `Matrix`, and the kernels. SPARK. `Max_Extent` is 32. Levels are in the proof status table |
 | `src/ai_amplifier-tensors-demo.ads/.adb` | The page's 3 by 3 panel. Calls `Mat_Vec` and `Softmax` |
 | `src/ai_amplifier-tensors-leaky_demo.ads/.adb` | The page's length-3 leaky ReLU. Calls `Leaky_ReLU` at `Negative_Slope` |
-| `src/ai_amplifier-mlp.ads/.adb` | The 2–8–1 network. Init, loss, backprop, gradient descent. Plain Ada |
-| `src/ai_amplifier-mlp-demo.ads/.adb` | The page's copy of that network. Dataset, rate, steps, grid, loss curve |
+| `src/ai_amplifier-mlp.ads/.adb` | The 2–8–1 network. Init, loss, backprop, gradient descent, the weight text, the hand-written XOR net. Plain Ada |
+| `src/ai_amplifier-mlp-demo.ads/.adb` | The page's copy of that network. Dataset, rate, steps, grid, loss curve, the weight workbench |
+| `docs/WEIGHT_SPACE.md` | What the weight text shows, and what it does not claim |
 | `src/ai_amplifier-bpe.ads/.adb` | Byte-level BPE. Learns merges from one excerpt. Encode and Decode |
 | `src/ai_amplifier-attention.ads/.adb` | One causal self-attention block. Embeddings, Q/K/V, mask, residual, layer norm |
 | `src/ai_amplifier-attention-demo.ads/.adb` | The page's buffer. Bytes in, token pieces and weights out |
 | `src/hello.adb` | Native program. Prints the stamp. Also calls the splash so the native build compiles it |
 | `src/tensors_test.adb` | Native tests. Known values, empty shapes, large logits, mismatches |
-| `src/mlp_test.adb` | Native tests. XOR, the circles, a central-difference gradient check |
+| `src/mlp_test.adb` | Native tests. XOR, the circles, a central-difference gradient check, the weight text, the hand-written net |
 | `src/attention_test.adb` | Native tests. BPE round trip, the hand-computed attention pass, the mask |
 | `web/template.html` | Page source. `build.sh` replaces `__WASM_BASE64__` |
 | `site/index.html` | Built page, gitignored. GitHub Pages publishes the `site/` directory |
@@ -99,8 +109,8 @@ omitted when printing.
 | `build.sh` | AdaWebPack 24 to `obj/wasm/ai_amplifier.wasm`, smoke, then `site/index.html` |
 | `prove.sh` | GNATprove level 2 on the SPARK units. Writes `proof/`. CI runs it |
 | `tools/get-toolchain.sh` | Downloads the wasm compiler into `toolchain/` (gitignored) |
-| `tools/wasm-smoke.mjs` | Node: stamp, no wasm imports, splash numbers, product and softmax, leaky ReLU, XOR training, BPE round trip, attention rows |
-| `tools/page-smoke.mjs` | Headless Chrome: splash, the tensor panel, leaky ReLU, the training panel, the token panel, Enter, tap, F9, crash panel, failed module |
+| `tools/wasm-smoke.mjs` | Node: stamp, no wasm imports, splash numbers, product and softmax, leaky ReLU, XOR training, the weight text, BPE round trip, attention rows |
+| `tools/page-smoke.mjs` | Headless Chrome: splash, the tensor panel, leaky ReLU, the training panel, the weight workbench, the token panel, Enter, tap, F9, crash panel, failed module |
 | `tools/howto-steps.sh` | The commands in the How-To. CI job `how-to steps` runs this file |
 | `docs/HOWTO.md` | Newcomer guide |
 | `CONTRIBUTING.md` | Stamp, one item at a time, honesty, the pre-push list, F9 |
@@ -124,7 +134,7 @@ alr -n build
 on). Expected line:
 
 ```text
-ada-ai-amplifier v0.7.0-spark
+ada-ai-amplifier v0.8.0-weights
 ```
 
 Then:
@@ -259,7 +269,7 @@ node tools/page-smoke.mjs
 `build.sh` compiles every `src/*.adb` except `hello.adb`,
 `tensors_test.adb`, `mlp_test.adb`, and `attention_test.adb` (Text_IO
 is not part of this runtime), links `--no-entry`, and exports the
-version, splash, tensor-demo, leaky ReLU, training, and
+version, splash, tensor-demo, leaky ReLU, training, weight, and
 token-attention entry points. It also links
 `tools/wasm-checks.c`. It does not pass `--allow-undefined`. The module
 this build emits has no imports. Runtime checks stay on. A failed check
@@ -444,6 +454,23 @@ hidden unit is 0, the four labels are balanced, and every gradient
 component is 0. The loss is `ln 2`. The seeded weights are what break
 that tie. `bin/mlp_test` checks the zero net as well.
 
+The same net can be written down. `Write_Weights` emits one labelled
+line per neuron. `Read_Weights` accepts that text only when the shape
+is 2, 8, 1 and every value is finite and inside ±1000
+(`Weight_Limit`). Anything else leaves the net alone. The learning
+rate is not stored in the file. `Hand_XOR` is a set of those weights
+chosen so hidden 1 is OR, hidden 2 is AND, and the output is OR and
+not AND. Units 3 through 8 are zero. It is not the result of `Train`.
+On the four XOR points the outputs sit past 0.8 and under 0.2, and
+the mean loss is under 0.05, with no steps. Three edits are also
+fixed in Ada: negate hidden 1's output weight, set hidden 2's output
+weight to 0, or negate the whole output layer. The page section is
+the workbench: a slider and a number for each weight, those three
+buttons, and download and upload of the text. JavaScript copies bytes
+and paints the grid Ada already filled.
+[docs/WEIGHT_SPACE.md](docs/WEIGHT_SPACE.md) is the longer account,
+including what is not shown.
+
 ## Tokenizer
 
 `AI_Amplifier.BPE` is plain Ada (`SPARK_Mode => Off`). It is byte-level
@@ -593,16 +620,18 @@ sentence under the heatmap. It does not form Q, K, or V.
 5. **Byte-level BPE tokenizer and one transformer attention block — done.** The tokenizer and the block above, native tests including the hand-computed pass, and the token panel.
 6. **Contributor How-To docs — done.** `docs/HOWTO.md`, this leaky ReLU kernel, `CONTRIBUTING.md`, and the issue and pull-request templates. CI job `how-to steps` runs the guide's command list.
 7. **SPARK proofs of the kernels — done.** `AI_Amplifier.Tensors`, at the levels in the proof status table. The MLP, the tokenizer, and attention are still plain Ada.
+8. **Weight-space programming — done.** The weight text, the hand-written XOR net, and the workbench on the page. [docs/WEIGHT_SPACE.md](docs/WEIGHT_SPACE.md). This is not a reproduction of the [post](https://rikiyat.github.io/blog/weight-space-programming/) that suggested it.
+9. **Recursive prompts with an Ada checker — planned.** A prompt that can call itself, in the style of [recursive_llm](https://github.com/andyk/recursive_llm), with an Ada checker on the result. Not started.
 
-Items landed one at a time. Item 7 is the last one on this list.
+Items landed one at a time. Item 8 is the last one done. Item 9 is not started.
 
 ## Honesty
 
-1. The splash arithmetic is plain Ada. It is not proved. `SPARK_Mode` is off on that unit so it is not presented as a proof target. The contracts on `AI_Amplifier.Version` are the ones from the skeleton. The stamp text in that unit is `v0.7.0-spark`.
+1. The splash arithmetic is plain Ada. It is not proved. `SPARK_Mode` is off on that unit so it is not presented as a proof target. The contracts on `AI_Amplifier.Version` are the ones from the skeleton. The stamp text in that unit is `v0.8.0-weights`.
 2. The tensor kernels are SPARK, at the levels in the proof status table. Silver is absence of run-time error (and, where the table says so, a range). Gold is the component rule. `Leaky_ReLU` is Gold. Its slope on the page is `0.01`. The `Pre` and `Post` are still checked when the program runs. The proof does not replace that check. Sigmoid, tanh, and softmax do not claim to match the real functions.
 3. CI builds the native program, runs `bin/tensors_test`, `bin/mlp_test`, and `bin/attention_test`, runs `./prove.sh` (GNATprove level 2, unproved checks are errors), builds the wasm module and the page, then runs the headless smoke. The committed `proof/gnatprove.out` is that level 2 run. It proves the root, the version unit, and the tensors. It does not prove the splash, the network, the tokenizer, or the attention block.
 4. The wasm module's lack of imports is what this build emits, and `tools/wasm-smoke.mjs` checks it. The tensor body does reference a failed-check path. `tools/wasm-checks.c` defines `__gnat_last_chance_handler` and `system__assertions__raise_assert_failure` as traps, so that path links without an import. On the native runtime the same check raises. `-gnatp` is not used. `-gnatw.X` is the same switch as the native Alire profile: this runtime forbids exception propagation, and the compiler's reminder of that is turned off.
-5. JavaScript does not compute the splash, the product, the softmax, the loss, the decision boundary, the merges, or the attention. It reads coordinates, copies numbers, and sends UTF-8 bytes. It adds up the weights it already read when it writes the sentence under the heatmap. If the module is missing, not WebAssembly, missing an export, or its stamp differs from the badge, the page says "The Ada module did not load" and still shows the title and the badge. The tensor demo then says it has no product. The leaky ReLU panel says it has no leaky ReLU. The training panel says it cannot train. The token panel says it cannot tokenize.
+5. JavaScript does not compute the splash, the product, the softmax, the loss, the decision boundary, the merges, the attention, or the weight text. It reads coordinates, copies numbers, and sends UTF-8 bytes. It adds up the weights it already read when it writes the sentence under the heatmap. If the module is missing, not WebAssembly, missing an export, or its stamp differs from the badge, the page says "The Ada module did not load" and still shows the title and the badge. The tensor demo then says it has no product. The leaky ReLU panel says it has no leaky ReLU. The training panel says it cannot train. The weight buttons say the weights cannot be edited. The token panel says it cannot tokenize.
 6. The network on the splash is not a model. The tensor demo is not a model. The training panel is a model: forward, binary cross-entropy, backprop, and gradient descent, in the MLP unit. The token panel tokenizes and runs attention, forward only. Those weights are the seed. They are not trained.
 7. The MLP, the tokenizer, and the attention block are plain Ada. `SPARK_Mode` is off. The finite-difference check and the hand-computed attention pass are tests, not proofs. There is no Silver claim and no Gold claim on these units. They call the tensor kernels, so a component outside `Summand_Bound` or a softmax logit outside `Logit_Bound` fails the kernel `Pre` at run time. The seeded nets and the tests stay inside those bounds.
 8. `Float` results are approximate. The tensor test and the attention test allow `0.000_05`. Softmax of a non-empty vector sums to 1 within that tolerance, because the largest logit becomes `exp(0) = 1`. The gradient check allows `0.002` plus 5 percent of the analytical value, at a central step of `0.001`. The log, square root, sine, and cosine in the MLP body, and the square root in the attention body, are series, not `Ada.Numerics`. The hand-computed layer-norm values in the attention section are this Newton square root.
@@ -611,6 +640,7 @@ Items landed one at a time. Item 7 is the last one on this list.
 11. Attention reads at most 16 tokens. The page still shows later pieces, and it says they are outside the heatmap. The box keeps at most 768 bytes.
 12. The compiler, `wasm-ld`, Chrome, and the Node smokes are trusted tools. They are not verified.
 13. GitHub Pages publishes `site/` from `main` via `.github/workflows/pages.yml`. The cache-bust query is the stamp without the leading `v`.
+14. The hand-written XOR net and the three weight edits are Ada source. They are not the output of a language model, and they are not a rerun of the weight-space programming post. The post is linked from `docs/WEIGHT_SPACE.md` as the idea. The checks on a loaded file run when the program runs. They are not proved.
 
 ## License
 

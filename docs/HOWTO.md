@@ -4,9 +4,9 @@ A walkthrough for someone new to this repository, and possibly new to
 Ada. The logic lives in Ada. JavaScript only draws. The live page is one
 HTML file with that Ada compiled to WebAssembly inside it.
 
-Visible stamp: **v0.7.0-spark**
+Visible stamp: **v0.8.0-weights**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.7.0-spark
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.8.0-weights
 
 The yellow badge, `version.txt`, and `AI_Amplifier.Version.Version_Text`
 are that same text. The query on the link is the cache bust (the stamp
@@ -106,7 +106,7 @@ mean something:
 | `alr -n toolchain --select …` | Puts GNAT 16.1.0 and gprbuild 26.0.1 on the Alire toolchain |
 | `./tools/get-toolchain.sh` | Downloads AdaWebPack 24 into `toolchain/` (gitignored). Later runs see the compiler and return |
 | `alr -n build` | Native build. Warnings and checks are on, including `-gnata`, so `Pre` and `Post` run |
-| `./bin/hello` | Prints `ada-ai-amplifier v0.7.0-spark` |
+| `./bin/hello` | Prints `ada-ai-amplifier v0.8.0-weights` |
 | `./tools/check-version.sh` | That line, `version.txt`, and the badge in `web/template.html` must be the same stamp |
 | `./bin/tensors_test` | Prints `tensors ok` |
 | `./bin/mlp_test` | Prints `mlp ok` |
@@ -116,7 +116,7 @@ mean something:
 | `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, tokens, F9, crash report, a failed module |
 
 Then open `site/index.html` in a browser yourself. The badge reads
-`v0.7.0-spark`. Leaky ReLU shows slope `0.01` and the output
+`v0.8.0-weights`. Leaky ReLU shows slope `0.01` and the output
 `-0.02`, `0`, `3`. Compute still shows the product `14`, `14`, `17`.
 
 The file, which CI runs as `./tools/howto-steps.sh`:
@@ -231,8 +231,8 @@ header comment, whether it is in SPARK.
 | `AI_Amplifier.Tensors` | `src/ai_amplifier-tensors.ads/.adb` | `Vector`, `Matrix`, and the kernels. SPARK. The level of each one is in section 8 |
 | `AI_Amplifier.Tensors.Demo` | `src/ai_amplifier-tensors-demo.ads/.adb` | The 3 by 3 panel. Calls `Mat_Vec`, then `Softmax` |
 | `AI_Amplifier.Tensors.Leaky_Demo` | `src/ai_amplifier-tensors-leaky_demo.ads/.adb` | The length-3 leaky ReLU panel |
-| `AI_Amplifier.MLP` | `src/ai_amplifier-mlp.ads/.adb` | The 2–8–1 network. Seeded init, binary cross-entropy, backprop, gradient descent |
-| `AI_Amplifier.MLP.Demo` | `src/ai_amplifier-mlp-demo.ads/.adb` | The page's copy: dataset, rate, at most 32 steps per call, a 48 by 48 grid, the loss curve |
+| `AI_Amplifier.MLP` | `src/ai_amplifier-mlp.ads/.adb` | The 2–8–1 network. Seeded init, binary cross-entropy, backprop, gradient descent, the weight text, the hand-written XOR net |
+| `AI_Amplifier.MLP.Demo` | `src/ai_amplifier-mlp-demo.ads/.adb` | The page's copy: dataset, rate, at most 32 steps per call, a 48 by 48 grid, the loss curve, the weight workbench |
 | `AI_Amplifier.BPE` | `src/ai_amplifier-bpe.ads/.adb` | Byte-level byte-pair encoding on one built-in excerpt. Encode and decode |
 | `AI_Amplifier.Attention` | `src/ai_amplifier-attention.ads/.adb` | One causal self-attention block, forward only. The weights are a seed |
 | `AI_Amplifier.Attention.Demo` | `src/ai_amplifier-attention-demo.ads/.adb` | The page's text buffer. Bytes in, token pieces and weights out |
@@ -252,8 +252,9 @@ because that runtime cannot propagate an exception.
 link has no imports.
 
 JavaScript does not compute the splash, the product, the softmax, the
-leaky ReLU, the loss, the decision boundary, the merges, or the
-attention. It reads coordinates, copies numbers, and sends UTF-8 bytes.
+leaky ReLU, the loss, the decision boundary, the weight text, the
+merges, or the attention. It reads coordinates, copies numbers, and
+sends UTF-8 bytes.
 It adds up attention weights it already read, when it writes the
 sentence under the heatmap. That sum is named in the README honesty
 list. If the module is missing, not WebAssembly, missing an export, or
@@ -282,8 +283,9 @@ to the stamp without the `v`. A screenshot of the new page shows the
 new badge.
 
 **Plan, then Go, then one item.** Post a numbered plan for one change.
-Wait for Go. Build that item. Report, and stop. Items 1 through 7 are
-done. Do not start a new one in the same change.
+Wait for Go. Build that item. Report, and stop. Items 1 through 8 are
+done. Item 9, recursive prompts with an Ada checker, is planned and
+not started. Do not start it in a change that is still about item 8.
 
 **Honesty.** Say what is checked at run time and what a prover has
 seen. On the tensor kernels, Silver means no run-time error and Gold
@@ -347,6 +349,8 @@ The bounds that make the sums safe are `Summand_Bound` (`1.0E18`),
 outside the bound fails the `Pre`.
 
 The splash, the page wrappers, the MLP, the tokenizer, and attention
-are plain Ada. Their tests are tests. `AI_Amplifier.Version` is SPARK,
+are plain Ada. Their tests are tests. The weight text and the
+hand-written XOR net live in the MLP unit, so they are tests too.
+`docs/WEIGHT_SPACE.md` is that account. `AI_Amplifier.Version` is SPARK,
 with the contracts from the skeleton. The stamp there is
-`v0.7.0-spark`.
+`v0.8.0-weights`.

@@ -51,6 +51,13 @@ ar x "$T/lib/rts-native/adalib/libgnat.a" s-memcop.o s-memmov.o s-memset.o
   --export=aa_mlp_lo --export=aa_mlp_hi --export=aa_mlp_grid_n \
   --export=aa_mlp_fill --export=aa_mlp_cell \
   --export=aa_mlp_curve_n --export=aa_mlp_curve --export=aa_mlp_kind \
+  --export=aa_w_limit --export=aa_w_span --export=aa_w_count \
+  --export=aa_w_get --export=aa_w_set \
+  --export=aa_w_name_len --export=aa_w_name_byte \
+  --export=aa_w_len --export=aa_w_byte \
+  --export=aa_w_clear --export=aa_w_push --export=aa_w_load \
+  --export=aa_w_hand --export=aa_w_trained --export=aa_w_preset \
+  --export=aa_w_note_len --export=aa_w_note_byte \
   --export=aa_bpe_clear --export=aa_bpe_push --export=aa_bpe_corpus \
   --export=aa_attn_run --export=aa_attn_tokens --export=aa_attn_id \
   --export=aa_attn_piece_len --export=aa_attn_piece_byte \

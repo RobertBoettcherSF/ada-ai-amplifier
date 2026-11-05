@@ -17,8 +17,9 @@ GitHub Pages from `main`, not with a secret gist.
 4. Report what landed, what the checks did, and what is still open.
 5. Stop. Do not start the next item in the same change.
 
-Items 1 through 7 are done. Item 7 is the SPARK proof of the tensor
-kernels. CI runs `./prove.sh` (GNATprove level 2, timeout 120 seconds). If a change touches
+Items 1 through 8 are done. Item 8 is the weight text and the
+workbench. Item 9, recursive prompts with an Ada checker, is planned
+and not started. CI runs `./prove.sh` (GNATprove level 2, timeout 120 seconds). If a change touches
 a proved unit, `./prove.sh` must still pass and `proof/gnatprove.out`
 is part of that change. Do not regenerate it as a side effect of a
 change that does not touch a proved unit. There is no `pragma Annotate`
@@ -34,7 +35,7 @@ These four are the same text:
 
 | Place | Text |
 |---|---|
-| `AI_Amplifier.Version.Version_Text` | `v0.7.0-spark` on this tree |
+| `AI_Amplifier.Version.Version_Text` | `v0.8.0-weights` on this tree |
 | `web/template.html`, the `#ver` badge | the same, so it shows with JavaScript off |
 | `version.txt` | the same, one line |
 | `alire.toml` `version` | the same without the leading `v` |
@@ -45,7 +46,7 @@ Bump the stamp when the page, or the Ada a visitor runs, would differ.
 Do not reuse a stamp. Pages deploys from `main` only, so the bump lands
 with the change that deploys. The link you send is
 
-`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.7.0-spark`
+`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.8.0-weights`
 
 with `?v=` set to the stamp without the leading `v`. Before you say
 that stamp is live, fetch the page and `version.txt` and see the text
@@ -77,8 +78,8 @@ seen.
 ## Pre-push
 
 1. **Was it already there?** Splash, tensor demo, leaky ReLU, training,
-   tokens and attention, F9, the crash report, the badge, the How-To
-   link.
+   the weight workbench, tokens and attention, F9, the crash report,
+   the badge, the How-To link.
 2. **Is it still there?** `node tools/page-smoke.mjs` walks those, on a
    desktop viewport and a phone-sized viewport.
 3. **Does the new behaviour work?** Native tests (`tensors ok`,

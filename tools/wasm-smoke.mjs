@@ -234,6 +234,48 @@ if (exp.aa_mlp_kind() !== 2 || exp.aa_mlp_count() !== 96) fail("spirals");
 exp.aa_mlp_reset(9);
 if (exp.aa_mlp_kind() !== 0 || exp.aa_mlp_count() !== 4) fail("unknown dataset");
 
+const wNeed = ["aa_w_limit", "aa_w_span", "aa_w_count", "aa_w_get", "aa_w_set", "aa_w_name_len", "aa_w_name_byte", "aa_w_len", "aa_w_byte", "aa_w_clear", "aa_w_push", "aa_w_load", "aa_w_hand", "aa_w_trained", "aa_w_preset", "aa_w_note_len", "aa_w_note_byte"];
+for (const name of wNeed) {
+  if (typeof exp[name] !== "function") fail("missing export " + name);
+}
+if (exp.aa_w_count() !== 33 || exp.aa_w_limit() !== 1000 || exp.aa_w_span() !== 12) {
+  fail("weight census " + [exp.aa_w_count(), exp.aa_w_limit(), exp.aa_w_span()]);
+}
+if (exp.aa_w_get(0) !== 0 || exp.aa_w_name_len(0) !== 0 || exp.aa_w_name_byte(1, 0) !== 0) {
+  fail("weight clamp");
+}
+let hname = "";
+for (let i = 1; i <= exp.aa_w_name_len(1); i += 1) hname += String.fromCharCode(exp.aa_w_name_byte(1, i));
+if (hname !== "h1.x1") fail("weight name " + hname);
+exp.aa_w_hand();
+const hand = [];
+for (let i = 1; i <= 4; i += 1) hand.push(exp.aa_mlp_predict(exp.aa_mlp_x(i), exp.aa_mlp_y(i)));
+if (!(hand[0] < 0.2 && hand[1] > 0.8 && hand[2] > 0.8 && hand[3] < 0.2)) fail("hand xor " + hand);
+if (exp.aa_mlp_epoch() !== 0) fail("hand epoch " + exp.aa_mlp_epoch());
+const kept = exp.aa_w_get(1);
+if (exp.aa_w_set(1, 1001) !== 1 || exp.aa_w_get(1) !== kept) fail("weight limit");
+if (exp.aa_w_set(1, 1.5) !== 0 || !near(exp.aa_w_get(1), 1.5, 1e-6)) fail("weight set");
+exp.aa_w_trained();
+if (near(exp.aa_w_get(1), 1.5, 1e-6)) fail("trained did not restore");
+const wn = exp.aa_w_len();
+if (wn < 50 || exp.aa_w_byte(0) !== 0) fail("export " + wn);
+let wtext = "";
+for (let i = 1; i <= wn; i += 1) wtext += String.fromCharCode(exp.aa_w_byte(i));
+if (!wtext.includes("shape 2 8 1") || !wtext.includes("hidden 1")) fail("weight text");
+exp.aa_w_set(1, 0);
+exp.aa_w_clear();
+exp.aa_w_push(300);
+for (let i = 0; i < wtext.length; i += 1) exp.aa_w_push(wtext.charCodeAt(i));
+if (exp.aa_w_load() !== 0) fail("reload " + exp.aa_w_load());
+exp.aa_w_clear();
+const badShape = "ada-ai-amplifier weights 1\nshape 2 4 1\n";
+for (let i = 0; i < badShape.length; i += 1) exp.aa_w_push(badShape.charCodeAt(i));
+if (exp.aa_w_load() !== 1) fail("bad shape " + exp.aa_w_load());
+exp.aa_w_hand();
+const before = exp.aa_mlp_predict(0, 1);
+exp.aa_w_preset(1);
+if (!(before > 0.8) || !(exp.aa_mlp_predict(0, 1) < 0.2)) fail("flip preset");
+
 const attnNeed = ["aa_bpe_clear", "aa_bpe_push", "aa_bpe_corpus", "aa_attn_run", "aa_attn_tokens", "aa_attn_id", "aa_attn_piece_len", "aa_attn_piece_byte", "aa_attn_vocab", "aa_attn_merges", "aa_attn_used", "aa_attn_weight", "aa_attn_dropped", "aa_attn_bytes"];
 for (const name of attnNeed) {
   if (typeof exp[name] !== "function") fail("missing export " + name);

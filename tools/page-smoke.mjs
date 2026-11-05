@@ -120,7 +120,7 @@ try {
   const about = await page.$eval("#about", (el) => el.textContent);
   assert(about.includes("Ada computes every position"), "about");
   const items = await page.$$eval("#backlog li", (els) => els.map((el) => el.textContent.replace(/\s+/g, " ").trim()));
-  assert(items.length === 7, "backlog length " + items.length);
+  assert(items.length === 9, "backlog length " + items.length);
   assert(items[1].includes("Splash and live page") && items[1].includes("done"), items[1]);
   assert(items[2].includes("Core tensor and maths") && items[2].includes("done"), items[2]);
   assert(items[3].includes("Tiny trainable MLP") && items[3].includes("done"), items[3]);
@@ -128,6 +128,9 @@ try {
   assert(items[5].includes("Contributor How-To") && items[5].includes("done"), items[5]);
   assert(items[6].includes("SPARK proofs of the kernels") && items[6].includes("done"), items[6]);
   assert(!items[6].includes("not started"), items[6]);
+  assert(items[7].includes("Weight-space programming") && items[7].includes("done"), items[7]);
+  assert(items[8].includes("Recursive prompts") && items[8].includes("planned"), items[8]);
+  assert(!items[8].includes("done"), items[8]);
   const proof = await page.$$eval("#proof tbody tr", (els) => els.map((el) => el.innerText.replace(/\s+/g, " ").trim()));
   assert(proof.length === 15, "proof rows " + proof.length);
   const statusOf = (name) => {
@@ -152,10 +155,11 @@ try {
   const hrefs = await page.$$eval("#links a", (els) => els.map((a) => a.href));
   assert(hrefs.some((h) => h === "https://github.com/RobertBoettcherSF/ada-ai-amplifier"), "repo link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/HOWTO.md")), "howto link " + hrefs);
+  assert(hrefs.some((h) => h.includes("/docs/WEIGHT_SPACE.md")), "weights link " + hrefs);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
   assert(overflow, "desktop main overflows");
   const numbered = await page.$$eval("#backlog .n", (els) => els.map((el) => el.textContent.trim()));
-  assert(numbered.join(" ") === "1. 2. 3. 4. 5. 6. 7.", "backlog numbers " + numbered);
+  assert(numbered.join(" ") === "1. 2. 3. 4. 5. 6. 7. 8. 9.", "backlog numbers " + numbered);
   const product = await page.$$eval("#y1, #y2, #y3", (els) => els.map((el) => el.textContent.trim()));
   assert(product.join(",") === "14,14,17", "product " + product);
   const soft = await page.$$eval("#s1, #s2, #s3", (els) => els.map((el) => Number(el.textContent)));
@@ -240,6 +244,87 @@ try {
   assert(await page.$eval("#mlpstat", (el) => el.textContent.startsWith("step 0")), "spiral reset");
   await page.click("#set-xor");
   assert(await page.$eval("#mlpout", (el) => el.textContent.includes("points 4")), "back to xor");
+
+  await page.click("#w-hand");
+  await page.waitForFunction(() => document.getElementById("mlpout").textContent.includes("4/4"));
+  assert(await page.$eval("#mlpstat", (el) => el.textContent.startsWith("step 0")), "hand epoch");
+  const handNote = await page.$eval("#wnote", (el) => el.textContent);
+  assert(handNote.includes("hand-written"), handNote);
+  const handH = await page.$eval("#w-hand", (el) => el.getBoundingClientRect().height);
+  assert(handH >= 44, "hand height " + handH);
+  const handSpread = await page.evaluate(() => {
+    const c = document.getElementById("boundary");
+    const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+    let min = 255;
+    let max = 0;
+    for (let i = 0; i < d.length; i += 16) {
+      if (d[i] < min) min = d[i];
+      if (d[i] > max) max = d[i];
+    }
+    return max - min;
+  });
+  assert(handSpread > 40, "hand boundary " + handSpread);
+  await page.evaluate(() => document.getElementById("weights").scrollIntoView({ block: "center" }));
+  await page.screenshot({ path: resolve(shotDir, "weights.png") });
+  await page.click("#w-flip");
+  await page.waitForFunction(() => !document.getElementById("mlpout").textContent.includes("4/4"));
+  const flipNote = await page.$eval("#wnote", (el) => el.textContent);
+  assert(flipNote.includes("Flipped hidden 1"), flipNote);
+  await page.click("#w-hand");
+  await page.waitForFunction(() => document.getElementById("mlpout").textContent.includes("4/4"));
+  await page.click("#w-silence");
+  const silenceNote = await page.$eval("#wnote", (el) => el.textContent);
+  assert(silenceNote.includes("Silenced hidden 2"), silenceNote);
+  assert(!(await page.$eval("#mlpout", (el) => el.textContent.includes("4/4"))), "silence still perfect");
+  await page.click("#w-hand");
+  await page.waitForFunction(() => document.getElementById("mlpout").textContent.includes("4/4"));
+  await page.click("#w-invert");
+  const invertNote = await page.$eval("#wnote", (el) => el.textContent);
+  assert(invertNote.includes("trade places"), invertNote);
+  assert(await page.$eval("#mlpout", (el) => el.textContent.includes("0/4")), "invert classes");
+  await page.click("#w-trained");
+  await page.waitForFunction(() => document.getElementById("mlpstat").textContent.startsWith("step 0"));
+  const trainedNote = await page.$eval("#wnote", (el) => el.textContent);
+  assert(trainedNote.includes("seeded"), trainedNote);
+  await page.click("#w-down");
+  await page.waitForFunction(() => window.__lastDownload && window.__lastDownload.name.startsWith("weights-"));
+  const wfile = await page.evaluate(() => window.__lastDownload);
+  assert(wfile.text.includes("shape 2 8 1") && wfile.text.includes("hidden 1"), "download text");
+  assert(wfile.text.includes("ada-ai-amplifier weights 1"), "download header");
+  const beforeLoss = await page.evaluate(() => window.__mlp.loss);
+  await page.evaluate(() => {
+    const slider = document.getElementById("ws1");
+    slider.value = "12";
+    slider.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await page.waitForFunction((prev) => window.__mlp.loss !== prev, {}, beforeLoss);
+  const shown = await page.$eval("#wn1", (el) => Number(el.value));
+  assert(Math.abs(shown - 12) < 1e-4, "slider value " + shown);
+  const good = wfile.text;
+  await page.evaluate((body) => {
+    const file = new File([body], "weights.txt", { type: "text/plain" });
+    const input = document.getElementById("w-file");
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }, good);
+  await page.waitForFunction(() => document.getElementById("wnote").textContent.includes("Loaded the weights"));
+  const restoredW = await page.$eval("#wn1", (el) => Number(el.value));
+  assert(Math.abs(restoredW - 12) > 0.5, "upload did not replace " + restoredW);
+  await page.evaluate(() => {
+    const file = new File(["ada-ai-amplifier weights 1\nshape 2 4 1\n"], "bad.txt", { type: "text/plain" });
+    const input = document.getElementById("w-file");
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  await page.waitForFunction(() => !document.getElementById("werr").hidden);
+  const werr = await page.$eval("#werr", (el) => el.textContent);
+  assert(werr.includes("shape"), werr);
+  const afterReject = await page.$eval("#wn1", (el) => Number(el.value));
+  assert(Math.abs(afterReject - restoredW) < 1e-4, "reject changed a weight");
 
   await page.evaluate(() => document.getElementById("attn").scrollIntoView({ block: "center" }));
   const attnStat = await page.$eval("#attnstat", (el) => el.textContent);
@@ -378,6 +463,8 @@ try {
   const phoneRead = await phonePage.$eval("#attnread", (el) => el.textContent);
   assert(phoneRead.includes("attends to"), "phone readout " + phoneRead);
   await phonePage.evaluate(() => document.getElementById("mlp").scrollIntoView({ block: "center" }));
+  const phoneHand = await phonePage.$eval("#w-hand", (el) => el.getBoundingClientRect().height);
+  assert(phoneHand >= 44, "phone hand height " + phoneHand);
   await phonePage.tap("#train");
   await phonePage.waitForFunction(() => {
     const m = /step (\d+)/.exec(document.getElementById("mlpstat").textContent);
@@ -427,6 +514,8 @@ try {
   assert(await badPage.$eval("#lrelu-apply", (el) => el.disabled), "lrelu still enabled");
   assert(await badPage.$eval("#mlperr", (el) => !el.hidden && el.textContent.includes("cannot train")), "mlp down");
   assert(await badPage.$eval("#train", (el) => el.disabled), "train still enabled");
+  assert(await badPage.$eval("#w-hand", (el) => el.disabled), "weights still enabled");
+  assert(await badPage.$eval("#werr", (el) => !el.hidden && el.textContent.includes("cannot")), "weights down");
   assert(await badPage.$eval("#attnerr", (el) => !el.hidden && el.textContent.includes("cannot tokenize")), "attn down");
   assert(await badPage.$eval("#attntext", (el) => el.disabled), "attn text still enabled");
   assert(badErrors.length === 0, "nowasm errors " + badErrors);

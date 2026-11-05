@@ -1,1 +1,1 @@
-v0.7.0-spark
+v0.8.0-weights

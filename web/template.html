@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <!-- ada-ai-amplifier. Splash motion, the tensor demo, leaky ReLU,
-     the MLP, the byte-level tokenizer, and the attention block are Ada,
-     compiled to WebAssembly and embedded by build.sh. This file only
-     draws, copies numbers and text bytes into the module, and writes
-     F9 / crash files. -->
+     the MLP, the weight text, the byte-level tokenizer, and the
+     attention block are Ada, compiled to WebAssembly and embedded by
+     build.sh. This file only draws, copies numbers and text bytes into
+     the module, and writes F9 / crash files. -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -280,9 +280,43 @@
       font-weight: 600;
     }
     #train:disabled, #reset:disabled, #rate:disabled,
-    .mlp-sets button:disabled, #rate-down:disabled, #rate-up:disabled {
+    .mlp-sets button:disabled, #rate-down:disabled, #rate-up:disabled,
+    #weights button:disabled {
       opacity: 0.45;
       cursor: default;
+    }
+    #weights { margin: 0.6rem 0 0.2rem; }
+    #weights h3 {
+      margin: 0.9rem 0 0.25rem;
+      font-size: 16px;
+      font-weight: 600;
+      color: #f3e6c4;
+    }
+    .wrow {
+      display: grid;
+      grid-template-columns: 4.6rem minmax(0, 1fr) 6.2rem;
+      gap: 6px;
+      align-items: center;
+      margin: 2px 0;
+    }
+    .wrow label {
+      font: 14px/1.2 ui-monospace, monospace;
+      color: #f3e6c4;
+    }
+    .wrow input[type="range"] {
+      width: 100%;
+      min-height: 44px;
+      margin: 0;
+      accent-color: #ffe14a;
+    }
+    .wrow input[type="number"] {
+      width: 100%;
+      min-height: 44px;
+      padding: 8px;
+      border: 1px solid #555;
+      background: #111;
+      color: #f3e6c4;
+      font: 16px/1.2 ui-monospace, monospace;
     }
     .mlp-views {
       display: grid;
@@ -369,7 +403,7 @@
   </style>
 </head>
 <body>
-  <div id="ver">v0.7.0-spark</div>
+  <div id="ver">v0.8.0-weights</div>
   <main id="main" tabindex="-1">
     <h1>ada-ai-amplifier</h1>
     <p id="banner" class="err" hidden></p>
@@ -478,6 +512,34 @@
         The spirals are a harder cut: the loss falls, and the boundary
         stays a rough one.
       </p>
+      <h3>Weights</h3>
+      <p>
+        The same network, as text. Ada writes one labelled line per
+        neuron and checks the shape and each value when a file comes
+        back. The hand-written XOR net was never trained: hidden 1 is
+        OR, hidden 2 is AND, and the output is OR and not AND. A slider
+        or a number writes one weight into Ada, and Ada recomputes the
+        boundary above. JavaScript does not do that arithmetic.
+        Reset to trained puts back the last training step on this
+        dataset, or the seeded start if training has not run.
+      </p>
+      <div id="weights">
+        <div class="mlp-controls">
+          <button id="w-trained" type="button" disabled>Reset to trained</button>
+          <button id="w-hand" type="button" disabled>Hand-written XOR</button>
+          <button id="w-down" type="button" disabled>Download weights</button>
+          <button id="w-up" type="button" disabled>Upload weights</button>
+          <input id="w-file" type="file" accept=".txt,text/plain" hidden>
+        </div>
+        <div class="mlp-controls">
+          <button id="w-flip" type="button" disabled>Flip hidden 1</button>
+          <button id="w-silence" type="button" disabled>Silence hidden 2</button>
+          <button id="w-invert" type="button" disabled>Invert output</button>
+        </div>
+        <p id="wnote" class="fine">Waiting for the Ada module.</p>
+        <p id="werr" class="err" hidden></p>
+        <div id="wtable"></div>
+      </div>
     </div>
     <h2>Tokens and attention</h2>
     <p>
@@ -511,6 +573,7 @@
       <li>The tensor demo asks Ada for a matrix-vector product and a softmax.</li>
       <li>Leaky ReLU asks Ada to apply that kernel. The slope is Ada's constant.</li>
       <li>Train runs the small network. Reset restores the seeded weights. The learning rate is Ada's step size.</li>
+      <li>The weight workbench edits those weights. Ada checks a file, and Ada applies the hand-written XOR net and the three edits.</li>
       <li>The text box asks Ada to tokenize and to run attention. JavaScript only paints.</li>
       <li>F9, or Feedback, writes a feedback file.</li>
       <li>If the previous session did not end cleanly, a crash report is offered.</li>
@@ -524,6 +587,8 @@
       <li><span class="n">5.</span><span>Byte-level BPE tokenizer and one transformer attention block</span> <span class="st done">done</span></li>
       <li><span class="n">6.</span><span>Contributor How-To docs</span> <span class="st done">done</span></li>
       <li><span class="n">7.</span><span>SPARK proofs of the kernels</span> <span class="st done">done</span></li>
+      <li><span class="n">8.</span><span>Weight-space programming</span> <span class="st done">done</span></li>
+      <li><span class="n">9.</span><span>Recursive prompts with an Ada checker</span> <span class="st">planned</span></li>
     </ol>
     <h2>Proof status</h2>
     <p>
@@ -559,6 +624,7 @@
     <ul id="links">
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier">Repository</a></li>
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/HOWTO.md">How-To</a></li>
+      <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/WEIGHT_SPACE.md">Weight-space programming</a></li>
     </ul>
     <noscript>
       <p class="err">JavaScript is off, so the Ada module is not running. Open this page in Safari or Chrome.</p>
@@ -827,6 +893,7 @@ function safeMlp(name) {
   try { return ada[name](); } catch (e) { return null; }
 }
 const mlpIds = ["set-xor", "set-circles", "set-spirals", "rate", "rate-down", "rate-up", "train", "reset"];
+const weightIds = ["w-trained", "w-hand", "w-down", "w-up", "w-flip", "w-silence", "w-invert"];
 function showMlpDown() {
   const err = box("mlperr");
   if (!err) return;
@@ -836,10 +903,23 @@ function showMlpDown() {
     const el = box(id);
     if (el) el.disabled = true;
   });
+  weightIds.forEach((id) => {
+    const el = box(id);
+    if (el) el.disabled = true;
+  });
+  const werr = box("werr");
+  if (werr) {
+    werr.hidden = false;
+    werr.textContent = "The Ada module did not load, so the weights cannot be edited.";
+  }
   stopTrain();
 }
 function enableMlp() {
   mlpIds.forEach((id) => {
+    const el = box(id);
+    if (el) el.disabled = false;
+  });
+  weightIds.forEach((id) => {
     const el = box(id);
     if (el) el.disabled = false;
   });
@@ -1000,6 +1080,7 @@ function paintMlp() {
   window.__mlp = {epoch: epoch, loss: loss, rate: rate, kind: ada.aa_mlp_kind(), correct: correct, points: n};
   drawBoundary();
   drawLoss();
+  if (typeof ada.aa_w_count === "function") syncWeightFields();
 }
 function drawBoundary() {
   const canvas = box("boundary");
@@ -1110,6 +1191,9 @@ function loadDataset(kind) {
   syncRateBox();
   ada.aa_mlp_fill();
   paintMlp();
+  showWeightNote();
+  const werr = box("werr");
+  if (werr) werr.hidden = true;
   note("mlp dataset", ada.aa_mlp_kind());
 }
 function mlpFrame() {
@@ -1157,6 +1241,7 @@ function bootMlp() {
   ada.aa_mlp_fill();
   enableMlp();
   paintMlp();
+  showWeightNote();
   requestAnimationFrame(() => {
     if (ada && !fatal) paintMlp();
   });
@@ -1178,6 +1263,200 @@ box("train").addEventListener("click", () => {
 box("reset").addEventListener("click", () => {
   loadDataset(mlpKind);
   note("mlp reset");
+});
+
+function adaText(lenFn, byteFn) {
+  const n = lenFn();
+  let s = "";
+  for (let i = 1; i <= n; i += 1) s += String.fromCharCode(byteFn(i) & 255);
+  return s;
+}
+function weightNote() {
+  return adaText(() => ada.aa_w_note_len(), (i) => ada.aa_w_note_byte(i));
+}
+function showWeightNote() {
+  const el = box("wnote");
+  if (el && ada) el.textContent = weightNote();
+}
+function fmtWeight(x) {
+  if (typeof x !== "number" || !Number.isFinite(x)) return "";
+  return String(Math.round(x * 1e8) / 1e8);
+}
+function buildWeightTable() {
+  const table = box("wtable");
+  if (!table || table.childElementCount > 0) return;
+  const n = ada.aa_w_count();
+  const span = ada.aa_w_span();
+  const limit = ada.aa_w_limit();
+  let group = "";
+  for (let i = 1; i <= n; i += 1) {
+    const name = adaText(() => ada.aa_w_name_len(i), (p) => ada.aa_w_name_byte(i, p));
+    const key = name.split(".")[0];
+    if (key !== group) {
+      group = key;
+      const h = document.createElement("h3");
+      h.textContent = key === "y" ? "Output" : "Hidden " + key.slice(1);
+      table.appendChild(h);
+    }
+    const row = document.createElement("div");
+    row.className = "wrow";
+    const lab = document.createElement("label");
+    lab.htmlFor = "wn" + i;
+    lab.textContent = name;
+    const slider = document.createElement("input");
+    slider.type = "range";
+    slider.id = "ws" + i;
+    slider.min = String(-span);
+    slider.max = String(span);
+    slider.step = "0.01";
+    slider.setAttribute("aria-label", name + " slider");
+    const num = document.createElement("input");
+    num.type = "number";
+    num.id = "wn" + i;
+    num.step = "any";
+    num.min = String(-limit);
+    num.max = String(limit);
+    num.setAttribute("aria-label", name);
+    slider.addEventListener("input", () => sendWeight(i, Number(slider.value)));
+    num.addEventListener("change", () => sendWeight(i, Number(num.value)));
+    row.append(lab, slider, num);
+    table.appendChild(row);
+  }
+}
+function syncWeightFields() {
+  const table = box("wtable");
+  if (!table) return;
+  if (table.childElementCount === 0) buildWeightTable();
+  const n = ada.aa_w_count();
+  const span = ada.aa_w_span();
+  for (let i = 1; i <= n; i += 1) {
+    const v = ada.aa_w_get(i);
+    const num = box("wn" + i);
+    const slider = box("ws" + i);
+    if (num && document.activeElement !== num) num.value = fmtWeight(v);
+    if (slider && document.activeElement !== slider) {
+      const c = Math.max(-span, Math.min(span, v));
+      slider.value = String(c);
+    }
+  }
+}
+function refreshWeights() {
+  const err = box("werr");
+  if (err) err.hidden = true;
+  ada.aa_mlp_fill();
+  paintMlp();
+  showWeightNote();
+}
+function sendWeight(index, value) {
+  if (!ada) return;
+  stopTrain();
+  const err = box("werr");
+  if (!Number.isFinite(value)) {
+    err.hidden = false;
+    err.textContent = "Type a finite number. Ada left this weight as it was.";
+    syncWeightFields();
+    note("weight bad", index);
+    return;
+  }
+  const code = ada.aa_w_set(index, value);
+  const text = weightNote();
+  if (code === 0) {
+    err.hidden = true;
+    box("wnote").textContent = text;
+  } else {
+    err.hidden = false;
+    err.textContent = text;
+  }
+  ada.aa_mlp_fill();
+  paintMlp();
+  note("weight", index);
+}
+function downloadWeights() {
+  if (!ada) return;
+  const text = adaText(() => ada.aa_w_len(), (i) => ada.aa_w_byte(i));
+  const name = "weights-" + badgeText() + ".txt";
+  window.__lastDownload = {name: name, text: text};
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], {type: "text/plain"}));
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  note("weight download", name);
+}
+function uploadWeights(text) {
+  if (!ada) return;
+  stopTrain();
+  ada.aa_w_clear();
+  for (let i = 0; i < text.length; i += 1) {
+    const c = text.charCodeAt(i);
+    ada.aa_w_push(c > 255 ? 63 : c);
+  }
+  const code = ada.aa_w_load();
+  const msg = weightNote();
+  const err = box("werr");
+  if (code === 0) {
+    err.hidden = true;
+    box("wnote").textContent = msg;
+  } else {
+    err.hidden = false;
+    err.textContent = msg;
+  }
+  ada.aa_mlp_fill();
+  paintMlp();
+  note("weight upload", code);
+}
+box("w-trained").addEventListener("click", () => {
+  if (!ada || box("w-trained").disabled) return;
+  stopTrain();
+  ada.aa_w_trained();
+  refreshWeights();
+  note("weight trained");
+});
+box("w-hand").addEventListener("click", () => {
+  if (!ada || box("w-hand").disabled) return;
+  stopTrain();
+  ada.aa_w_hand();
+  markSet(ada.aa_mlp_kind());
+  refreshWeights();
+  note("weight hand");
+});
+box("w-down").addEventListener("click", () => {
+  if (!ada || box("w-down").disabled) return;
+  downloadWeights();
+});
+box("w-up").addEventListener("click", () => {
+  if (!ada || box("w-up").disabled) return;
+  box("w-file").click();
+});
+box("w-file").addEventListener("change", () => {
+  const file = box("w-file").files && box("w-file").files[0];
+  box("w-file").value = "";
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => uploadWeights(String(reader.result || ""));
+  reader.readAsText(file);
+});
+box("w-flip").addEventListener("click", () => {
+  if (!ada || box("w-flip").disabled) return;
+  stopTrain();
+  ada.aa_w_preset(1);
+  refreshWeights();
+  note("weight flip");
+});
+box("w-silence").addEventListener("click", () => {
+  if (!ada || box("w-silence").disabled) return;
+  stopTrain();
+  ada.aa_w_preset(2);
+  refreshWeights();
+  note("weight silence");
+});
+box("w-invert").addEventListener("click", () => {
+  if (!ada || box("w-invert").disabled) return;
+  stopTrain();
+  ada.aa_w_preset(3);
+  refreshWeights();
+  note("weight invert");
 });
 
 const attnColors = ["#ffe14a", "#9ad7ff", "#ffb085", "#b6f0c2", "#e7c1ff", "#ffd6e0", "#d5f28a", "#ffd27a"];
@@ -1586,7 +1865,7 @@ async function boot() {
     fail(String(e && e.message ? e.message : e));
     return;
   }
-  const need = ["aa_version_length", "aa_version_byte", "aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get", "aa_set_m", "aa_get_m", "aa_set_v", "aa_get_v", "aa_tensor_run", "aa_product", "aa_softmax", "aa_lrelu_set", "aa_lrelu_in", "aa_lrelu_run", "aa_lrelu_out", "aa_lrelu_slope", "aa_mlp_reset", "aa_mlp_set_rate", "aa_mlp_rate", "aa_mlp_train", "aa_mlp_epoch", "aa_mlp_loss", "aa_mlp_predict", "aa_mlp_count", "aa_mlp_x", "aa_mlp_y", "aa_mlp_label", "aa_mlp_lo", "aa_mlp_hi", "aa_mlp_grid_n", "aa_mlp_fill", "aa_mlp_cell", "aa_mlp_curve_n", "aa_mlp_curve", "aa_mlp_kind", "aa_bpe_clear", "aa_bpe_push", "aa_bpe_corpus", "aa_attn_run", "aa_attn_tokens", "aa_attn_id", "aa_attn_piece_len", "aa_attn_piece_byte", "aa_attn_vocab", "aa_attn_merges", "aa_attn_used", "aa_attn_weight", "aa_attn_dropped", "aa_attn_bytes"];
+  const need = ["aa_version_length", "aa_version_byte", "aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get", "aa_set_m", "aa_get_m", "aa_set_v", "aa_get_v", "aa_tensor_run", "aa_product", "aa_softmax", "aa_lrelu_set", "aa_lrelu_in", "aa_lrelu_run", "aa_lrelu_out", "aa_lrelu_slope", "aa_mlp_reset", "aa_mlp_set_rate", "aa_mlp_rate", "aa_mlp_train", "aa_mlp_epoch", "aa_mlp_loss", "aa_mlp_predict", "aa_mlp_count", "aa_mlp_x", "aa_mlp_y", "aa_mlp_label", "aa_mlp_lo", "aa_mlp_hi", "aa_mlp_grid_n", "aa_mlp_fill", "aa_mlp_cell", "aa_mlp_curve_n", "aa_mlp_curve", "aa_mlp_kind", "aa_w_limit", "aa_w_span", "aa_w_count", "aa_w_get", "aa_w_set", "aa_w_name_len", "aa_w_name_byte", "aa_w_len", "aa_w_byte", "aa_w_clear", "aa_w_push", "aa_w_load", "aa_w_hand", "aa_w_trained", "aa_w_preset", "aa_w_note_len", "aa_w_note_byte", "aa_bpe_clear", "aa_bpe_push", "aa_bpe_corpus", "aa_attn_run", "aa_attn_tokens", "aa_attn_id", "aa_attn_piece_len", "aa_attn_piece_byte", "aa_attn_vocab", "aa_attn_merges", "aa_attn_used", "aa_attn_weight", "aa_attn_dropped", "aa_attn_bytes"];
   for (let i = 0; i < need.length; i += 1) {
     if (typeof ada[need[i]] !== "function") {
       ada = null;
