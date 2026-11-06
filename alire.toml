@@ -1,6 +1,6 @@
 name = "ada_ai_amplifier"
 description = "Readable AI building blocks in plain Ada/SPARK"
-version = "0.8.0-weights"
+version = "0.9.0-recurse"
 licenses = "MIT"
 website = "https://github.com/RobertBoettcherSF/ada-ai-amplifier"
 tags = ["ai", "spark", "webassembly"]

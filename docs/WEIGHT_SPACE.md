@@ -2,9 +2,9 @@
 
 The idea, and what this repository actually shows.
 
-Visible stamp: **v0.8.0-weights**
+Visible stamp: **v0.9.0-recurse**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.8.0-weights
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.9.0-recurse
 
 ## The idea
 

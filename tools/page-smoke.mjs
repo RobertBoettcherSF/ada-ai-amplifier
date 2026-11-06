@@ -120,7 +120,7 @@ try {
   const about = await page.$eval("#about", (el) => el.textContent);
   assert(about.includes("Ada computes every position"), "about");
   const items = await page.$$eval("#backlog li", (els) => els.map((el) => el.textContent.replace(/\s+/g, " ").trim()));
-  assert(items.length === 9, "backlog length " + items.length);
+  assert(items.length === 16, "backlog length " + items.length);
   assert(items[1].includes("Splash and live page") && items[1].includes("done"), items[1]);
   assert(items[2].includes("Core tensor and maths") && items[2].includes("done"), items[2]);
   assert(items[3].includes("Tiny trainable MLP") && items[3].includes("done"), items[3]);
@@ -129,10 +129,18 @@ try {
   assert(items[6].includes("SPARK proofs of the kernels") && items[6].includes("done"), items[6]);
   assert(!items[6].includes("not started"), items[6]);
   assert(items[7].includes("Weight-space programming") && items[7].includes("done"), items[7]);
-  assert(items[8].includes("Recursive prompts") && items[8].includes("planned"), items[8]);
-  assert(!items[8].includes("done"), items[8]);
+  assert(items[8].includes("Recursive prompts") && items[8].includes("done"), items[8]);
+  assert(!items[8].includes("planned"), items[8]);
+  assert(items[9].includes("Training-speed harness") && items[9].includes("planned"), items[9]);
+  assert(items[10].includes("Wrong-turn traces") && items[10].includes("planned"), items[10]);
+  assert(items[11].includes("Benchmark audit") && items[11].includes("planned"), items[11]);
+  assert(items[12].includes("Reward-hacking demo") && items[12].includes("planned"), items[12]);
+  assert(items[13].includes("Same model, different harness") && items[13].includes("planned"), items[13]);
+  assert(items[14].includes("Checked steps, not just answers") && items[14].includes("planned"), items[14]);
+  assert(items[15].includes("README update after items 1–15") && items[15].includes("planned"), items[15]);
+  assert(!items[15].includes("done"), items[15]);
   const proof = await page.$$eval("#proof tbody tr", (els) => els.map((el) => el.innerText.replace(/\s+/g, " ").trim()));
-  assert(proof.length === 15, "proof rows " + proof.length);
+  assert(proof.length === 16, "proof rows " + proof.length);
   const statusOf = (name) => {
     const row = proof.find((r) => r.slice(0, name.length) === name && (r.length === name.length || r[name.length] === " "));
     return row ? row.slice(name.length).trim() : "";
@@ -152,14 +160,16 @@ try {
   assert(statusOf("MLP") === "not proved", "mlp " + statusOf("MLP"));
   assert(statusOf("Tokenizer") === "not proved", "bpe " + statusOf("Tokenizer"));
   assert(statusOf("Attention") === "not proved", "attn " + statusOf("Attention"));
+  assert(statusOf("Recursive prompts") === "not proved", "recurse proof " + statusOf("Recursive prompts"));
   const hrefs = await page.$$eval("#links a", (els) => els.map((a) => a.href));
   assert(hrefs.some((h) => h === "https://github.com/RobertBoettcherSF/ada-ai-amplifier"), "repo link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/HOWTO.md")), "howto link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/WEIGHT_SPACE.md")), "weights link " + hrefs);
+  assert(hrefs.some((h) => h.includes("/docs/RECURSIVE_PROMPTS.md")), "recurse link " + hrefs);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
   assert(overflow, "desktop main overflows");
   const numbered = await page.$$eval("#backlog .n", (els) => els.map((el) => el.textContent.trim()));
-  assert(numbered.join(" ") === "1. 2. 3. 4. 5. 6. 7. 8. 9.", "backlog numbers " + numbered);
+  assert(numbered.join(" ") === "1. 2. 3. 4. 5. 6. 7. 8. 9. 10. 11. 12. 13. 14. 15. 16.", "backlog numbers " + numbered);
   const product = await page.$$eval("#y1, #y2, #y3", (els) => els.map((el) => el.textContent.trim()));
   assert(product.join(",") === "14,14,17", "product " + product);
   const soft = await page.$$eval("#s1, #s2, #s3", (els) => els.map((el) => Number(el.textContent)));
@@ -398,6 +408,33 @@ try {
   const pressed = await page.$eval("#tokens .tok", (el) => el.getAttribute("aria-pressed"));
   assert(pressed === "true", "token press " + pressed);
 
+  await page.evaluate(() => document.getElementById("recurse").scrollIntoView({ block: "center" }));
+  const recStat = await page.$eval("#recstat", (el) => el.textContent);
+  assert(recStat.includes("4 recorded chains"), "rec stat " + recStat);
+  assert(recStat.includes("at most 20"), "rec max " + recStat);
+  const rec = await page.evaluate(() => window.__rec);
+  assert(rec && rec.length === 4, "rec count");
+  const recGood = rec.find((c) => c.name === "fib-6-complete");
+  const recBad = rec.find((c) => c.name === "fib-6-bad-sum");
+  const stall = rec.find((c) => c.name === "fib-4-stalled");
+  const garbled = rec.find((c) => c.name === "fib-3-garbled");
+  assert(recGood && recGood.kind === 0 && recGood.answer === 8 && recGood.stepsOk === 6, "rec good " + JSON.stringify(recGood));
+  assert(recGood.note.includes("Reached the base case"), "rec note " + recGood.note);
+  assert(recGood.states.length === 7 && recGood.states[6].index === 0 && recGood.states[6].minus === 8 && recGood.states[6].current === 13, "rec last");
+  assert(recGood.states[6].line.includes("base"), "rec base line " + recGood.states[6].line);
+  assert(recBad && recBad.kind === 4 && recBad.stopAt === 4 && recBad.stepsOk === 2, "rec bad " + JSON.stringify(recBad));
+  assert(recBad.note.includes("bad arithmetic"), "rec arith " + recBad.note);
+  assert(recBad.states[3].current === 4 && recBad.states[3].mark === 2, "rec bad step");
+  assert(stall && stall.kind === 3 && stall.states[1].index === 4, "rec stall");
+  assert(stall.note.includes("not toward base"), "rec toward " + stall.note);
+  assert(garbled && garbled.kind === 1 && garbled.states[2].parsed === 0, "rec garbled");
+  assert(garbled.states[2].line === "unreadable  halt", "rec line " + garbled.states[2].line);
+  const recText = await page.$eval("#reclist", (el) => el.textContent);
+  assert(recText.includes("Reached the base case"), "rec visible good");
+  assert(recText.includes("bad arithmetic"), "rec visible halt");
+  assert(recText.includes("not toward base"), "rec visible stall");
+  await page.screenshot({ path: resolve(shotDir, "recurse.png") });
+
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   const covered = await page.evaluate(() => {
     const link = document.querySelector("#links a[href*='docs/HOWTO.md']").getBoundingClientRect();
@@ -462,6 +499,12 @@ try {
   await phonePage.tap("#tokens .tok");
   const phoneRead = await phonePage.$eval("#attnread", (el) => el.textContent);
   assert(phoneRead.includes("attends to"), "phone readout " + phoneRead);
+  await phonePage.evaluate(() => document.getElementById("recurse").scrollIntoView({ block: "center" }));
+  const phoneRec = await phonePage.$eval("#reclist", (el) => el.textContent);
+  assert(phoneRec.includes("Reached the base case"), "phone rec good");
+  assert(phoneRec.includes("bad arithmetic"), "phone rec halt");
+  const phoneRecOverflow = await phonePage.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
+  assert(phoneRecOverflow, "phone rec overflows");
   await phonePage.evaluate(() => document.getElementById("mlp").scrollIntoView({ block: "center" }));
   const phoneHand = await phonePage.$eval("#w-hand", (el) => el.getBoundingClientRect().height);
   assert(phoneHand >= 44, "phone hand height " + phoneHand);
@@ -518,6 +561,7 @@ try {
   assert(await badPage.$eval("#werr", (el) => !el.hidden && el.textContent.includes("cannot")), "weights down");
   assert(await badPage.$eval("#attnerr", (el) => !el.hidden && el.textContent.includes("cannot tokenize")), "attn down");
   assert(await badPage.$eval("#attntext", (el) => el.disabled), "attn text still enabled");
+  assert(await badPage.$eval("#recerr", (el) => !el.hidden && el.textContent.includes("cannot check a chain")), "recurse down");
   assert(badErrors.length === 0, "nowasm errors " + badErrors);
 
   const html = readFileSync(resolve(root, "site/index.html"), "utf8");

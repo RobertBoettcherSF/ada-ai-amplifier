@@ -6,14 +6,14 @@ the feedback and crash files.
 The splash on the live page is a small picture of a network: Ada moves
 the points, and the page plots them.
 
-Visible stamp: **v0.8.0-weights**
+Visible stamp: **v0.9.0-recurse**
 
 The same text is `AI_Amplifier.Version.Version_Text`, the yellow badge in
 `web/template.html`, `version.txt`, and the line printed by `bin/hello`.
-The Alire crate version is `0.8.0-weights` (the stamp without the leading
+The Alire crate version is `0.9.0-recurse` (the stamp without the leading
 `v`, because Alire versions are semver).
 
-**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.8.0-weights
+**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.9.0-recurse
 
 **Guide:** [docs/HOWTO.md](docs/HOWTO.md). The page links there. It is the install path, a walkthrough that adds leaky ReLU, and the code tour.
 
@@ -39,7 +39,10 @@ network, the tokenizer, and attention stay plain Ada. Item 8 writes
 that network's weights as text, loads a hand-written XOR net that was
 never trained, and edits one weight at a time on the page.
 [docs/WEIGHT_SPACE.md](docs/WEIGHT_SPACE.md) says what that does and
-does not show. Item 9 is planned and not started.
+does not show. Item 9 checks a Fibonacci state blob that stands in
+for a prompt calling itself. The page replays recorded chains. It
+does not call a model. [docs/RECURSIVE_PROMPTS.md](docs/RECURSIVE_PROMPTS.md)
+is that account. Items 10 through 16 are planned and not started.
 
 ## Why plain Ada
 
@@ -73,6 +76,7 @@ does not show. Item 9 is planned and not started.
 | Download / Upload | Ada writes the weight text, and Ada checks a file before it replaces the net |
 | Flip, Silence, Invert | Three fixed edits. Each one changes weights and does not train |
 | Text box | Sends the text to Ada as UTF-8 bytes. Ada splits it with byte-level BPE and runs one causal attention block. The page paints the pieces and the heatmap |
+| Recorded chains | Ada replays four saved Fibonacci blobs and stops at the first failed check. The page does not call a model |
 | Feedback, or F9 | Asks for a short note, then writes `feedback-*.json` (version, browser, screen, the recent UI events, and the note). On a phone that can share files, it offers the share sheet |
 | Crash report | If the previous visit did not end cleanly, or the module traps, a panel offers `crash-report-*.json` |
 | Yellow badge | The stamp, on every screen, including when JavaScript is off |
@@ -99,6 +103,11 @@ omitted when printing.
 | `src/ai_amplifier-bpe.ads/.adb` | Byte-level BPE. Learns merges from one excerpt. Encode and Decode |
 | `src/ai_amplifier-attention.ads/.adb` | One causal self-attention block. Embeddings, Q/K/V, mask, residual, layer norm |
 | `src/ai_amplifier-attention-demo.ads/.adb` | The page's buffer. Bytes in, token pieces and weights out |
+| `src/ai_amplifier-recurse.ads/.adb` | The Fibonacci state blob and the step checker. Plain Ada |
+| `src/ai_amplifier-recurse-demo.ads/.adb` | The page's four recorded chains |
+| `docs/RECURSIVE_PROMPTS.md` | What those chains show, and what they do not claim |
+| `src/recurse_test.adb` | Native tests. The rules, the four chains, the page wrapper, and a stand-in for the model caller |
+| `src/recurse_cli.adb` | Native program. Replays the chains. Calls a model only when the user sets a key, a URL, and a model name |
 | `src/hello.adb` | Native program. Prints the stamp. Also calls the splash so the native build compiles it |
 | `src/tensors_test.adb` | Native tests. Known values, empty shapes, large logits, mismatches |
 | `src/mlp_test.adb` | Native tests. XOR, the circles, a central-difference gradient check, the weight text, the hand-written net |
@@ -134,7 +143,7 @@ alr -n build
 on). Expected line:
 
 ```text
-ada-ai-amplifier v0.8.0-weights
+ada-ai-amplifier v0.9.0-recurse
 ```
 
 Then:
@@ -143,6 +152,7 @@ Then:
 ./bin/tensors_test
 ./bin/mlp_test
 ./bin/attention_test
+./bin/recurse_test
 ```
 
 Expected lines:
@@ -151,6 +161,7 @@ Expected lines:
 tensors ok
 mlp ok
 attention ok
+recurse ok
 ```
 
 ## Proof status
@@ -175,10 +186,12 @@ export PATH="$HOME/.alire/bin:$PATH"
 
 Proved units: the empty root `AI_Amplifier`, `AI_Amplifier.Version`,
 and `AI_Amplifier.Tensors` (the kernels and the small helpers in that
-body). `hello.adb`, the three test procedures, `AI_Amplifier.Splash`,
+body). `hello.adb`, the four test procedures, `AI_Amplifier.Splash`,
 the tensor demo children, `AI_Amplifier.MLP` and its demo,
-`AI_Amplifier.BPE`, and `AI_Amplifier.Attention` and its demo are
-`SPARK_Mode => Off`. GNATprove lists them and proves nothing in them.
+`AI_Amplifier.BPE`, `AI_Amplifier.Attention` and its demo, and
+`AI_Amplifier.Recurse` and its demo are `SPARK_Mode => Off`.
+`recurse_cli.adb` is too. GNATprove lists them and proves nothing
+in them.
 
 | Kernel | Level | What is proved |
 |---|---|---|
@@ -197,6 +210,7 @@ the tensor demo children, `AI_Amplifier.MLP` and its demo,
 | MLP, including its demo | not proved | Plain Ada. Tests, not proofs |
 | Tokenizer | not proved | Plain Ada |
 | Attention, including its demo | not proved | Plain Ada. The hand-computed pass is a test |
+| Recursive prompts, including the demo and the native caller | not proved | Plain Ada. The recorded chains and the stand-in caller are tests |
 
 `Summand_Bound` is `1.0E18`. The float value of that literal is a
 little under `1.0E18`, and the real square of that float is a little
@@ -267,10 +281,11 @@ node tools/page-smoke.mjs
 ```
 
 `build.sh` compiles every `src/*.adb` except `hello.adb`,
-`tensors_test.adb`, `mlp_test.adb`, and `attention_test.adb` (Text_IO
-is not part of this runtime), links `--no-entry`, and exports the
-version, splash, tensor-demo, leaky ReLU, training, weight, and
-token-attention entry points. It also links
+`tensors_test.adb`, `mlp_test.adb`, `attention_test.adb`,
+`recurse_test.adb`, and `recurse_cli.adb` (Text_IO is not part of
+this runtime), links `--no-entry`, and exports the
+version, splash, tensor-demo, leaky ReLU, training, weight,
+token-attention, and recorded-chain entry points. It also links
 `tools/wasm-checks.c`. It does not pass `--allow-undefined`. The module
 this build emits has no imports. Runtime checks stay on. A failed check
 traps that module; it does not propagate.
@@ -611,6 +626,59 @@ pieces were left out of it. JavaScript sends bytes and reads ids,
 piece bytes, and weights. It adds a row up when it writes the
 sentence under the heatmap. It does not form Q, K, or V.
 
+## Recursive prompts
+
+A blob of three lines stands in for a prompt that would call itself.
+Ada keeps the state, counts the steps, and stops at the first blob
+that fails a check. The page replays four chains that were written
+in this repository. It does not call a language model, and it does
+not send a key. The longer account, including the license note, is
+[docs/RECURSIVE_PROMPTS.md](docs/RECURSIVE_PROMPTS.md).
+
+The opening blob for a target `n` from 0 to 20 is:
+
+```text
+index n
+minus-one 0
+current 1
+```
+
+`minus-one` starts as F(0), which is 0. `current` starts as F(1),
+which is 1. `index` is how many times the recurrence still has to
+be applied. A later blob is legal only when:
+
+| Check, in this order | What has to be true |
+|---|---|
+| Parse | The blob is those three fields, each once. A blank line is skipped. A line whose first visible character is `#` is skipped. A number is an integer from 0 to 20000 |
+| Past base | The previous index was not already 0 |
+| Toward the base | The new index is the previous index minus 1 |
+| Arithmetic | `minus-one` is the previous `current`, and `current` is the previous `minus-one` plus the previous `current` |
+
+The first failure stops the chain. At index 0 the answer is
+`minus-one`, which is F(n) when every step followed the rule.
+`current` is then F(n + 1), except for n = 0: no step runs, and
+`current` stays the unused seed 1. F(6) is 8. F(20) is 6765.
+A chain longer than 4000 characters is refused before it is parsed.
+
+| Recorded chain | Stop | Where |
+|---|---|---|
+| `fib-6-complete` | reached the base | answer 8, after 6 accepted steps |
+| `fib-6-bad-sum` | bad arithmetic | state 4 writes `current 4` where the rule wants 3 |
+| `fib-4-stalled` | not toward base | state 2 keeps index 4. The pair would have been right for index 3 |
+| `fib-3-garbled` | bad parse | state 3 says `index two` |
+
+`bin/recurse_test` locks those four, and it also locks a chain that
+continues after the base, a chain that stops early, a bad opening,
+and a chain that is too long to read. JavaScript copies the lines
+Ada already wrote.
+
+`bin/recurse_cli` with no arguments replays the same four chains and
+does not open a socket. `recurse_cli --ask N` calls a chat endpoint
+only when `RECURSE_LLM_URL` is an `http://` or `https://` address,
+`RECURSE_LLM_KEY` is a single line, and `RECURSE_LLM_MODEL` is set.
+The key is written to a mode 0600 file for curl and is not placed
+on the command line. The page does not run this program.
+
 ## Backlog
 
 1. **Repo skeleton — done.** Crate, stamp, native hello, wasm target, placeholder page.
@@ -621,19 +689,26 @@ sentence under the heatmap. It does not form Q, K, or V.
 6. **Contributor How-To docs — done.** `docs/HOWTO.md`, this leaky ReLU kernel, `CONTRIBUTING.md`, and the issue and pull-request templates. CI job `how-to steps` runs the guide's command list.
 7. **SPARK proofs of the kernels — done.** `AI_Amplifier.Tensors`, at the levels in the proof status table. The MLP, the tokenizer, and attention are still plain Ada.
 8. **Weight-space programming — done.** The weight text, the hand-written XOR net, and the workbench on the page. [docs/WEIGHT_SPACE.md](docs/WEIGHT_SPACE.md). This is not a reproduction of the [post](https://rikiyat.github.io/blog/weight-space-programming/) that suggested it.
-9. **Recursive prompts with an Ada checker — planned.** A prompt that can call itself, in the style of [recursive_llm](https://github.com/andyk/recursive_llm), with an Ada checker on the result. Not started.
+9. **Recursive prompts with an Ada checker — done.** The state blob, the checker, four recorded chains on the page, and a native caller that stays offline unless the user supplies a key. [docs/RECURSIVE_PROMPTS.md](docs/RECURSIVE_PROMPTS.md). This is not a reproduction of [recursive_llm](https://github.com/andyk/recursive_llm). That repository has no license. Nothing here was copied from it.
+10. **Training-speed harness — planned.** Not started.
+11. **Wrong-turn traces — planned.** Not started.
+12. **Benchmark audit — planned.** Not started.
+13. **Reward-hacking demo — planned.** Not started.
+14. **Same model, different harness — planned.** Not started.
+15. **Checked steps, not just answers — planned.** Not started.
+16. **README update after items 1–15 — planned.** Not this change. Not started.
 
-Items landed one at a time. Item 8 is the last one done. Item 9 is not started.
+Items landed one at a time. Item 9 is the last one done. Item 10 is not started.
 
 ## Honesty
 
-1. The splash arithmetic is plain Ada. It is not proved. `SPARK_Mode` is off on that unit so it is not presented as a proof target. The contracts on `AI_Amplifier.Version` are the ones from the skeleton. The stamp text in that unit is `v0.8.0-weights`.
+1. The splash arithmetic is plain Ada. It is not proved. `SPARK_Mode` is off on that unit so it is not presented as a proof target. The contracts on `AI_Amplifier.Version` are the ones from the skeleton. The stamp text in that unit is `v0.9.0-recurse`.
 2. The tensor kernels are SPARK, at the levels in the proof status table. Silver is absence of run-time error (and, where the table says so, a range). Gold is the component rule. `Leaky_ReLU` is Gold. Its slope on the page is `0.01`. The `Pre` and `Post` are still checked when the program runs. The proof does not replace that check. Sigmoid, tanh, and softmax do not claim to match the real functions.
-3. CI builds the native program, runs `bin/tensors_test`, `bin/mlp_test`, and `bin/attention_test`, runs `./prove.sh` (GNATprove level 2, unproved checks are errors), builds the wasm module and the page, then runs the headless smoke. The committed `proof/gnatprove.out` is that level 2 run. It proves the root, the version unit, and the tensors. It does not prove the splash, the network, the tokenizer, or the attention block.
+3. CI builds the native program, runs `bin/tensors_test`, `bin/mlp_test`, `bin/attention_test`, and `bin/recurse_test`, runs `./prove.sh` (GNATprove level 2, unproved checks are errors), builds the wasm module and the page, then runs the headless smoke. The committed `proof/gnatprove.out` is that level 2 run. It proves the root, the version unit, and the tensors. It does not prove the splash, the network, the tokenizer, the attention block, or the chain checker.
 4. The wasm module's lack of imports is what this build emits, and `tools/wasm-smoke.mjs` checks it. The tensor body does reference a failed-check path. `tools/wasm-checks.c` defines `__gnat_last_chance_handler` and `system__assertions__raise_assert_failure` as traps, so that path links without an import. On the native runtime the same check raises. `-gnatp` is not used. `-gnatw.X` is the same switch as the native Alire profile: this runtime forbids exception propagation, and the compiler's reminder of that is turned off.
-5. JavaScript does not compute the splash, the product, the softmax, the loss, the decision boundary, the merges, the attention, or the weight text. It reads coordinates, copies numbers, and sends UTF-8 bytes. It adds up the weights it already read when it writes the sentence under the heatmap. If the module is missing, not WebAssembly, missing an export, or its stamp differs from the badge, the page says "The Ada module did not load" and still shows the title and the badge. The tensor demo then says it has no product. The leaky ReLU panel says it has no leaky ReLU. The training panel says it cannot train. The weight buttons say the weights cannot be edited. The token panel says it cannot tokenize.
+5. JavaScript does not compute the splash, the product, the softmax, the loss, the decision boundary, the merges, the attention, the weight text, or the chain check. It reads coordinates, copies numbers, and sends UTF-8 bytes. It adds up the weights it already read when it writes the sentence under the heatmap. If the module is missing, not WebAssembly, missing an export, or its stamp differs from the badge, the page says "The Ada module did not load" and still shows the title and the badge. The tensor demo then says it has no product. The leaky ReLU panel says it has no leaky ReLU. The training panel says it cannot train. The weight buttons say the weights cannot be edited. The token panel says it cannot tokenize. The chain panel says it cannot check a chain.
 6. The network on the splash is not a model. The tensor demo is not a model. The training panel is a model: forward, binary cross-entropy, backprop, and gradient descent, in the MLP unit. The token panel tokenizes and runs attention, forward only. Those weights are the seed. They are not trained.
-7. The MLP, the tokenizer, and the attention block are plain Ada. `SPARK_Mode` is off. The finite-difference check and the hand-computed attention pass are tests, not proofs. There is no Silver claim and no Gold claim on these units. They call the tensor kernels, so a component outside `Summand_Bound` or a softmax logit outside `Logit_Bound` fails the kernel `Pre` at run time. The seeded nets and the tests stay inside those bounds.
+7. The MLP, the tokenizer, the attention block, and the chain checker are plain Ada. `SPARK_Mode` is off. The finite-difference check, the hand-computed attention pass, and the recorded chains are tests, not proofs. There is no Silver claim and no Gold claim on these units. The MLP and attention call the tensor kernels, so a component outside `Summand_Bound` or a softmax logit outside `Logit_Bound` fails the kernel `Pre` at run time. The seeded nets and the tests stay inside those bounds. The chain checker does not call those kernels. A bad blob is a result, not a trap.
 8. `Float` results are approximate. The tensor test and the attention test allow `0.000_05`. Softmax of a non-empty vector sums to 1 within that tolerance, because the largest logit becomes `exp(0) = 1`. The gradient check allows `0.002` plus 5 percent of the analytical value, at a central step of `0.001`. The log, square root, sine, and cosine in the MLP body, and the square root in the attention body, are series, not `Ada.Numerics`. The hand-computed layer-norm values in the attention section are this Newton square root.
 9. Eight hidden units do not solve the spirals. The numbers in the network section are this seed, at the rates named there. They are not a claim about every seed.
 10. The BPE rules are whatever this excerpt and this tie-break produce. They are not a published tokenizer. ß is one token here. ä is not. A different excerpt would learn different merges. The 32, 288, and 376 figures are this text.
@@ -641,6 +716,7 @@ Items landed one at a time. Item 8 is the last one done. Item 9 is not started.
 12. The compiler, `wasm-ld`, Chrome, and the Node smokes are trusted tools. They are not verified.
 13. GitHub Pages publishes `site/` from `main` via `.github/workflows/pages.yml`. The cache-bust query is the stamp without the leading `v`.
 14. The hand-written XOR net and the three weight edits are Ada source. They are not the output of a language model, and they are not a rerun of the weight-space programming post. The post is linked from `docs/WEIGHT_SPACE.md` as the idea. The checks on a loaded file run when the program runs. They are not proved.
+15. The recorded chains are Ada source written for this repository. They are not the output of a language model, and they are not a rerun of the recursive-prompt repository linked from `docs/RECURSIVE_PROMPTS.md`. That repository has no license file. The page shows checked recordings. `recurse_cli --ask` can call a model, and only on the machine where the user set a key. The browser does not. There is no claim that a model produces the same chains, and no claim that these runs match anyone else's numbers.
 
 ## License
 

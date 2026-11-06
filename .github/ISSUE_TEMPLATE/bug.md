@@ -6,7 +6,7 @@ title: ""
 
 ## Stamp
 
-The yellow badge, bottom right. Example: `v0.8.0-weights`.
+The yellow badge, bottom right. Example: `v0.9.0-recurse`.
 
 ## What you expected
 
