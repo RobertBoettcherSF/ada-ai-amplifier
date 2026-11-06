@@ -58,6 +58,16 @@ ar x "$T/lib/rts-native/adalib/libgnat.a" s-memcop.o s-memmov.o s-memset.o
   --export=aa_w_clear --export=aa_w_push --export=aa_w_load \
   --export=aa_w_hand --export=aa_w_trained --export=aa_w_preset \
   --export=aa_w_note_len --export=aa_w_note_byte \
+  --export=aa_speed_prepare --export=aa_speed_execute \
+  --export=aa_speed_finish --export=aa_speed_steps \
+  --export=aa_speed_repeats --export=aa_speed_us \
+  --export=aa_speed_loss --export=aa_speed_answer \
+  --export=aa_speed_counted --export=aa_speed_reason \
+  --export=aa_speed_published_steps \
+  --export=aa_speed_published_native_us \
+  --export=aa_speed_published_wasm_us \
+  --export=aa_speed_len --export=aa_speed_byte \
+  --export=aa_speed_describe \
   --export=aa_bpe_clear --export=aa_bpe_push --export=aa_bpe_corpus \
   --export=aa_attn_run --export=aa_attn_tokens --export=aa_attn_id \
   --export=aa_attn_piece_len --export=aa_attn_piece_byte \

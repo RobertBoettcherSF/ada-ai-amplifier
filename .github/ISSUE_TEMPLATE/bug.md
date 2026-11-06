@@ -6,7 +6,7 @@ title: ""
 
 ## Stamp
 
-The yellow badge, bottom right. Example: `v0.9.0-recurse`.
+The yellow badge, bottom right. Example: `v0.10.0-speed`.
 
 ## What you expected
 

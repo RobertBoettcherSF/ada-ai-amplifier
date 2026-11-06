@@ -2,9 +2,9 @@
 
 The idea, and what this repository actually shows.
 
-Visible stamp: **v0.9.0-recurse**
+Visible stamp: **v0.10.0-speed**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.9.0-recurse
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.10.0-speed
 
 ## The idea
 
@@ -115,7 +115,7 @@ Reset button above the plot is different: it always rebuilds the seed.
   hand-written net and the three edits are ordinary Ada in
   `AI_Amplifier.MLP`.
 - Not a proof. `AI_Amplifier.MLP` and `AI_Amplifier.MLP.Demo` stay
-  `SPARK_Mode => Off`. The checks above run when the program runs.
+  `SPARK_Mode => Off`. The speed harness is the same. The checks above run when the program runs.
   A failed check in the WebAssembly module traps that module. The
   native test is where a bad file returns a status instead.
 - Not a change to the tensor proofs. Item 7 is untouched.
