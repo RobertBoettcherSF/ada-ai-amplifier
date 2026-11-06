@@ -4,9 +4,9 @@ A walkthrough for someone new to this repository, and possibly new to
 Ada. The logic lives in Ada. JavaScript only draws. The live page is one
 HTML file with that Ada compiled to WebAssembly inside it.
 
-Visible stamp: **v0.10.0-speed**
+Visible stamp: **v0.11.0-traces**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.10.0-speed
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.11.0-traces
 
 The yellow badge, `version.txt`, and `AI_Amplifier.Version.Version_Text`
 are that same text. The query on the link is the cache bust (the stamp
@@ -106,19 +106,21 @@ mean something:
 | `alr -n toolchain --select …` | Puts GNAT 16.1.0 and gprbuild 26.0.1 on the Alire toolchain |
 | `./tools/get-toolchain.sh` | Downloads AdaWebPack 24 into `toolchain/` (gitignored). Later runs see the compiler and return |
 | `alr -n build` | Native build. Warnings and checks are on, including `-gnata`, so `Pre` and `Post` run |
-| `./bin/hello` | Prints `ada-ai-amplifier v0.10.0-speed` |
+| `./bin/hello` | Prints `ada-ai-amplifier v0.11.0-traces` |
 | `./tools/check-version.sh` | That line, `version.txt`, and the badge in `web/template.html` must be the same stamp |
 | `./bin/tensors_test` | Prints `tensors ok` |
 | `./bin/mlp_test` | Prints `mlp ok` |
 | `./bin/attention_test` | Prints `attention ok` |
 | `./bin/recurse_test` | Prints `recurse ok` |
 | `./bin/recurse_cli` | Replays the recorded chains. It does not call a model |
+| `./bin/traces_test` | Prints `traces ok` |
+| `./bin/traces_cli` | Replays the wrong-turn traces. It does not call a model |
 | `npm ci` | Installs `puppeteer-core` from the lockfile |
 | `./build.sh` | Compiles the library to WebAssembly, runs `tools/wasm-smoke.mjs`, writes `site/index.html` and `site/version.txt` |
-| `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, the speed panel, tokens, recorded chains, F9, crash report, a failed module |
+| `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, the speed panel, tokens, recorded chains, wrong turns, F9, crash report, a failed module |
 
 Then open `site/index.html` in a browser yourself. The badge reads
-`v0.10.0-speed`. Leaky ReLU shows slope `0.01` and the output
+`v0.11.0-traces`. Leaky ReLU shows slope `0.01` and the output
 `-0.02`, `0`, `3`. Compute still shows the product `14`, `14`, `17`.
 
 The file, which CI runs as `./tools/howto-steps.sh`:
@@ -141,6 +143,8 @@ alr -n build
 ./bin/attention_test
 ./bin/recurse_test
 ./bin/recurse_cli
+./bin/traces_test
+./bin/traces_cli
 npm ci
 ./build.sh
 node tools/page-smoke.mjs
@@ -243,9 +247,12 @@ header comment, whether it is in SPARK.
 | `AI_Amplifier.Attention.Demo` | `src/ai_amplifier-attention-demo.ads/.adb` | The page's text buffer. Bytes in, token pieces and weights out |
 | `AI_Amplifier.Recurse` | `src/ai_amplifier-recurse.ads/.adb` | The Fibonacci state blob and the checker. Plain Ada |
 | `AI_Amplifier.Recurse.Demo` | `src/ai_amplifier-recurse-demo.ads/.adb` | The page's recorded chains. No network |
+| `AI_Amplifier.Traces` | `src/ai_amplifier-traces.ads/.adb` | Four wrong turns of the XOR trainer, and the next-step checker. Plain Ada |
+| `AI_Amplifier.Traces.Demo` | `src/ai_amplifier-traces-demo.ads/.adb` | The page's trace and verdict. No network |
 | `Hello` | `src/hello.adb` | Prints the stamp. Native only |
 | `Recurse_Cli` | `src/recurse_cli.adb` | Replays the chains. Calls a model only when the user sets a key, a URL, and a model name. Native only |
-| `Tensors_Test`, `MLP_Test`, `Attention_Test`, `Recurse_Test` | `src/tensors_test.adb`, `src/mlp_test.adb`, `src/attention_test.adb`, `src/recurse_test.adb` | Native tests. They use `Ada.Text_IO`, so `build.sh` does not compile them into the module |
+| `Traces_Cli` | `src/traces_cli.adb` | Replays the wrong-turn traces. Calls a model only when the user sets a key, a URL, and a model name. Native only |
+| `Tensors_Test`, `MLP_Test`, `Attention_Test`, `Recurse_Test`, `Traces_Test` | `src/tensors_test.adb`, `src/mlp_test.adb`, `src/attention_test.adb`, `src/recurse_test.adb`, `src/traces_test.adb` | Native tests. They use `Ada.Text_IO`, so `build.sh` does not compile them into the module |
 
 `Vector` and `Matrix` carry their shape as a discriminant (`Length`, or
 `Rows` and `Cols`). Components are `Float`, indexed `1 ..` that bound.
@@ -261,7 +268,8 @@ link has no imports.
 
 JavaScript does not compute the splash, the product, the softmax, the
 leaky ReLU, the loss, the decision boundary, the weight text, the
-merges, the attention, the chain check, or the training-speed verdict.
+merges, the attention, the chain check, the training-speed verdict,
+or the wrong-turn verdict.
 It reads coordinates, copies numbers, and sends UTF-8 bytes. On the
 speed panel it passes in two host wall-clock readings. Ada subtracts them.
 It adds up attention weights it already read, when it writes the
@@ -292,24 +300,24 @@ to the stamp without the `v`. A screenshot of the new page shows the
 new badge.
 
 **Plan, then Go, then one item.** Post a numbered plan for one change.
-Wait for Go. Build that item. Report, and stop. Items 1 through 10 are
-done. Item 9 is the recorded Fibonacci chains and the Ada checker.
-Item 10 is the training-speed harness. Items 11 through 16 are planned
-and not started. Do not start one of those in a change that is still
-about item 10.
+Wait for Go. Build that item. Report, and stop. Items 1 through 11 are
+done. Item 10 is the training-speed harness. Item 11 is the wrong-turn
+traces and the Ada checker. Items 12 through 16 are planned and not
+started. Do not start one of those in a change that is still about
+item 11.
 
 **Honesty.** Say what is checked at run time and what a prover has
 seen. On the tensor kernels, Silver means no run-time error and Gold
 means the component rule. Sigmoid, tanh, and softmax are Silver: the
 result lies in range, and the series is not the real function. The
-splash, the MLP, the tokenizer, attention, and the chain checker
-are not proved. `Pre`
+splash, the MLP, the tokenizer, attention, the chain checker, and
+the wrong-turn checker are not proved. `Pre`
 and `Post` are still ordinary Ada contracts, checked when the program
 runs. `Float` results are approximate; the tests name the tolerance.
 The spirals are not solved. The attention weights are a seed.
 
 **Pre-push.** Was the previous behaviour still there (splash, tensor
-demo, leaky ReLU, training, tokens, F9, crash report, badge)? Does the
+demo, leaky ReLU, training, tokens, recorded chains, wrong turns, F9, crash report, badge)? Does the
 new behaviour work? `./tools/howto-steps.sh` is the long check, after
 the packages and the compilers are installed. `./tools/check-version.sh`
 is the stamp check. Docs that name a number should name the number the
@@ -348,6 +356,7 @@ The log is `proof/gnatprove.out`. The same table is on the live page.
 | Tokenizer | not proved |
 | Attention | not proved |
 | Recursive prompts | not proved |
+| Wrong turns | not proved |
 
 Silver on dot and the two products means no run-time error, and the
 numeric result lies in `[-Acc_Bound, Acc_Bound]`. It does not mean the
@@ -362,11 +371,12 @@ The bounds that make the sums safe are `Summand_Bound` (`1.0E18`),
 (`1.0E38`). The README says why each one is that number. A component
 outside the bound fails the `Pre`.
 
-The splash, the page wrappers, the MLP, the tokenizer, attention, and
-the chain checker are plain Ada. Their tests are tests. The weight
+The splash, the page wrappers, the MLP, the tokenizer, attention,
+the chain checker, and the wrong-turn checker are plain Ada. Their tests are tests. The weight
 text and the hand-written XOR net live in the MLP unit, so they are
 tests too. `docs/WEIGHT_SPACE.md` is that account.
 `docs/RECURSIVE_PROMPTS.md` is the account of the recorded chains.
+`docs/WRONG_TURNS.md` is the account of the four trainer traces.
 `AI_Amplifier.Version` is SPARK,
 with the contracts from the skeleton. The stamp there is
-`v0.10.0-speed`.
+`v0.11.0-traces`.

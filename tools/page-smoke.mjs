@@ -132,7 +132,8 @@ try {
   assert(items[8].includes("Recursive prompts") && items[8].includes("done"), items[8]);
   assert(!items[8].includes("planned"), items[8]);
   assert(items[9].includes("Training-speed harness") && items[9].includes("done"), items[9]);
-  assert(items[10].includes("Wrong-turn traces") && items[10].includes("planned"), items[10]);
+  assert(items[10].includes("Wrong-turn traces") && items[10].includes("done"), items[10]);
+  assert(!items[10].includes("planned"), items[10]);
   assert(items[11].includes("Benchmark audit") && items[11].includes("planned"), items[11]);
   assert(items[12].includes("Reward-hacking demo") && items[12].includes("planned"), items[12]);
   assert(items[13].includes("Same model, different harness") && items[13].includes("planned"), items[13]);
@@ -141,7 +142,7 @@ try {
   const status16 = await page.$eval("#backlog li:nth-child(16) .st", (el) => el.textContent.trim());
   assert(status16 === "planned", status16);
   const proof = await page.$$eval("#proof tbody tr", (els) => els.map((el) => el.innerText.replace(/\s+/g, " ").trim()));
-  assert(proof.length === 17, "proof rows " + proof.length);
+  assert(proof.length === 18, "proof rows " + proof.length);
   const statusOf = (name) => {
     const row = proof.find((r) => r.slice(0, name.length) === name && (r.length === name.length || r[name.length] === " "));
     return row ? row.slice(name.length).trim() : "";
@@ -163,12 +164,14 @@ try {
   assert(statusOf("Tokenizer") === "not proved", "bpe " + statusOf("Tokenizer"));
   assert(statusOf("Attention") === "not proved", "attn " + statusOf("Attention"));
   assert(statusOf("Recursive prompts") === "not proved", "recurse proof " + statusOf("Recursive prompts"));
+  assert(statusOf("Wrong turns") === "not proved", "turns proof " + statusOf("Wrong turns"));
   const hrefs = await page.$$eval("#links a", (els) => els.map((a) => a.href));
   assert(hrefs.some((h) => h === "https://github.com/RobertBoettcherSF/ada-ai-amplifier"), "repo link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/HOWTO.md")), "howto link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/WEIGHT_SPACE.md")), "weights link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/RECURSIVE_PROMPTS.md")), "recurse link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/TRAINING_SPEED.md")), "speed link " + hrefs);
+  assert(hrefs.some((h) => h.includes("/docs/WRONG_TURNS.md")), "turns link " + hrefs);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
   assert(overflow, "desktop main overflows");
   const numbered = await page.$$eval("#backlog .n", (els) => els.map((el) => el.textContent.trim()));
@@ -437,6 +440,28 @@ try {
   assert(recText.includes("bad arithmetic"), "rec visible halt");
   assert(recText.includes("not toward base"), "rec visible stall");
   await page.screenshot({ path: resolve(shotDir, "recurse.png") });
+  await page.evaluate(() => document.getElementById("turns").scrollIntoView({ block: "center" }));
+  const turnSteps = await page.$eval("#turnsteps", (el) => el.textContent);
+  assert(turnSteps.includes("Wrong turn:"), "turn steps " + turnSteps);
+  const turnGood = await page.$eval("#turngood", (el) => el.textContent);
+  assert(turnGood.includes("fixes-it") && turnGood.includes("xor-returned"), turnGood);
+  const turnState = await page.$eval("#turnstat", (el) => el.textContent);
+  assert(turnState.includes("xor missed") && turnState.includes("weights valid"), turnState);
+  const turnH = await page.$eval("#turn-go-1", (el) => el.getBoundingClientRect().height);
+  assert(turnH >= 44, "turn height " + turnH);
+  await page.click("#turn-go-9");
+  await page.waitForFunction(() => document.getElementById("turnreport").textContent.includes("makes-it-worse"), { timeout: 20000 });
+  const turnBad = await page.$eval("#turnreport", (el) => el.textContent);
+  assert(turnBad.includes("loss-rose"), turnBad);
+  await page.click("#turn-go-1");
+  await page.waitForFunction(() => document.getElementById("turnreport").textContent.includes("fixes-it"), { timeout: 20000 });
+  const turnFix = await page.$eval("#turnreport", (el) => el.textContent);
+  assert(turnFix.includes("xor-returned"), turnFix);
+  await page.click("#turn-pick-2");
+  await page.waitForFunction(() => document.getElementById("turnsteps").textContent.includes("shape 2 4 1"), { timeout: 20000 });
+  const turnShape = await page.$eval("#turngood", (el) => el.textContent);
+  assert(turnShape.includes("fixes-it"), turnShape);
+  await page.screenshot({ path: resolve(shotDir, "turns.png") });
   const speedH = await page.$eval("#speed-base", (el) => el.getBoundingClientRect().height);
   assert(speedH >= 44, "speed height " + speedH);
   const speedBlurb = await page.$eval("#speedstat", (el) => el.textContent);
@@ -525,6 +550,13 @@ try {
   const phoneRec = await phonePage.$eval("#reclist", (el) => el.textContent);
   assert(phoneRec.includes("Reached the base case"), "phone rec good");
   assert(phoneRec.includes("bad arithmetic"), "phone rec halt");
+  await phonePage.evaluate(() => document.getElementById("turns").scrollIntoView({ block: "center" }));
+  const phoneTurn = await phonePage.$eval("#turnsteps", (el) => el.textContent);
+  assert(phoneTurn.includes("Wrong turn:"), "phone turn " + phoneTurn);
+  const phoneTurnH = await phonePage.$eval("#turn-go-5", (el) => el.getBoundingClientRect().height);
+  assert(phoneTurnH >= 44, "phone turn height " + phoneTurnH);
+  const phoneTurnOverflow = await phonePage.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
+  assert(phoneTurnOverflow, "phone turn overflows");
   const phoneRecOverflow = await phonePage.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
   assert(phoneRecOverflow, "phone rec overflows");
   await phonePage.evaluate(() => document.getElementById("mlp").scrollIntoView({ block: "center" }));
@@ -590,6 +622,7 @@ try {
   assert(await badPage.$eval("#attnerr", (el) => !el.hidden && el.textContent.includes("cannot tokenize")), "attn down");
   assert(await badPage.$eval("#attntext", (el) => el.disabled), "attn text still enabled");
   assert(await badPage.$eval("#recerr", (el) => !el.hidden && el.textContent.includes("cannot check a chain")), "recurse down");
+  assert(await badPage.$eval("#turnerr", (el) => !el.hidden && el.textContent.includes("cannot check a next step")), "turns down");
   assert(badErrors.length === 0, "nowasm errors " + badErrors);
 
   const html = readFileSync(resolve(root, "site/index.html"), "utf8");

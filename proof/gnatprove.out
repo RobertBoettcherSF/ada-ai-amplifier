@@ -9,9 +9,9 @@ Data Dependencies                 2           2                                 
 Flow Dependencies                 .           .                                                 .           .          .
 Initialization                    8           8                                                 .           .          .
 Non-Aliasing                      .           .                                                 .           .          .
-Run-time Checks                 225           .    225 (CVC5 82%, Trivial 2%, Z3 15%, altergo 1%)           .          .
-Assertions                      106           .    106 (CVC5 79%, Trivial 6%, Z3 13%, altergo 2%)           .          .
-Functional Contracts             47           .                 47 (CVC5 66%, Z3 32%, altergo 2%)           .          .
+Run-time Checks                 225           .    225 (CVC5 35%, Trivial 2%, Z3 61%, altergo 2%)           .          .
+Assertions                      106           .    106 (CVC5 34%, Trivial 6%, Z3 57%, altergo 4%)           .          .
+Functional Contracts             47           .                 47 (CVC5 39%, Z3 60%, altergo 1%)           .          .
 LSP Verification                  .           .                                                 .           .          .
 Termination                      31          31                                                 .           .          .
 Concurrency                       .           .                                                 .           .          .
@@ -25,13 +25,22 @@ max steps used for successful proof: 24233
 Most difficult proved checks
 ============================
 
-No check found with max time greater than 1 second
+ai_amplifier-tensors.adb:84:33: loop invariant after first iteration proved in max 5 seconds
+ai_amplifier-tensors.adb:410:52: fp_overflow check proved in max 4 seconds
+ai_amplifier-tensors.adb:542:13: loop invariant after first iteration proved in max 4 seconds
+ai_amplifier-tensors.adb:326:16: loop invariant after first iteration proved in max 3 seconds
+ai_amplifier-tensors.adb:408:13: loop invariant after first iteration proved in max 2 seconds
+ai_amplifier-tensors.adb:300:13: loop invariant after first iteration proved in max 2 seconds
+ai_amplifier-tensors.adb:528:13: loop invariant after first iteration proved in max 1 seconds
+ai_amplifier-tensors.adb:50:19: postcondition proved in max 1 seconds
+ai_amplifier-tensors.adb:65:19: postcondition proved in max 1 seconds
+ai_amplifier-tensors.adb:456:13: loop invariant after first iteration proved in max 1 seconds
 
 ========================
 Detailed analysis report
 ========================
 
-Analyzed 20 units
+Analyzed 24 units
 in unit ai_amplifier, 1 subprograms and packages out of 1 analyzed
   AI_Amplifier at ai_amplifier.ads:2 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
 in unit ai_amplifier-attention, 0 subprograms and packages out of 0 analyzed
@@ -76,6 +85,8 @@ in unit ai_amplifier-tensors, 30 subprograms and packages out of 30 analyzed
   AI_Amplifier.Tensors.Zero_Vector at ai_amplifier-tensors.adb:257 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (3 checks)
 in unit ai_amplifier-tensors-demo, 0 subprograms and packages out of 0 analyzed
 in unit ai_amplifier-tensors-leaky_demo, 0 subprograms and packages out of 0 analyzed
+in unit ai_amplifier-traces, 0 subprograms and packages out of 0 analyzed
+in unit ai_amplifier-traces-demo, 0 subprograms and packages out of 0 analyzed
 in unit ai_amplifier-version, 3 subprograms and packages out of 3 analyzed
   AI_Amplifier.Version at ai_amplifier-version.ads:3 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
   AI_Amplifier.Version.Version_Byte at ai_amplifier-version.ads:15 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
@@ -86,3 +97,5 @@ in unit mlp_test, 0 subprograms and packages out of 0 analyzed
 in unit recurse_cli, 0 subprograms and packages out of 0 analyzed
 in unit recurse_test, 0 subprograms and packages out of 0 analyzed
 in unit tensors_test, 0 subprograms and packages out of 0 analyzed
+in unit traces_cli, 0 subprograms and packages out of 0 analyzed
+in unit traces_test, 0 subprograms and packages out of 0 analyzed

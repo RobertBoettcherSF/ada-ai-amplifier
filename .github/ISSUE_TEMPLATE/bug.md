@@ -6,7 +6,7 @@ title: ""
 
 ## Stamp
 
-The yellow badge, bottom right. Example: `v0.10.0-speed`.
+The yellow badge, bottom right. Example: `v0.11.0-traces`.
 
 ## What you expected
 
