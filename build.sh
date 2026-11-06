@@ -19,7 +19,7 @@ rm -rf obj/wasm && mkdir -p obj/wasm
 cd obj/wasm
 for F in ../../src/*.adb; do
   case $(basename "$F") in
-    hello.adb|tensors_test.adb|mlp_test.adb|attention_test.adb) continue ;;
+    hello.adb|tensors_test.adb|mlp_test.adb|attention_test.adb|recurse_test.adb|recurse_cli.adb) continue ;;
   esac
   # -gnatw.X: this runtime forbids exception propagation, and the
   # compiler warns that a check would call Last_Chance_Handler. The
@@ -63,6 +63,14 @@ ar x "$T/lib/rts-native/adalib/libgnat.a" s-memcop.o s-memmov.o s-memset.o
   --export=aa_attn_piece_len --export=aa_attn_piece_byte \
   --export=aa_attn_vocab --export=aa_attn_merges --export=aa_attn_used \
   --export=aa_attn_weight --export=aa_attn_dropped --export=aa_attn_bytes \
+  --export=aa_rec_chains --export=aa_rec_max_index --export=aa_rec_select \
+  --export=aa_rec_name_len --export=aa_rec_name_byte \
+  --export=aa_rec_states --export=aa_rec_line_len --export=aa_rec_line_byte \
+  --export=aa_rec_mark --export=aa_rec_parsed \
+  --export=aa_rec_index --export=aa_rec_minus --export=aa_rec_current \
+  --export=aa_rec_stop --export=aa_rec_stop_len --export=aa_rec_stop_byte \
+  --export=aa_rec_stop_at --export=aa_rec_accepted --export=aa_rec_answer \
+  --export=aa_rec_note_len --export=aa_rec_note_byte \
   -z stack-size=2097152 --initial-memory=16777216 \
   -o ai_amplifier.wasm *.o
 cd ../..

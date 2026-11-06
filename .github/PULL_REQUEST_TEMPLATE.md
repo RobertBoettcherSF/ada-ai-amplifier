@@ -18,7 +18,7 @@ touches a proved kernel, and which level that kernel is.
 ## Pre-push
 
 - [ ] Previous behaviour is still there (splash, tensor demo, leaky ReLU, training, tokens, F9, crash report, badge, How-To link)
-- [ ] `./bin/tensors_test`, `./bin/mlp_test`, and `./bin/attention_test` print `ok`
+- [ ] `./bin/tensors_test`, `./bin/mlp_test`, `./bin/attention_test`, and `./bin/recurse_test` print `ok`
 - [ ] `./build.sh` and `node tools/page-smoke.mjs` pass
 - [ ] `./tools/check-version.sh` passes
 - [ ] `python3 tools/check-howto-quote.py` passes if the guide or its scripts changed

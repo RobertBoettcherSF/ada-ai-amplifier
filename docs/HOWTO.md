@@ -4,9 +4,9 @@ A walkthrough for someone new to this repository, and possibly new to
 Ada. The logic lives in Ada. JavaScript only draws. The live page is one
 HTML file with that Ada compiled to WebAssembly inside it.
 
-Visible stamp: **v0.8.0-weights**
+Visible stamp: **v0.9.0-recurse**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.8.0-weights
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.9.0-recurse
 
 The yellow badge, `version.txt`, and `AI_Amplifier.Version.Version_Text`
 are that same text. The query on the link is the cache bust (the stamp
@@ -106,17 +106,19 @@ mean something:
 | `alr -n toolchain --select …` | Puts GNAT 16.1.0 and gprbuild 26.0.1 on the Alire toolchain |
 | `./tools/get-toolchain.sh` | Downloads AdaWebPack 24 into `toolchain/` (gitignored). Later runs see the compiler and return |
 | `alr -n build` | Native build. Warnings and checks are on, including `-gnata`, so `Pre` and `Post` run |
-| `./bin/hello` | Prints `ada-ai-amplifier v0.8.0-weights` |
+| `./bin/hello` | Prints `ada-ai-amplifier v0.9.0-recurse` |
 | `./tools/check-version.sh` | That line, `version.txt`, and the badge in `web/template.html` must be the same stamp |
 | `./bin/tensors_test` | Prints `tensors ok` |
 | `./bin/mlp_test` | Prints `mlp ok` |
 | `./bin/attention_test` | Prints `attention ok` |
+| `./bin/recurse_test` | Prints `recurse ok` |
+| `./bin/recurse_cli` | Replays the recorded chains. It does not call a model |
 | `npm ci` | Installs `puppeteer-core` from the lockfile |
 | `./build.sh` | Compiles the library to WebAssembly, runs `tools/wasm-smoke.mjs`, writes `site/index.html` and `site/version.txt` |
-| `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, tokens, F9, crash report, a failed module |
+| `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, tokens, recorded chains, F9, crash report, a failed module |
 
 Then open `site/index.html` in a browser yourself. The badge reads
-`v0.8.0-weights`. Leaky ReLU shows slope `0.01` and the output
+`v0.9.0-recurse`. Leaky ReLU shows slope `0.01` and the output
 `-0.02`, `0`, `3`. Compute still shows the product `14`, `14`, `17`.
 
 The file, which CI runs as `./tools/howto-steps.sh`:
@@ -137,6 +139,8 @@ alr -n build
 ./bin/tensors_test
 ./bin/mlp_test
 ./bin/attention_test
+./bin/recurse_test
+./bin/recurse_cli
 npm ci
 ./build.sh
 node tools/page-smoke.mjs
@@ -236,8 +240,11 @@ header comment, whether it is in SPARK.
 | `AI_Amplifier.BPE` | `src/ai_amplifier-bpe.ads/.adb` | Byte-level byte-pair encoding on one built-in excerpt. Encode and decode |
 | `AI_Amplifier.Attention` | `src/ai_amplifier-attention.ads/.adb` | One causal self-attention block, forward only. The weights are a seed |
 | `AI_Amplifier.Attention.Demo` | `src/ai_amplifier-attention-demo.ads/.adb` | The page's text buffer. Bytes in, token pieces and weights out |
+| `AI_Amplifier.Recurse` | `src/ai_amplifier-recurse.ads/.adb` | The Fibonacci state blob and the checker. Plain Ada |
+| `AI_Amplifier.Recurse.Demo` | `src/ai_amplifier-recurse-demo.ads/.adb` | The page's recorded chains. No network |
 | `Hello` | `src/hello.adb` | Prints the stamp. Native only |
-| `Tensors_Test`, `MLP_Test`, `Attention_Test` | `src/tensors_test.adb`, `src/mlp_test.adb`, `src/attention_test.adb` | Native tests. They use `Ada.Text_IO`, so `build.sh` does not compile them into the module |
+| `Recurse_Cli` | `src/recurse_cli.adb` | Replays the chains. Calls a model only when the user sets a key, a URL, and a model name. Native only |
+| `Tensors_Test`, `MLP_Test`, `Attention_Test`, `Recurse_Test` | `src/tensors_test.adb`, `src/mlp_test.adb`, `src/attention_test.adb`, `src/recurse_test.adb` | Native tests. They use `Ada.Text_IO`, so `build.sh` does not compile them into the module |
 
 `Vector` and `Matrix` carry their shape as a discriminant (`Length`, or
 `Rows` and `Cols`). Components are `Float`, indexed `1 ..` that bound.
@@ -253,8 +260,8 @@ link has no imports.
 
 JavaScript does not compute the splash, the product, the softmax, the
 leaky ReLU, the loss, the decision boundary, the weight text, the
-merges, or the attention. It reads coordinates, copies numbers, and
-sends UTF-8 bytes.
+merges, the attention, or the chain check. It reads coordinates,
+copies numbers, and sends UTF-8 bytes.
 It adds up attention weights it already read, when it writes the
 sentence under the heatmap. That sum is named in the README honesty
 list. If the module is missing, not WebAssembly, missing an export, or
@@ -283,15 +290,17 @@ to the stamp without the `v`. A screenshot of the new page shows the
 new badge.
 
 **Plan, then Go, then one item.** Post a numbered plan for one change.
-Wait for Go. Build that item. Report, and stop. Items 1 through 8 are
-done. Item 9, recursive prompts with an Ada checker, is planned and
-not started. Do not start it in a change that is still about item 8.
+Wait for Go. Build that item. Report, and stop. Items 1 through 9 are
+done. Item 9 is the recorded Fibonacci chains and the Ada checker.
+Item 10, a training-speed harness, is planned and not started. Do not
+start it in a change that is still about item 9.
 
 **Honesty.** Say what is checked at run time and what a prover has
 seen. On the tensor kernels, Silver means no run-time error and Gold
 means the component rule. Sigmoid, tanh, and softmax are Silver: the
 result lies in range, and the series is not the real function. The
-splash, the MLP, the tokenizer, and attention are not proved. `Pre`
+splash, the MLP, the tokenizer, attention, and the chain checker
+are not proved. `Pre`
 and `Post` are still ordinary Ada contracts, checked when the program
 runs. `Float` results are approximate; the tests name the tolerance.
 The spirals are not solved. The attention weights are a seed.
@@ -334,6 +343,7 @@ The log is `proof/gnatprove.out`. The same table is on the live page.
 | MLP | not proved |
 | Tokenizer | not proved |
 | Attention | not proved |
+| Recursive prompts | not proved |
 
 Silver on dot and the two products means no run-time error, and the
 numeric result lies in `[-Acc_Bound, Acc_Bound]`. It does not mean the
@@ -348,9 +358,11 @@ The bounds that make the sums safe are `Summand_Bound` (`1.0E18`),
 (`1.0E38`). The README says why each one is that number. A component
 outside the bound fails the `Pre`.
 
-The splash, the page wrappers, the MLP, the tokenizer, and attention
-are plain Ada. Their tests are tests. The weight text and the
-hand-written XOR net live in the MLP unit, so they are tests too.
-`docs/WEIGHT_SPACE.md` is that account. `AI_Amplifier.Version` is SPARK,
+The splash, the page wrappers, the MLP, the tokenizer, attention, and
+the chain checker are plain Ada. Their tests are tests. The weight
+text and the hand-written XOR net live in the MLP unit, so they are
+tests too. `docs/WEIGHT_SPACE.md` is that account.
+`docs/RECURSIVE_PROMPTS.md` is the account of the recorded chains.
+`AI_Amplifier.Version` is SPARK,
 with the contracts from the skeleton. The stamp there is
-`v0.8.0-weights`.
+`v0.9.0-recurse`.

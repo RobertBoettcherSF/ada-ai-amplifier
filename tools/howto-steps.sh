@@ -12,6 +12,8 @@ alr -n build
 ./bin/tensors_test
 ./bin/mlp_test
 ./bin/attention_test
+./bin/recurse_test
+./bin/recurse_cli
 npm ci
 ./build.sh
 node tools/page-smoke.mjs

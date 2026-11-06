@@ -355,4 +355,50 @@ if (exp.aa_attn_bytes() !== 768 || exp.aa_attn_dropped() !== 3) {
 }
 const longN = exp.aa_attn_run();
 if (longN < 1 || exp.aa_attn_used() > 16 || exp.aa_attn_used() < 1) fail("wasm long " + longN);
+
+const recNeed = ["aa_rec_chains", "aa_rec_max_index", "aa_rec_select", "aa_rec_name_len", "aa_rec_name_byte", "aa_rec_states", "aa_rec_line_len", "aa_rec_line_byte", "aa_rec_mark", "aa_rec_parsed", "aa_rec_index", "aa_rec_minus", "aa_rec_current", "aa_rec_stop", "aa_rec_stop_len", "aa_rec_stop_byte", "aa_rec_stop_at", "aa_rec_accepted", "aa_rec_answer", "aa_rec_note_len", "aa_rec_note_byte"];
+for (const name of recNeed) {
+  if (typeof exp[name] !== "function") fail("missing export " + name);
+}
+function recText(lenFn, byteFn) {
+  const n = lenFn();
+  let s = "";
+  for (let i = 1; i <= n; i += 1) s += String.fromCharCode(byteFn(i) & 255);
+  return s;
+}
+if (exp.aa_rec_chains() !== 4 || exp.aa_rec_max_index() !== 20) {
+  fail("wasm rec census " + exp.aa_rec_chains() + " " + exp.aa_rec_max_index());
+}
+//  This link has no binder, so the demo's elaboration block does
+//  not run. The page selects a chain before it reads one.
+exp.aa_rec_select(1);
+if (exp.aa_rec_answer() !== 8 || exp.aa_rec_accepted() !== 6 || exp.aa_rec_stop() !== 0) {
+  fail("wasm rec chain 1 " + [exp.aa_rec_answer(), exp.aa_rec_accepted(), exp.aa_rec_stop()]);
+}
+const recBefore = exp.aa_rec_answer();
+exp.aa_rec_select(0);
+exp.aa_rec_select(9);
+if (exp.aa_rec_answer() !== recBefore) fail("wasm rec bad select");
+if (exp.aa_rec_states() !== 7 || exp.aa_rec_index(7) !== 0 || exp.aa_rec_minus(7) !== 8 || exp.aa_rec_current(7) !== 13) {
+  fail("wasm rec fib6 " + [exp.aa_rec_states(), exp.aa_rec_index(7), exp.aa_rec_minus(7), exp.aa_rec_current(7)]);
+}
+if (exp.aa_rec_mark(7) !== 1 || exp.aa_rec_parsed(7) !== 1) fail("wasm rec base mark");
+if (recText(() => exp.aa_rec_name_len(), (i) => exp.aa_rec_name_byte(i)) !== "fib-6-complete") {
+  fail("wasm rec name");
+}
+const note = recText(() => exp.aa_rec_note_len(), (i) => exp.aa_rec_note_byte(i));
+if (!note.includes("minus-one is 8 after 6 accepted steps")) fail("wasm rec note " + note);
+if (exp.aa_rec_line_byte(1, 0) !== 0 || exp.aa_rec_name_byte(0) !== 0 || exp.aa_rec_index(0) !== 0) {
+  fail("wasm rec clamp");
+}
+exp.aa_rec_select(2);
+if (exp.aa_rec_stop() !== 4 || exp.aa_rec_stop_at() !== 4 || exp.aa_rec_current(4) !== 4 || exp.aa_rec_accepted() !== 2) {
+  fail("wasm rec sum");
+}
+exp.aa_rec_select(3);
+if (exp.aa_rec_stop() !== 3 || exp.aa_rec_index(2) !== 4) fail("wasm rec stall");
+exp.aa_rec_select(4);
+if (exp.aa_rec_stop() !== 1 || exp.aa_rec_parsed(3) !== 0) fail("wasm rec garbled");
+const halt = recText(() => exp.aa_rec_line_len(3), (i) => exp.aa_rec_line_byte(3, i));
+if (halt !== "unreadable  halt") fail("wasm rec halt line " + halt);
 console.log("wasm ok", got);
