@@ -465,4 +465,46 @@ if (exp.aa_speed_reason() !== 6) fail("speed clock " + speedText());
 exp.aa_speed_describe();
 if (!speedText().includes("95")) fail("speed blurb " + speedText());
 console.log("speed wasm baseline_us", speedBaseUs, "faster_us", speedFastUs);
+const trNeed = ["aa_tr_count", "aa_tr_select", "aa_tr_name_len", "aa_tr_name_byte", "aa_tr_steps", "aa_tr_line_len", "aa_tr_line_byte", "aa_tr_wrong", "aa_tr_menu", "aa_tr_menu_len", "aa_tr_menu_byte", "aa_tr_propose", "aa_tr_verdict", "aa_tr_reason", "aa_tr_reason_len", "aa_tr_reason_byte", "aa_tr_report_len", "aa_tr_report_byte", "aa_tr_good_len", "aa_tr_good_byte", "aa_tr_state_len", "aa_tr_state_byte"];
+for (const name of trNeed) {
+  if (typeof exp[name] !== "function") fail("missing export " + name);
+}
+function trText(lenFn, byteFn) {
+  const n = lenFn();
+  let s = "";
+  for (let i = 1; i <= n; i += 1) s += String.fromCharCode(byteFn(i));
+  return s;
+}
+if (exp.aa_tr_count() !== 4 || exp.aa_tr_menu() !== 10) {
+  fail("wasm tr census " + exp.aa_tr_count() + " " + exp.aa_tr_menu());
+}
+exp.aa_tr_select(1);
+if (exp.aa_tr_steps() !== 3 || exp.aa_tr_wrong(3) !== 1 || exp.aa_tr_wrong(1) !== 0) {
+  fail("wasm tr shape " + [exp.aa_tr_steps(), exp.aa_tr_wrong(3)]);
+}
+const trState = trText(() => exp.aa_tr_state_len(), (i) => exp.aa_tr_state_byte(i));
+if (!trState.includes("xor missed")) fail("wasm tr state " + trState);
+const trGood = trText(() => exp.aa_tr_good_len(), (i) => exp.aa_tr_good_byte(i));
+if (!trGood.includes("fixes-it") || !trGood.includes("xor-returned")) fail("wasm tr good " + trGood);
+exp.aa_tr_propose(9);
+if (exp.aa_tr_verdict() !== 3 || exp.aa_tr_reason() !== 4) {
+  fail("wasm tr invert " + [exp.aa_tr_verdict(), exp.aa_tr_reason()]);
+}
+const trBad = trText(() => exp.aa_tr_report_len(), (i) => exp.aa_tr_report_byte(i));
+if (!trBad.includes("makes-it-worse") || !trBad.includes("loss-rose")) fail("wasm tr bad " + trBad);
+exp.aa_tr_propose(1);
+if (exp.aa_tr_verdict() !== 1 || exp.aa_tr_reason() !== 1) {
+  fail("wasm tr fix " + [exp.aa_tr_verdict(), exp.aa_tr_reason()]);
+}
+exp.aa_tr_propose(0);
+if (exp.aa_tr_verdict() !== 2 || exp.aa_tr_reason() !== 7) fail("wasm tr code 0");
+const trKept = exp.aa_tr_verdict();
+exp.aa_tr_select(0);
+if (exp.aa_tr_verdict() !== trKept) fail("wasm tr bad select");
+exp.aa_tr_select(2);
+exp.aa_tr_propose(3);
+if (exp.aa_tr_verdict() !== 2 || exp.aa_tr_reason() !== 5) {
+  fail("wasm tr zeros " + [exp.aa_tr_verdict(), exp.aa_tr_reason()]);
+}
+if (exp.aa_tr_line_byte(1, 0) !== 0 || exp.aa_tr_name_byte(0) !== 0) fail("wasm tr clamp");
 console.log("wasm ok", got);

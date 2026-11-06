@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <!-- ada-ai-amplifier. Splash motion, the tensor demo, leaky ReLU,
      the MLP, the weight text, the byte-level tokenizer, the
-     attention block, and the recorded chains are Ada, compiled to
-     WebAssembly and embedded by build.sh. This file only draws,
+     attention block, the recorded chains, and the wrong-turn
+     checker are Ada, compiled to WebAssembly and embedded by
+     build.sh. This file only draws,
      copies numbers and text bytes into the module, and writes
      F9 / crash files. -->
 <html lang="en">
@@ -392,7 +393,13 @@
       touch-action: manipulation;
     }
     #attnread { margin-top: 0.4rem; }
-    #recurse { margin: 0.2rem 0 1.2rem; }
+    #recurse, #turns { margin: 0.2rem 0 1.2rem; }
+    .turn-pair {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 12px;
+    }
+    .turn-pair p { margin: 0.3rem 0; }
     .rec-chain {
       margin: 0 0 1rem;
       padding-bottom: 0.6rem;
@@ -413,7 +420,7 @@
     .rec-steps .base { color: #ffe14a; }
     .rec-steps .halt { color: #ffb4b4; }
     @media (max-width: 640px) {
-      .mlp-views { grid-template-columns: minmax(0, 1fr); }
+      .mlp-views, .turn-pair { grid-template-columns: minmax(0, 1fr); }
     }
     @media (max-width: 520px) {
       .demo-cols { flex-direction: column; }
@@ -426,7 +433,7 @@
   </style>
 </head>
 <body>
-  <div id="ver">v0.10.0-speed</div>
+  <div id="ver">v0.11.0-traces</div>
   <main id="main" tabindex="-1">
     <h1>ada-ai-amplifier</h1>
     <p id="banner" class="err" hidden></p>
@@ -637,6 +644,38 @@
         runs that program.
       </p>
     </div>
+    <h2>Wrong turns</h2>
+    <p>
+      Four traces of this XOR trainer, each ending on a step that
+      left the net in a bad state. Ada replays the trace up to that
+      step. Pick a next step from the menu. Ada runs it on the
+      trainer and says whether it fixes the net, leaves it no
+      better, or makes it worse, and which rule decided. The
+      known-good step is shown beside that verdict. JavaScript
+      only copies the words. This page does not call a model.
+    </p>
+    <div id="turns">
+      <div class="mlp-controls" id="turnpicks"></div>
+      <p id="turnstat" class="out">Waiting for the Ada module.</p>
+      <ol id="turnsteps" class="rec-steps"></ol>
+      <div class="mlp-controls" id="turnmenu"></div>
+      <div class="turn-pair">
+        <div>
+          <p class="fine">This step</p>
+          <p id="turnreport" class="out"></p>
+        </div>
+        <div>
+          <p class="fine">Known-good step</p>
+          <p id="turngood" class="out"></p>
+        </div>
+      </div>
+      <p id="turnerr" class="err" hidden></p>
+      <p class="fine">
+        A native program can ask a model for the next step. It does
+        that only when you give it your own key, and this page never
+        runs that program.
+      </p>
+    </div>
     <h2>On this page</h2>
     <ul>
       <li>Tap the splash, or press Enter, to leave it.</li>
@@ -647,6 +686,7 @@
       <li>Training speed times the XOR trainer. The baseline and the faster variant have to pass the same loss check. Ada decides whether the time counts.</li>
       <li>The text box asks Ada to tokenize and to run attention. JavaScript only paints.</li>
       <li>The recorded chains ask Ada to check each saved blob. A wrong step stops that chain.</li>
+      <li>Wrong turns asks Ada to run one next step on a recorded trainer trace and to say whether that step fixes it.</li>
       <li>F9, or Feedback, writes a feedback file.</li>
       <li>If the previous session did not end cleanly, a crash report is offered.</li>
     </ul>
@@ -662,7 +702,7 @@
       <li><span class="n">8.</span><span>Weight-space programming</span> <span class="st done">done</span></li>
       <li><span class="n">9.</span><span>Recursive prompts with an Ada checker</span> <span class="st done">done</span></li>
       <li><span class="n">10.</span><span>Training-speed harness</span> <span class="st done">done</span></li>
-      <li><span class="n">11.</span><span>Wrong-turn traces</span> <span class="st">planned</span></li>
+      <li><span class="n">11.</span><span>Wrong-turn traces</span> <span class="st done">done</span></li>
       <li><span class="n">12.</span><span>Benchmark audit</span> <span class="st">planned</span></li>
       <li><span class="n">13.</span><span>Reward-hacking demo</span> <span class="st">planned</span></li>
       <li><span class="n">14.</span><span>Same model, different harness</span> <span class="st">planned</span></li>
@@ -699,6 +739,7 @@
         <tr><td>Tokenizer</td><td class="st">not proved</td></tr>
         <tr><td>Attention</td><td class="st">not proved</td></tr>
         <tr><td>Recursive prompts</td><td class="st">not proved</td></tr>
+        <tr><td>Wrong turns</td><td class="st">not proved</td></tr>
       </tbody>
     </table>
     <h2>Links</h2>
@@ -708,6 +749,7 @@
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/WEIGHT_SPACE.md">Weight-space programming</a></li>
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/RECURSIVE_PROMPTS.md">Recursive prompts</a></li>
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/TRAINING_SPEED.md">Training speed</a></li>
+      <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/WRONG_TURNS.md">Wrong turns</a></li>
     </ul>
     <noscript>
       <p class="err">JavaScript is off, so the Ada module is not running. Open this page in Safari or Chrome.</p>
@@ -902,6 +944,7 @@ function fail(detail) {
   showAttnDown();
   showSpeedDown();
   showRecurseDown();
+  showTurnsDown();
 }
 function skip(how) {
   if (splash.hidden) return;
@@ -1919,6 +1962,70 @@ function bootRecurse() {
   paintRecurse();
   note("recurse", box("recstat").textContent);
 }
+function showTurnsDown() {
+  const err = box("turnerr");
+  if (!err) return;
+  err.hidden = false;
+  err.textContent = "The Ada module did not load, so this panel cannot check a next step.";
+  const stat = box("turnstat");
+  if (stat) stat.textContent = "Waiting for the Ada module.";
+}
+function paintTurn() {
+  const list = box("turnsteps");
+  if (!list || !ada) return;
+  list.replaceChildren();
+  const n = ada.aa_tr_steps();
+  for (let s = 1; s <= n; s += 1) {
+    const li = document.createElement("li");
+    li.textContent = adaText(() => ada.aa_tr_line_len(s), (i) => ada.aa_tr_line_byte(s, i));
+    if (ada.aa_tr_wrong(s) === 1) li.className = "halt";
+    list.append(li);
+  }
+  box("turnstat").textContent = adaText(() => ada.aa_tr_state_len(), (i) => ada.aa_tr_state_byte(i));
+  box("turngood").textContent = adaText(() => ada.aa_tr_good_len(), (i) => ada.aa_tr_good_byte(i));
+  const report = adaText(() => ada.aa_tr_report_len(), (i) => ada.aa_tr_report_byte(i));
+  box("turnreport").textContent = report || "Pick a next step.";
+}
+function bootTurns() {
+  const err = box("turnerr");
+  if (err) err.hidden = true;
+  const picks = box("turnpicks");
+  const menu = box("turnmenu");
+  picks.replaceChildren();
+  menu.replaceChildren();
+  const count = ada.aa_tr_count();
+  for (let c = 1; c <= count; c += 1) {
+    ada.aa_tr_select(c);
+    const name = adaText(() => ada.aa_tr_name_len(), (i) => ada.aa_tr_name_byte(i));
+    const button = document.createElement("button");
+    button.type = "button";
+    button.id = "turn-pick-" + String(c);
+    button.textContent = name;
+    button.addEventListener("click", () => {
+      ada.aa_tr_select(c);
+      paintTurn();
+      note("turn", name);
+    });
+    picks.append(button);
+  }
+  const menuCount = ada.aa_tr_menu();
+  for (let code = 1; code <= menuCount; code += 1) {
+    const label = adaText(() => ada.aa_tr_menu_len(code), (i) => ada.aa_tr_menu_byte(code, i));
+    const button = document.createElement("button");
+    button.type = "button";
+    button.id = "turn-go-" + String(code);
+    button.textContent = label;
+    button.addEventListener("click", () => {
+      ada.aa_tr_propose(code);
+      paintTurn();
+      note("turn step", code);
+    });
+    menu.append(button);
+  }
+  ada.aa_tr_select(1);
+  paintTurn();
+  note("turns", box("turnstat").textContent);
+}
 addEventListener("resize", () => {
   if (ada && !fatal) paintMlp();
 });
@@ -2081,7 +2188,7 @@ async function boot() {
     fail(String(e && e.message ? e.message : e));
     return;
   }
-  const need = ["aa_version_length", "aa_version_byte", "aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get", "aa_set_m", "aa_get_m", "aa_set_v", "aa_get_v", "aa_tensor_run", "aa_product", "aa_softmax", "aa_lrelu_set", "aa_lrelu_in", "aa_lrelu_run", "aa_lrelu_out", "aa_lrelu_slope", "aa_mlp_reset", "aa_mlp_set_rate", "aa_mlp_rate", "aa_mlp_train", "aa_mlp_epoch", "aa_mlp_loss", "aa_mlp_predict", "aa_mlp_count", "aa_mlp_x", "aa_mlp_y", "aa_mlp_label", "aa_mlp_lo", "aa_mlp_hi", "aa_mlp_grid_n", "aa_mlp_fill", "aa_mlp_cell", "aa_mlp_curve_n", "aa_mlp_curve", "aa_mlp_kind", "aa_w_limit", "aa_w_span", "aa_w_count", "aa_w_get", "aa_w_set", "aa_w_name_len", "aa_w_name_byte", "aa_w_len", "aa_w_byte", "aa_w_clear", "aa_w_push", "aa_w_load", "aa_w_hand", "aa_w_trained", "aa_w_preset", "aa_w_note_len", "aa_w_note_byte", "aa_speed_prepare", "aa_speed_execute", "aa_speed_finish", "aa_speed_steps", "aa_speed_repeats", "aa_speed_us", "aa_speed_loss", "aa_speed_answer", "aa_speed_counted", "aa_speed_reason", "aa_speed_published_steps", "aa_speed_published_native_us", "aa_speed_published_wasm_us", "aa_speed_len", "aa_speed_byte", "aa_speed_describe", "aa_bpe_clear", "aa_bpe_push", "aa_bpe_corpus", "aa_attn_run", "aa_attn_tokens", "aa_attn_id", "aa_attn_piece_len", "aa_attn_piece_byte", "aa_attn_vocab", "aa_attn_merges", "aa_attn_used", "aa_attn_weight", "aa_attn_dropped", "aa_attn_bytes", "aa_rec_chains", "aa_rec_max_index", "aa_rec_select", "aa_rec_name_len", "aa_rec_name_byte", "aa_rec_states", "aa_rec_line_len", "aa_rec_line_byte", "aa_rec_mark", "aa_rec_parsed", "aa_rec_index", "aa_rec_minus", "aa_rec_current", "aa_rec_stop", "aa_rec_stop_len", "aa_rec_stop_byte", "aa_rec_stop_at", "aa_rec_accepted", "aa_rec_answer", "aa_rec_note_len", "aa_rec_note_byte"];
+  const need = ["aa_version_length", "aa_version_byte", "aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get", "aa_set_m", "aa_get_m", "aa_set_v", "aa_get_v", "aa_tensor_run", "aa_product", "aa_softmax", "aa_lrelu_set", "aa_lrelu_in", "aa_lrelu_run", "aa_lrelu_out", "aa_lrelu_slope", "aa_mlp_reset", "aa_mlp_set_rate", "aa_mlp_rate", "aa_mlp_train", "aa_mlp_epoch", "aa_mlp_loss", "aa_mlp_predict", "aa_mlp_count", "aa_mlp_x", "aa_mlp_y", "aa_mlp_label", "aa_mlp_lo", "aa_mlp_hi", "aa_mlp_grid_n", "aa_mlp_fill", "aa_mlp_cell", "aa_mlp_curve_n", "aa_mlp_curve", "aa_mlp_kind", "aa_w_limit", "aa_w_span", "aa_w_count", "aa_w_get", "aa_w_set", "aa_w_name_len", "aa_w_name_byte", "aa_w_len", "aa_w_byte", "aa_w_clear", "aa_w_push", "aa_w_load", "aa_w_hand", "aa_w_trained", "aa_w_preset", "aa_w_note_len", "aa_w_note_byte", "aa_speed_prepare", "aa_speed_execute", "aa_speed_finish", "aa_speed_steps", "aa_speed_repeats", "aa_speed_us", "aa_speed_loss", "aa_speed_answer", "aa_speed_counted", "aa_speed_reason", "aa_speed_published_steps", "aa_speed_published_native_us", "aa_speed_published_wasm_us", "aa_speed_len", "aa_speed_byte", "aa_speed_describe", "aa_bpe_clear", "aa_bpe_push", "aa_bpe_corpus", "aa_attn_run", "aa_attn_tokens", "aa_attn_id", "aa_attn_piece_len", "aa_attn_piece_byte", "aa_attn_vocab", "aa_attn_merges", "aa_attn_used", "aa_attn_weight", "aa_attn_dropped", "aa_attn_bytes", "aa_rec_chains", "aa_rec_max_index", "aa_rec_select", "aa_rec_name_len", "aa_rec_name_byte", "aa_rec_states", "aa_rec_line_len", "aa_rec_line_byte", "aa_rec_mark", "aa_rec_parsed", "aa_rec_index", "aa_rec_minus", "aa_rec_current", "aa_rec_stop", "aa_rec_stop_len", "aa_rec_stop_byte", "aa_rec_stop_at", "aa_rec_accepted", "aa_rec_answer", "aa_rec_note_len", "aa_rec_note_byte", "aa_tr_count", "aa_tr_select", "aa_tr_name_len", "aa_tr_name_byte", "aa_tr_steps", "aa_tr_line_len", "aa_tr_line_byte", "aa_tr_wrong", "aa_tr_menu", "aa_tr_menu_len", "aa_tr_menu_byte", "aa_tr_propose", "aa_tr_verdict", "aa_tr_reason", "aa_tr_reason_len", "aa_tr_reason_byte", "aa_tr_report_len", "aa_tr_report_byte", "aa_tr_good_len", "aa_tr_good_byte", "aa_tr_state_len", "aa_tr_state_byte"];
   for (let i = 0; i < need.length; i += 1) {
     if (typeof ada[need[i]] !== "function") {
       ada = null;
@@ -2113,6 +2220,7 @@ async function boot() {
   });
   bootAttn();
   bootRecurse();
+  bootTurns();
   note("wasm loaded", stamp);
   hint.textContent = "Tap or Enter";
   started = true;
