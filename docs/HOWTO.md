@@ -4,9 +4,9 @@ A walkthrough for someone new to this repository, and possibly new to
 Ada. The logic lives in Ada. JavaScript only draws. The live page is one
 HTML file with that Ada compiled to WebAssembly inside it.
 
-Visible stamp: **v0.9.0-recurse**
+Visible stamp: **v0.10.0-speed**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.9.0-recurse
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.10.0-speed
 
 The yellow badge, `version.txt`, and `AI_Amplifier.Version.Version_Text`
 are that same text. The query on the link is the cache bust (the stamp
@@ -106,7 +106,7 @@ mean something:
 | `alr -n toolchain --select …` | Puts GNAT 16.1.0 and gprbuild 26.0.1 on the Alire toolchain |
 | `./tools/get-toolchain.sh` | Downloads AdaWebPack 24 into `toolchain/` (gitignored). Later runs see the compiler and return |
 | `alr -n build` | Native build. Warnings and checks are on, including `-gnata`, so `Pre` and `Post` run |
-| `./bin/hello` | Prints `ada-ai-amplifier v0.9.0-recurse` |
+| `./bin/hello` | Prints `ada-ai-amplifier v0.10.0-speed` |
 | `./tools/check-version.sh` | That line, `version.txt`, and the badge in `web/template.html` must be the same stamp |
 | `./bin/tensors_test` | Prints `tensors ok` |
 | `./bin/mlp_test` | Prints `mlp ok` |
@@ -115,10 +115,10 @@ mean something:
 | `./bin/recurse_cli` | Replays the recorded chains. It does not call a model |
 | `npm ci` | Installs `puppeteer-core` from the lockfile |
 | `./build.sh` | Compiles the library to WebAssembly, runs `tools/wasm-smoke.mjs`, writes `site/index.html` and `site/version.txt` |
-| `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, tokens, recorded chains, F9, crash report, a failed module |
+| `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, the speed panel, tokens, recorded chains, F9, crash report, a failed module |
 
 Then open `site/index.html` in a browser yourself. The badge reads
-`v0.9.0-recurse`. Leaky ReLU shows slope `0.01` and the output
+`v0.10.0-speed`. Leaky ReLU shows slope `0.01` and the output
 `-0.02`, `0`, `3`. Compute still shows the product `14`, `14`, `17`.
 
 The file, which CI runs as `./tools/howto-steps.sh`:
@@ -237,6 +237,7 @@ header comment, whether it is in SPARK.
 | `AI_Amplifier.Tensors.Leaky_Demo` | `src/ai_amplifier-tensors-leaky_demo.ads/.adb` | The length-3 leaky ReLU panel |
 | `AI_Amplifier.MLP` | `src/ai_amplifier-mlp.ads/.adb` | The 2–8–1 network. Seeded init, binary cross-entropy, backprop, gradient descent, the weight text, the hand-written XOR net |
 | `AI_Amplifier.MLP.Demo` | `src/ai_amplifier-mlp-demo.ads/.adb` | The page's copy: dataset, rate, at most 32 steps per call, a 48 by 48 grid, the loss curve, the weight workbench |
+| `AI_Amplifier.MLP.Speed` | `src/ai_amplifier-mlp-speed.ads/.adb` | The XOR training-speed harness. Baseline and faster variant, the step count, and the accept or reject. Plain Ada |
 | `AI_Amplifier.BPE` | `src/ai_amplifier-bpe.ads/.adb` | Byte-level byte-pair encoding on one built-in excerpt. Encode and decode |
 | `AI_Amplifier.Attention` | `src/ai_amplifier-attention.ads/.adb` | One causal self-attention block, forward only. The weights are a seed |
 | `AI_Amplifier.Attention.Demo` | `src/ai_amplifier-attention-demo.ads/.adb` | The page's text buffer. Bytes in, token pieces and weights out |
@@ -260,8 +261,9 @@ link has no imports.
 
 JavaScript does not compute the splash, the product, the softmax, the
 leaky ReLU, the loss, the decision boundary, the weight text, the
-merges, the attention, or the chain check. It reads coordinates,
-copies numbers, and sends UTF-8 bytes.
+merges, the attention, the chain check, or the training-speed verdict.
+It reads coordinates, copies numbers, and sends UTF-8 bytes. On the
+speed panel it passes in two host wall-clock readings. Ada subtracts them.
 It adds up attention weights it already read, when it writes the
 sentence under the heatmap. That sum is named in the README honesty
 list. If the module is missing, not WebAssembly, missing an export, or
@@ -290,10 +292,11 @@ to the stamp without the `v`. A screenshot of the new page shows the
 new badge.
 
 **Plan, then Go, then one item.** Post a numbered plan for one change.
-Wait for Go. Build that item. Report, and stop. Items 1 through 9 are
+Wait for Go. Build that item. Report, and stop. Items 1 through 10 are
 done. Item 9 is the recorded Fibonacci chains and the Ada checker.
-Item 10, a training-speed harness, is planned and not started. Do not
-start it in a change that is still about item 9.
+Item 10 is the training-speed harness. Items 11 through 16 are planned
+and not started. Do not start one of those in a change that is still
+about item 10.
 
 **Honesty.** Say what is checked at run time and what a prover has
 seen. On the tensor kernels, Silver means no run-time error and Gold
@@ -341,6 +344,7 @@ The log is `proof/gnatprove.out`. The same table is on the live page.
 | Softmax | Silver |
 | Splash | not proved |
 | MLP | not proved |
+| Training speed | not proved |
 | Tokenizer | not proved |
 | Attention | not proved |
 | Recursive prompts | not proved |
@@ -365,4 +369,4 @@ tests too. `docs/WEIGHT_SPACE.md` is that account.
 `docs/RECURSIVE_PROMPTS.md` is the account of the recorded chains.
 `AI_Amplifier.Version` is SPARK,
 with the contracts from the skeleton. The stamp there is
-`v0.9.0-recurse`.
+`v0.10.0-speed`.

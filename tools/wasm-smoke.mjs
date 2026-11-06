@@ -401,4 +401,68 @@ exp.aa_rec_select(4);
 if (exp.aa_rec_stop() !== 1 || exp.aa_rec_parsed(3) !== 0) fail("wasm rec garbled");
 const halt = recText(() => exp.aa_rec_line_len(3), (i) => exp.aa_rec_line_byte(3, i));
 if (halt !== "unreadable  halt") fail("wasm rec halt line " + halt);
+const speedNeed = ["aa_speed_prepare", "aa_speed_execute", "aa_speed_finish", "aa_speed_steps", "aa_speed_repeats", "aa_speed_us", "aa_speed_loss", "aa_speed_answer", "aa_speed_counted", "aa_speed_reason", "aa_speed_published_steps", "aa_speed_published_native_us", "aa_speed_published_wasm_us", "aa_speed_len", "aa_speed_byte", "aa_speed_describe"];
+for (const name of speedNeed) {
+  if (typeof exp[name] !== "function") fail("missing " + name);
+}
+function speedText() {
+  let s = "";
+  const n = exp.aa_speed_len();
+  for (let i = 1; i <= n; i += 1) s += String.fromCharCode(exp.aa_speed_byte(i));
+  return s;
+}
+function runSpeed(kind) {
+  exp.aa_speed_prepare(kind);
+  const t0 = performance.now();
+  exp.aa_speed_execute();
+  const t1 = performance.now();
+  exp.aa_speed_finish(t0, t1);
+  return speedText();
+}
+if (exp.aa_speed_published_steps() !== 95 || exp.aa_speed_repeats() !== 8) {
+  fail("yardstick " + exp.aa_speed_published_steps() + " " + exp.aa_speed_repeats());
+}
+if (exp.aa_speed_answer(0) !== 0 || exp.aa_speed_byte(0) !== 0) fail("speed clamp");
+const speedBase = runSpeed(1);
+const speedBaseUs = exp.aa_speed_us();
+if (exp.aa_speed_counted() !== 1 || speedBaseUs <= 0 || exp.aa_speed_loss() >= 0.05) {
+  fail("speed base " + speedBase);
+}
+const speedOut = [];
+for (let i = 1; i <= 4; i += 1) speedOut.push(exp.aa_speed_answer(i));
+if (!(speedOut[1] >= 0.8 && speedOut[2] >= 0.8 && speedOut[0] <= 0.2 && speedOut[3] <= 0.2)) {
+  fail("speed answers " + speedOut);
+}
+const speedFast = runSpeed(2);
+const speedFastUs = exp.aa_speed_us();
+if (exp.aa_speed_counted() !== 1 || speedFastUs <= 0 || speedFastUs >= speedBaseUs) {
+  fail("speed fast " + speedFastUs + " base " + speedBaseUs + " " + speedFast);
+}
+if (!speedFast.includes("times the baseline")) fail("speed ratio " + speedFast);
+const speedOutside = runSpeed(3);
+if (exp.aa_speed_counted() !== 0 || exp.aa_speed_reason() !== 3 || exp.aa_speed_us() !== 0) {
+  fail("speed outside " + speedOutside);
+}
+if (!speedOutside.includes("does not count") || exp.aa_speed_loss() >= 0.05) {
+  fail("speed outside answers " + speedOutside);
+}
+const speedSkip = runSpeed(4);
+if (exp.aa_speed_reason() !== 4 || !speedSkip.includes("does not count")) {
+  fail("speed skip " + speedSkip);
+}
+const speedEasier = runSpeed(5);
+if (exp.aa_speed_reason() !== 5 || !speedEasier.includes("does not count")) {
+  fail("speed easier " + speedEasier);
+}
+exp.aa_speed_prepare(9);
+exp.aa_speed_execute();
+exp.aa_speed_finish(1, 1);
+if (exp.aa_speed_reason() !== 7) fail("speed unknown " + speedText());
+exp.aa_speed_prepare(1);
+exp.aa_speed_execute();
+exp.aa_speed_finish(5, 5);
+if (exp.aa_speed_reason() !== 6) fail("speed clock " + speedText());
+exp.aa_speed_describe();
+if (!speedText().includes("95")) fail("speed blurb " + speedText());
+console.log("speed wasm baseline_us", speedBaseUs, "faster_us", speedFastUs);
 console.log("wasm ok", got);

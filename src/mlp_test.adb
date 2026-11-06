@@ -1,6 +1,9 @@
 with Ada.Command_Line;
+with Ada.Execution_Time;
+with Ada.Real_Time;
 with Ada.Text_IO;
 with AI_Amplifier.MLP.Demo;
+with AI_Amplifier.MLP.Speed;
 with AI_Amplifier.Tensors;
 
 --  The network against its own definition.
@@ -16,6 +19,7 @@ procedure MLP_Test
 is
    package M renames AI_Amplifier.MLP;
    package D renames AI_Amplifier.MLP.Demo;
+   package S renames AI_Amplifier.MLP.Speed;
    package T renames AI_Amplifier.Tensors;
    use type M.Load_Status;
 
@@ -1049,6 +1053,192 @@ begin
             Fail ("note clamp");
          end if;
       end;
+   end;
+
+   declare
+      function Report_Text return String is
+         Buffer : String (1 .. 1200) := (others => ' ');
+         N      : constant Integer := S.Report_Length;
+      begin
+         for I in 1 .. N loop
+            Buffer (I) := Character'Val (S.Report_Byte (I));
+         end loop;
+         return Buffer (1 .. N);
+      end Report_Text;
+
+      function Cpu_Us
+        (Start : Ada.Execution_Time.CPU_Time) return Integer
+      is
+         use type Ada.Execution_Time.CPU_Time;
+         Span : constant Ada.Real_Time.Time_Span :=
+           Ada.Execution_Time.Clock - Start;
+         Dur  : constant Duration :=
+           Ada.Real_Time.To_Duration (Span);
+         Us   : Float;
+      begin
+         Us := Float (Dur) * 1_000_000.0;
+         if Us <= 0.0 then
+            return 0;
+         elsif Us >= 1.0e9 then
+            return 1_000_000_000;
+         else
+            return Integer (Us);
+         end if;
+      end Cpu_Us;
+
+      function Has (Hay, Needle : String) return Boolean is
+      begin
+         if Needle'Length = 0 or else Needle'Length > Hay'Length then
+            return False;
+         end if;
+         for I in Hay'First .. Hay'Last - Needle'Length + 1 loop
+            if Hay (I .. I + Needle'Length - 1) = Needle then
+               return True;
+            end if;
+         end loop;
+         return False;
+      end Has;
+
+      procedure Time_Run (Code : Integer; Name : String) is
+         Start : Ada.Execution_Time.CPU_Time;
+         Us    : Integer;
+      begin
+         S.Prepare (Code);
+         Start := Ada.Execution_Time.Clock;
+         S.Execute;
+         Us := Cpu_Us (Start);
+         S.Note_Cpu_Microseconds (Us);
+         Ada.Text_IO.Put_Line
+           ("speed " & Name
+            & " steps" & Integer'Image (S.Step_Count)
+            & " repeats" & Integer'Image (S.Repeat_Count)
+            & " us" & Integer'Image (S.Microseconds)
+            & " loss " & Float'Image (S.Loss)
+            & " counted" & Integer'Image (S.Counted)
+            & " reason" & Integer'Image (S.Reason_Code));
+         Ada.Text_IO.Put_Line (Report_Text);
+      end Time_Run;
+
+      Baseline_Us : Integer := 0;
+      Faster_Us   : Integer := 0;
+   begin
+      declare
+         Model : M.Net;
+         Data  : constant M.Sample_List :=
+           M.Make_Dataset (M.XOR_Points);
+         Loss  : Float;
+         Took  : Natural := 0;
+      begin
+         M.Initialize (Model, M.Init_Seed, S.Rate);
+         for I in 1 .. 8000 loop
+            M.Train (Model, Data, 1, Loss);
+            Took := I;
+            exit when Loss < S.Loss_Max and then Margin (Model, Data);
+         end loop;
+         if Took /= S.Published_Steps
+           or else Loss >= S.Loss_Max
+           or else not Margin (Model, Data)
+         then
+            Fail ("yardstick steps" & Natural'Image (Took)
+              & " loss " & Float'Image (Loss));
+         end if;
+      end;
+
+      Time_Run (1, "baseline");
+      if S.Counted /= 1 or else S.Reason_Code /= 1 then
+         Fail ("baseline not counted, reason"
+           & Integer'Image (S.Reason_Code));
+      elsif S.Microseconds <= 0 then
+         Fail ("baseline clock");
+      else
+         Baseline_Us := S.Microseconds;
+         if S.Loss >= S.Loss_Max then
+            Fail ("baseline loss");
+         end if;
+         for I in 1 .. 4 loop
+            if S.Answer (I) <= 0.0 then
+               Fail ("baseline answer");
+            end if;
+         end loop;
+      end if;
+
+      Time_Run (2, "faster");
+      if S.Counted /= 1 or else S.Reason_Code /= 1 then
+         Fail ("faster not counted, reason"
+           & Integer'Image (S.Reason_Code));
+      elsif not Has (Report_Text, "times the baseline")
+        or else not Has (Report_Text, "33044")
+        or else not Has (Report_Text, "10162")
+      then
+         Fail ("faster ratio text");
+      else
+         Faster_Us := S.Microseconds;
+         if Faster_Us <= 0 or else Faster_Us >= Baseline_Us then
+            Fail ("faster us" & Integer'Image (Faster_Us)
+              & " baseline" & Integer'Image (Baseline_Us));
+         end if;
+         if not (S.Loss < S.Loss_Max) then
+            Fail ("faster loss");
+         end if;
+      end if;
+      --  The published microseconds are one machine's record.
+      --  This bound only catches a clock that barely moves, or a
+      --  run that is not the timed section. It is not a match.
+      if Baseline_Us < S.Published_Native / 40
+        or else Baseline_Us / 40 > S.Published_Native
+      then
+         Fail ("baseline us far from the record"
+           & Integer'Image (Baseline_Us));
+      end if;
+      Ada.Text_IO.Put_Line
+        ("speed ratio faster/baseline"
+         & Integer'Image (Faster_Us)
+         & " /" & Integer'Image (Baseline_Us));
+
+      Time_Run (3, "outside");
+      if S.Counted /= 0 or else S.Reason_Code /= 3
+        or else S.Microseconds /= 0
+        or else S.Loss >= S.Loss_Max
+        or else S.Answer (2) < S.High_Min
+        or else S.Answer (1) > S.Low_Max
+      then
+         Fail ("outside reason" & Integer'Image (S.Reason_Code)
+           & " loss " & Float'Image (S.Loss));
+      end if;
+      if not Has (Report_Text, "does not count") then
+         Fail ("outside text");
+      end if;
+
+      Time_Run (4, "skipped");
+      if S.Counted /= 0 or else S.Reason_Code /= 4 then
+         Fail ("skipped reason" & Integer'Image (S.Reason_Code));
+      end if;
+
+      Time_Run (5, "easier");
+      if S.Counted /= 0 or else S.Reason_Code /= 5 then
+         Fail ("easier reason" & Integer'Image (S.Reason_Code));
+      end if;
+
+      Time_Run (9, "unknown");
+      if S.Counted /= 0 or else S.Reason_Code /= 7 then
+         Fail ("unknown reason" & Integer'Image (S.Reason_Code));
+      end if;
+
+      S.Prepare (1);
+      S.Execute;
+      S.Note_Cpu_Microseconds (0);
+      if S.Counted /= 0 or else S.Reason_Code /= 6 then
+         Fail ("clock reason" & Integer'Image (S.Reason_Code));
+      end if;
+
+      if S.Answer (0) /= 0.0 or else S.Report_Byte (0) /= 0 then
+         Fail ("speed clamp");
+      end if;
+      if S.Published_Step_Count /= S.Published_Steps
+        or else S.Repeat_Count /= S.Repeats
+      then
+         Fail ("published exports");
+      end if;
    end;
 
    if Failures = 0 then

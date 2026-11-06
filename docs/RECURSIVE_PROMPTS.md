@@ -2,9 +2,9 @@
 
 The idea, and what this repository actually shows.
 
-Visible stamp: **v0.9.0-recurse**
+Visible stamp: **v0.10.0-speed**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.9.0-recurse
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.10.0-speed
 
 ## The idea
 

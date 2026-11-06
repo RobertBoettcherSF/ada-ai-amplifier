@@ -282,10 +282,12 @@
     }
     #train:disabled, #reset:disabled, #rate:disabled,
     .mlp-sets button:disabled, #rate-down:disabled, #rate-up:disabled,
-    #weights button:disabled {
+    #weights button:disabled, #speed button:disabled {
       opacity: 0.45;
       cursor: default;
     }
+    #speed { margin: 0.2rem 0 1.2rem; }
+    #speedstat { overflow-wrap: anywhere; }
     #weights { margin: 0.6rem 0 0.2rem; }
     #weights h3 {
       margin: 0.9rem 0 0.25rem;
@@ -424,7 +426,7 @@
   </style>
 </head>
 <body>
-  <div id="ver">v0.9.0-recurse</div>
+  <div id="ver">v0.10.0-speed</div>
   <main id="main" tabindex="-1">
     <h1>ada-ai-amplifier</h1>
     <p id="banner" class="err" hidden></p>
@@ -562,6 +564,33 @@
         <div id="wtable"></div>
       </div>
     </div>
+    <h2>Training speed</h2>
+    <p>
+      The same XOR net, from the same seed, at rate 1.
+      Ada trains it for the step count it reports, repeated so the
+      clock has a duration to read. A run counts only when the loss
+      and the four answers pass the same checks as the native test.
+      The baseline calls that trainer once per step. The faster
+      variant is the same update, written in place, without the extra
+      loss pass between steps. Ada times the work and rejects a run
+      that moved the steps outside the clock, skipped steps, or
+      changed the batch. JavaScript reads the host clock around the
+      call and passes the two readings in. It does not train.
+    </p>
+    <div id="speed">
+      <div class="mlp-controls">
+        <button id="speed-base" type="button" disabled>Run baseline</button>
+        <button id="speed-fast" type="button" disabled>Run faster variant</button>
+      </div>
+      <p id="speederr" class="err" hidden></p>
+      <p id="speedstat" class="out">Waiting for the Ada module.</p>
+      <p class="fine">
+        The published microseconds are a record from the machine that
+        added this page. A different computer will not match them.
+        The comparison that matters is the faster variant against the
+        baseline on this page. This is not someone else's speedup.
+      </p>
+    </div>
     <h2>Tokens and attention</h2>
     <p>
       Type in the box. JavaScript sends the UTF-8 bytes. Ada learns a
@@ -615,6 +644,7 @@
       <li>Leaky ReLU asks Ada to apply that kernel. The slope is Ada's constant.</li>
       <li>Train runs the small network. Reset restores the seeded weights. The learning rate is Ada's step size.</li>
       <li>The weight workbench edits those weights. Ada checks a file, and Ada applies the hand-written XOR net and the three edits.</li>
+      <li>Training speed times the XOR trainer. The baseline and the faster variant have to pass the same loss check. Ada decides whether the time counts.</li>
       <li>The text box asks Ada to tokenize and to run attention. JavaScript only paints.</li>
       <li>The recorded chains ask Ada to check each saved blob. A wrong step stops that chain.</li>
       <li>F9, or Feedback, writes a feedback file.</li>
@@ -631,7 +661,7 @@
       <li><span class="n">7.</span><span>SPARK proofs of the kernels</span> <span class="st done">done</span></li>
       <li><span class="n">8.</span><span>Weight-space programming</span> <span class="st done">done</span></li>
       <li><span class="n">9.</span><span>Recursive prompts with an Ada checker</span> <span class="st done">done</span></li>
-      <li><span class="n">10.</span><span>Training-speed harness</span> <span class="st">planned</span></li>
+      <li><span class="n">10.</span><span>Training-speed harness</span> <span class="st done">done</span></li>
       <li><span class="n">11.</span><span>Wrong-turn traces</span> <span class="st">planned</span></li>
       <li><span class="n">12.</span><span>Benchmark audit</span> <span class="st">planned</span></li>
       <li><span class="n">13.</span><span>Reward-hacking demo</span> <span class="st">planned</span></li>
@@ -665,6 +695,7 @@
         <tr><td>Softmax</td><td class="st done">Silver</td></tr>
         <tr><td>Splash</td><td class="st">not proved</td></tr>
         <tr><td>MLP</td><td class="st">not proved</td></tr>
+        <tr><td>Training speed</td><td class="st">not proved</td></tr>
         <tr><td>Tokenizer</td><td class="st">not proved</td></tr>
         <tr><td>Attention</td><td class="st">not proved</td></tr>
         <tr><td>Recursive prompts</td><td class="st">not proved</td></tr>
@@ -676,6 +707,7 @@
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/HOWTO.md">How-To</a></li>
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/WEIGHT_SPACE.md">Weight-space programming</a></li>
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/RECURSIVE_PROMPTS.md">Recursive prompts</a></li>
+      <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/TRAINING_SPEED.md">Training speed</a></li>
     </ul>
     <noscript>
       <p class="err">JavaScript is off, so the Ada module is not running. Open this page in Safari or Chrome.</p>
@@ -868,6 +900,7 @@ function fail(detail) {
   showMlpDown();
   showLreluDown();
   showAttnDown();
+  showSpeedDown();
   showRecurseDown();
 }
 function skip(how) {
@@ -946,6 +979,60 @@ function safeMlp(name) {
 }
 const mlpIds = ["set-xor", "set-circles", "set-spirals", "rate", "rate-down", "rate-up", "train", "reset"];
 const weightIds = ["w-trained", "w-hand", "w-down", "w-up", "w-flip", "w-silence", "w-invert"];
+const speedIds = ["speed-base", "speed-fast"];
+function showSpeedDown() {
+  const err = box("speederr");
+  if (err) {
+    err.hidden = false;
+    err.textContent = "The Ada module did not load, so this panel cannot time a run.";
+  }
+  speedIds.forEach((id) => {
+    const el = box(id);
+    if (el) el.disabled = true;
+  });
+}
+function speedText() {
+  return adaText(() => ada.aa_speed_len(), (i) => ada.aa_speed_byte(i));
+}
+function showSpeedText() {
+  const el = box("speedstat");
+  if (el && ada) el.textContent = speedText();
+}
+function runSpeed(kind) {
+  if (!ada || fatal) return;
+  const err = box("speederr");
+  if (err) err.hidden = true;
+  speedIds.forEach((id) => {
+    const el = box(id);
+    if (el) el.disabled = true;
+  });
+  const stat = box("speedstat");
+  if (stat) stat.textContent = "Running the Ada trainer…";
+  note("speed", kind);
+  setTimeout(() => {
+    if (!ada || fatal) return;
+    try {
+      ada.aa_speed_prepare(kind);
+      const t0 = performance.now();
+      ada.aa_speed_execute();
+      const t1 = performance.now();
+      ada.aa_speed_finish(t0, t1);
+      showSpeedText();
+    } catch (e) {
+      if (err) {
+        err.hidden = false;
+        err.textContent = "The speed run trapped the Ada module. Reload the page to run it again.";
+      }
+      note("speed trap", String(e && e.message ? e.message : e));
+    }
+    if (!fatal) {
+      speedIds.forEach((id) => {
+        const el = box(id);
+        if (el) el.disabled = false;
+      });
+    }
+  }, 30);
+}
 function showMlpDown() {
   const err = box("mlperr");
   if (!err) return;
@@ -1316,6 +1403,8 @@ box("reset").addEventListener("click", () => {
   loadDataset(mlpKind);
   note("mlp reset");
 });
+box("speed-base").addEventListener("click", () => runSpeed(1));
+box("speed-fast").addEventListener("click", () => runSpeed(2));
 
 function adaText(lenFn, byteFn) {
   const n = lenFn();
@@ -1992,7 +2081,7 @@ async function boot() {
     fail(String(e && e.message ? e.message : e));
     return;
   }
-  const need = ["aa_version_length", "aa_version_byte", "aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get", "aa_set_m", "aa_get_m", "aa_set_v", "aa_get_v", "aa_tensor_run", "aa_product", "aa_softmax", "aa_lrelu_set", "aa_lrelu_in", "aa_lrelu_run", "aa_lrelu_out", "aa_lrelu_slope", "aa_mlp_reset", "aa_mlp_set_rate", "aa_mlp_rate", "aa_mlp_train", "aa_mlp_epoch", "aa_mlp_loss", "aa_mlp_predict", "aa_mlp_count", "aa_mlp_x", "aa_mlp_y", "aa_mlp_label", "aa_mlp_lo", "aa_mlp_hi", "aa_mlp_grid_n", "aa_mlp_fill", "aa_mlp_cell", "aa_mlp_curve_n", "aa_mlp_curve", "aa_mlp_kind", "aa_w_limit", "aa_w_span", "aa_w_count", "aa_w_get", "aa_w_set", "aa_w_name_len", "aa_w_name_byte", "aa_w_len", "aa_w_byte", "aa_w_clear", "aa_w_push", "aa_w_load", "aa_w_hand", "aa_w_trained", "aa_w_preset", "aa_w_note_len", "aa_w_note_byte", "aa_bpe_clear", "aa_bpe_push", "aa_bpe_corpus", "aa_attn_run", "aa_attn_tokens", "aa_attn_id", "aa_attn_piece_len", "aa_attn_piece_byte", "aa_attn_vocab", "aa_attn_merges", "aa_attn_used", "aa_attn_weight", "aa_attn_dropped", "aa_attn_bytes", "aa_rec_chains", "aa_rec_max_index", "aa_rec_select", "aa_rec_name_len", "aa_rec_name_byte", "aa_rec_states", "aa_rec_line_len", "aa_rec_line_byte", "aa_rec_mark", "aa_rec_parsed", "aa_rec_index", "aa_rec_minus", "aa_rec_current", "aa_rec_stop", "aa_rec_stop_len", "aa_rec_stop_byte", "aa_rec_stop_at", "aa_rec_accepted", "aa_rec_answer", "aa_rec_note_len", "aa_rec_note_byte"];
+  const need = ["aa_version_length", "aa_version_byte", "aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get", "aa_set_m", "aa_get_m", "aa_set_v", "aa_get_v", "aa_tensor_run", "aa_product", "aa_softmax", "aa_lrelu_set", "aa_lrelu_in", "aa_lrelu_run", "aa_lrelu_out", "aa_lrelu_slope", "aa_mlp_reset", "aa_mlp_set_rate", "aa_mlp_rate", "aa_mlp_train", "aa_mlp_epoch", "aa_mlp_loss", "aa_mlp_predict", "aa_mlp_count", "aa_mlp_x", "aa_mlp_y", "aa_mlp_label", "aa_mlp_lo", "aa_mlp_hi", "aa_mlp_grid_n", "aa_mlp_fill", "aa_mlp_cell", "aa_mlp_curve_n", "aa_mlp_curve", "aa_mlp_kind", "aa_w_limit", "aa_w_span", "aa_w_count", "aa_w_get", "aa_w_set", "aa_w_name_len", "aa_w_name_byte", "aa_w_len", "aa_w_byte", "aa_w_clear", "aa_w_push", "aa_w_load", "aa_w_hand", "aa_w_trained", "aa_w_preset", "aa_w_note_len", "aa_w_note_byte", "aa_speed_prepare", "aa_speed_execute", "aa_speed_finish", "aa_speed_steps", "aa_speed_repeats", "aa_speed_us", "aa_speed_loss", "aa_speed_answer", "aa_speed_counted", "aa_speed_reason", "aa_speed_published_steps", "aa_speed_published_native_us", "aa_speed_published_wasm_us", "aa_speed_len", "aa_speed_byte", "aa_speed_describe", "aa_bpe_clear", "aa_bpe_push", "aa_bpe_corpus", "aa_attn_run", "aa_attn_tokens", "aa_attn_id", "aa_attn_piece_len", "aa_attn_piece_byte", "aa_attn_vocab", "aa_attn_merges", "aa_attn_used", "aa_attn_weight", "aa_attn_dropped", "aa_attn_bytes", "aa_rec_chains", "aa_rec_max_index", "aa_rec_select", "aa_rec_name_len", "aa_rec_name_byte", "aa_rec_states", "aa_rec_line_len", "aa_rec_line_byte", "aa_rec_mark", "aa_rec_parsed", "aa_rec_index", "aa_rec_minus", "aa_rec_current", "aa_rec_stop", "aa_rec_stop_len", "aa_rec_stop_byte", "aa_rec_stop_at", "aa_rec_accepted", "aa_rec_answer", "aa_rec_note_len", "aa_rec_note_byte"];
   for (let i = 0; i < need.length; i += 1) {
     if (typeof ada[need[i]] !== "function") {
       ada = null;
@@ -2016,6 +2105,12 @@ async function boot() {
     document.getElementById("lrelu-apply").disabled = false;
   }
   bootMlp();
+  ada.aa_speed_describe();
+  showSpeedText();
+  speedIds.forEach((id) => {
+    const el = box(id);
+    if (el) el.disabled = false;
+  });
   bootAttn();
   bootRecurse();
   note("wasm loaded", stamp);

@@ -131,16 +131,17 @@ try {
   assert(items[7].includes("Weight-space programming") && items[7].includes("done"), items[7]);
   assert(items[8].includes("Recursive prompts") && items[8].includes("done"), items[8]);
   assert(!items[8].includes("planned"), items[8]);
-  assert(items[9].includes("Training-speed harness") && items[9].includes("planned"), items[9]);
+  assert(items[9].includes("Training-speed harness") && items[9].includes("done"), items[9]);
   assert(items[10].includes("Wrong-turn traces") && items[10].includes("planned"), items[10]);
   assert(items[11].includes("Benchmark audit") && items[11].includes("planned"), items[11]);
   assert(items[12].includes("Reward-hacking demo") && items[12].includes("planned"), items[12]);
   assert(items[13].includes("Same model, different harness") && items[13].includes("planned"), items[13]);
   assert(items[14].includes("Checked steps, not just answers") && items[14].includes("planned"), items[14]);
   assert(items[15].includes("README update after items 1–15") && items[15].includes("planned"), items[15]);
-  assert(!items[15].includes("done"), items[15]);
+  const status16 = await page.$eval("#backlog li:nth-child(16) .st", (el) => el.textContent.trim());
+  assert(status16 === "planned", status16);
   const proof = await page.$$eval("#proof tbody tr", (els) => els.map((el) => el.innerText.replace(/\s+/g, " ").trim()));
-  assert(proof.length === 16, "proof rows " + proof.length);
+  assert(proof.length === 17, "proof rows " + proof.length);
   const statusOf = (name) => {
     const row = proof.find((r) => r.slice(0, name.length) === name && (r.length === name.length || r[name.length] === " "));
     return row ? row.slice(name.length).trim() : "";
@@ -158,6 +159,7 @@ try {
   assert(statusOf("Softmax") === "Silver", "softmax " + statusOf("Softmax"));
   assert(statusOf("Splash") === "not proved", "splash " + statusOf("Splash"));
   assert(statusOf("MLP") === "not proved", "mlp " + statusOf("MLP"));
+  assert(statusOf("Training speed") === "not proved", "speed " + statusOf("Training speed"));
   assert(statusOf("Tokenizer") === "not proved", "bpe " + statusOf("Tokenizer"));
   assert(statusOf("Attention") === "not proved", "attn " + statusOf("Attention"));
   assert(statusOf("Recursive prompts") === "not proved", "recurse proof " + statusOf("Recursive prompts"));
@@ -166,6 +168,7 @@ try {
   assert(hrefs.some((h) => h.includes("/docs/HOWTO.md")), "howto link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/WEIGHT_SPACE.md")), "weights link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/RECURSIVE_PROMPTS.md")), "recurse link " + hrefs);
+  assert(hrefs.some((h) => h.includes("/docs/TRAINING_SPEED.md")), "speed link " + hrefs);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
   assert(overflow, "desktop main overflows");
   const numbered = await page.$$eval("#backlog .n", (els) => els.map((el) => el.textContent.trim()));
@@ -434,6 +437,25 @@ try {
   assert(recText.includes("bad arithmetic"), "rec visible halt");
   assert(recText.includes("not toward base"), "rec visible stall");
   await page.screenshot({ path: resolve(shotDir, "recurse.png") });
+  const speedH = await page.$eval("#speed-base", (el) => el.getBoundingClientRect().height);
+  assert(speedH >= 44, "speed height " + speedH);
+  const speedBlurb = await page.$eval("#speedstat", (el) => el.textContent);
+  assert(speedBlurb.includes("Yardstick") && speedBlurb.includes("95"), speedBlurb);
+  await page.click("#speed-base");
+  await page.waitForFunction(() => document.getElementById("speedstat").textContent.includes("Counted"), { timeout: 20000 });
+  const speedBase = await page.$eval("#speedstat", (el) => el.textContent);
+  assert(speedBase.includes("baseline") && speedBase.includes("passed"), speedBase);
+  assert(!speedBase.includes("does not count"), speedBase);
+  const baseUs = Number((/(\d+) microseconds of wasm wall time/).exec(speedBase)[1]);
+  assert(baseUs > 0, "base us " + speedBase);
+  await page.click("#speed-fast");
+  await page.waitForFunction(() => document.getElementById("speedstat").textContent.includes("faster variant"), { timeout: 20000 });
+  const speedFast = await page.$eval("#speedstat", (el) => el.textContent);
+  assert(speedFast.includes("in place") && speedFast.includes("times the baseline"), speedFast);
+  const fastUs = Number((/(\d+) microseconds of wasm wall time/).exec(speedFast)[1]);
+  assert(fastUs > 0 && fastUs < baseUs, "fast us " + fastUs + " base " + baseUs);
+  await page.evaluate(() => document.getElementById("speed").scrollIntoView({ block: "center" }));
+  await page.screenshot({ path: resolve(shotDir, "speed.png") });
 
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   const covered = await page.evaluate(() => {
@@ -508,6 +530,10 @@ try {
   await phonePage.evaluate(() => document.getElementById("mlp").scrollIntoView({ block: "center" }));
   const phoneHand = await phonePage.$eval("#w-hand", (el) => el.getBoundingClientRect().height);
   assert(phoneHand >= 44, "phone hand height " + phoneHand);
+  const phoneSpeed = await phonePage.$eval("#speed-fast", (el) => el.getBoundingClientRect().height);
+  assert(phoneSpeed >= 44, "phone speed height " + phoneSpeed);
+  const phoneBlurb = await phonePage.$eval("#speedstat", (el) => el.textContent);
+  assert(phoneBlurb.includes("Yardstick"), phoneBlurb);
   await phonePage.tap("#train");
   await phonePage.waitForFunction(() => {
     const m = /step (\d+)/.exec(document.getElementById("mlpstat").textContent);
@@ -559,6 +585,8 @@ try {
   assert(await badPage.$eval("#train", (el) => el.disabled), "train still enabled");
   assert(await badPage.$eval("#w-hand", (el) => el.disabled), "weights still enabled");
   assert(await badPage.$eval("#werr", (el) => !el.hidden && el.textContent.includes("cannot")), "weights down");
+  assert(await badPage.$eval("#speederr", (el) => !el.hidden && el.textContent.includes("cannot time")), "speed down");
+  assert(await badPage.$eval("#speed-base", (el) => el.disabled), "speed still enabled");
   assert(await badPage.$eval("#attnerr", (el) => !el.hidden && el.textContent.includes("cannot tokenize")), "attn down");
   assert(await badPage.$eval("#attntext", (el) => el.disabled), "attn text still enabled");
   assert(await badPage.$eval("#recerr", (el) => !el.hidden && el.textContent.includes("cannot check a chain")), "recurse down");
