@@ -4,9 +4,9 @@ A walkthrough for someone new to this repository, and possibly new to
 Ada. The logic lives in Ada. JavaScript only draws. The live page is one
 HTML file with that Ada compiled to WebAssembly inside it.
 
-Visible stamp: **v0.11.0-traces**
+Visible stamp: **v0.12.0-audit**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.11.0-traces
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.12.0-audit
 
 The yellow badge, `version.txt`, and `AI_Amplifier.Version.Version_Text`
 are that same text. The query on the link is the cache bust (the stamp
@@ -106,7 +106,7 @@ mean something:
 | `alr -n toolchain --select …` | Puts GNAT 16.1.0 and gprbuild 26.0.1 on the Alire toolchain |
 | `./tools/get-toolchain.sh` | Downloads AdaWebPack 24 into `toolchain/` (gitignored). Later runs see the compiler and return |
 | `alr -n build` | Native build. Warnings and checks are on, including `-gnata`, so `Pre` and `Post` run |
-| `./bin/hello` | Prints `ada-ai-amplifier v0.11.0-traces` |
+| `./bin/hello` | Prints `ada-ai-amplifier v0.12.0-audit` |
 | `./tools/check-version.sh` | That line, `version.txt`, and the badge in `web/template.html` must be the same stamp |
 | `./bin/tensors_test` | Prints `tensors ok` |
 | `./bin/mlp_test` | Prints `mlp ok` |
@@ -115,12 +115,14 @@ mean something:
 | `./bin/recurse_cli` | Replays the recorded chains. It does not call a model |
 | `./bin/traces_test` | Prints `traces ok` |
 | `./bin/traces_cli` | Replays the wrong-turn traces. It does not call a model |
+| `./bin/audit_test` | Prints `audit ok` |
+| `./bin/audit_cli` | Audits the built-in benchmark. The full-set score is not accepted |
 | `npm ci` | Installs `puppeteer-core` from the lockfile |
 | `./build.sh` | Compiles the library to WebAssembly, runs `tools/wasm-smoke.mjs`, writes `site/index.html` and `site/version.txt` |
-| `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, the speed panel, tokens, recorded chains, wrong turns, F9, crash report, a failed module |
+| `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, the speed panel, tokens, recorded chains, wrong turns, the benchmark audit, F9, crash report, a failed module |
 
 Then open `site/index.html` in a browser yourself. The badge reads
-`v0.11.0-traces`. Leaky ReLU shows slope `0.01` and the output
+`v0.12.0-audit`. Leaky ReLU shows slope `0.01` and the output
 `-0.02`, `0`, `3`. Compute still shows the product `14`, `14`, `17`.
 
 The file, which CI runs as `./tools/howto-steps.sh`:
@@ -145,6 +147,8 @@ alr -n build
 ./bin/recurse_cli
 ./bin/traces_test
 ./bin/traces_cli
+./bin/audit_test
+./bin/audit_cli
 npm ci
 ./build.sh
 node tools/page-smoke.mjs
@@ -249,10 +253,14 @@ header comment, whether it is in SPARK.
 | `AI_Amplifier.Recurse.Demo` | `src/ai_amplifier-recurse-demo.ads/.adb` | The page's recorded chains. No network |
 | `AI_Amplifier.Traces` | `src/ai_amplifier-traces.ads/.adb` | Four wrong turns of the XOR trainer, and the next-step checker. Plain Ada |
 | `AI_Amplifier.Traces.Demo` | `src/ai_amplifier-traces-demo.ads/.adb` | The page's trace and verdict. No network |
+| `AI_Amplifier.Audit` | `src/ai_amplifier-audit.ads/.adb` | The benchmark auditor. Recomputes, flags, then scores. Plain Ada |
+| `AI_Amplifier.Audit.Demo` | `src/ai_amplifier-audit-demo.ads/.adb` | The page's audit report. No network |
+| `AI_Amplifier.Audit.Manifest` | `src/ai_amplifier-audit-manifest.ads` | Planted ids and rules. The auditor does not read it |
 | `Hello` | `src/hello.adb` | Prints the stamp. Native only |
 | `Recurse_Cli` | `src/recurse_cli.adb` | Replays the chains. Calls a model only when the user sets a key, a URL, and a model name. Native only |
 | `Traces_Cli` | `src/traces_cli.adb` | Replays the wrong-turn traces. Calls a model only when the user sets a key, a URL, and a model name. Native only |
-| `Tensors_Test`, `MLP_Test`, `Attention_Test`, `Recurse_Test`, `Traces_Test` | `src/tensors_test.adb`, `src/mlp_test.adb`, `src/attention_test.adb`, `src/recurse_test.adb`, `src/traces_test.adb` | Native tests. They use `Ada.Text_IO`, so `build.sh` does not compile them into the module |
+| `Audit_Cli` | `src/audit_cli.adb` | Audits the built-in benchmark, or one task file. Native only |
+| `Tensors_Test`, `MLP_Test`, `Attention_Test`, `Recurse_Test`, `Traces_Test`, `Audit_Test` | `src/tensors_test.adb`, `src/mlp_test.adb`, `src/attention_test.adb`, `src/recurse_test.adb`, `src/traces_test.adb`, `src/audit_test.adb` | Native tests. They use `Ada.Text_IO`, so `build.sh` does not compile them into the module |
 
 `Vector` and `Matrix` carry their shape as a discriminant (`Length`, or
 `Rows` and `Cols`). Components are `Float`, indexed `1 ..` that bound.
@@ -300,24 +308,24 @@ to the stamp without the `v`. A screenshot of the new page shows the
 new badge.
 
 **Plan, then Go, then one item.** Post a numbered plan for one change.
-Wait for Go. Build that item. Report, and stop. Items 1 through 11 are
-done. Item 10 is the training-speed harness. Item 11 is the wrong-turn
-traces and the Ada checker. Items 12 through 16 are planned and not
+Wait for Go. Build that item. Report, and stop. Items 1 through 12 are
+done. Item 11 is the wrong-turn traces and the Ada checker. Item 12
+is the benchmark audit. Items 13 through 16 are planned and not
 started. Do not start one of those in a change that is still about
-item 11.
+item 12.
 
 **Honesty.** Say what is checked at run time and what a prover has
 seen. On the tensor kernels, Silver means no run-time error and Gold
 means the component rule. Sigmoid, tanh, and softmax are Silver: the
 result lies in range, and the series is not the real function. The
-splash, the MLP, the tokenizer, attention, the chain checker, and
-the wrong-turn checker are not proved. `Pre`
+splash, the MLP, the tokenizer, attention, the chain checker,
+the wrong-turn checker, and the benchmark auditor are not proved. `Pre`
 and `Post` are still ordinary Ada contracts, checked when the program
 runs. `Float` results are approximate; the tests name the tolerance.
 The spirals are not solved. The attention weights are a seed.
 
 **Pre-push.** Was the previous behaviour still there (splash, tensor
-demo, leaky ReLU, training, tokens, recorded chains, wrong turns, F9, crash report, badge)? Does the
+demo, leaky ReLU, training, tokens, recorded chains, wrong turns, the benchmark audit, F9, crash report, badge)? Does the
 new behaviour work? `./tools/howto-steps.sh` is the long check, after
 the packages and the compilers are installed. `./tools/check-version.sh`
 is the stamp check. Docs that name a number should name the number the
@@ -357,6 +365,7 @@ The log is `proof/gnatprove.out`. The same table is on the live page.
 | Attention | not proved |
 | Recursive prompts | not proved |
 | Wrong turns | not proved |
+| Benchmark audit | not proved |
 
 Silver on dot and the two products means no run-time error, and the
 numeric result lies in `[-Acc_Bound, Acc_Bound]`. It does not mean the
@@ -372,11 +381,13 @@ The bounds that make the sums safe are `Summand_Bound` (`1.0E18`),
 outside the bound fails the `Pre`.
 
 The splash, the page wrappers, the MLP, the tokenizer, attention,
-the chain checker, and the wrong-turn checker are plain Ada. Their tests are tests. The weight
+the chain checker, the wrong-turn checker, and the benchmark
+auditor are plain Ada. Their tests are tests. The weight
 text and the hand-written XOR net live in the MLP unit, so they are
 tests too. `docs/WEIGHT_SPACE.md` is that account.
 `docs/RECURSIVE_PROMPTS.md` is the account of the recorded chains.
 `docs/WRONG_TURNS.md` is the account of the four trainer traces.
+`docs/BENCHMARK_AUDIT.md` is the account of the benchmark auditor.
 `AI_Amplifier.Version` is SPARK,
 with the contracts from the skeleton. The stamp there is
-`v0.11.0-traces`.
+`v0.12.0-audit`.

@@ -6,14 +6,14 @@ the feedback and crash files.
 The splash on the live page is a small picture of a network: Ada moves
 the points, and the page plots them.
 
-Visible stamp: **v0.11.0-traces**
+Visible stamp: **v0.12.0-audit**
 
 The same text is `AI_Amplifier.Version.Version_Text`, the yellow badge in
 `web/template.html`, `version.txt`, and the line printed by `bin/hello`.
-The Alire crate version is `0.11.0-traces` (the stamp without the leading
+The Alire crate version is `0.12.0-audit` (the stamp without the leading
 `v`, because Alire versions are semver).
 
-**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.11.0-traces
+**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.12.0-audit
 
 **Guide:** [docs/HOWTO.md](docs/HOWTO.md). The page links there. It is the install path, a walkthrough that adds leaky ReLU, and the code tour.
 
@@ -50,7 +50,12 @@ Item 11 records four wrong turns of that same trainer. Ada runs a
 proposed next step and judges it: the loss, the four XOR answers,
 and whether the weights are still valid.
 [docs/WRONG_TURNS.md](docs/WRONG_TURNS.md) is that account. The page
-does not call a model. Items 12 through 16 are planned and not started.
+does not call a model. Item 12 is a twenty-task benchmark about
+this repository's own XOR labels, Fibonacci checker, and weight
+files. Five tasks are broken on purpose. Ada audits every task
+before it will accept a score.
+[docs/BENCHMARK_AUDIT.md](docs/BENCHMARK_AUDIT.md) is that account.
+Items 13 through 16 are planned and not started.
 
 ## Why plain Ada
 
@@ -88,6 +93,7 @@ does not call a model. Items 12 through 16 are planned and not started.
 | Text box | Sends the text to Ada as UTF-8 bytes. Ada splits it with byte-level BPE and runs one causal attention block. The page paints the pieces and the heatmap |
 | Recorded chains | Ada replays four saved Fibonacci blobs and stops at the first failed check. The page does not call a model |
 | Wrong turns | Pick a recorded trace and a next step. Ada runs that step on the XOR trainer and reports whether it fixes the net |
+| Benchmark audit | Ada flags each task, then scores the same samples on the full set and on the set with flagged tasks removed |
 | Feedback, or F9 | Asks for a short note, then writes `feedback-*.json` (version, browser, screen, the recent UI events, and the note). On a phone that can share files, it offers the share sheet |
 | Crash report | If the previous visit did not end cleanly, or the module traps, a panel offers `crash-report-*.json` |
 | Yellow badge | The stamp, on every screen, including when JavaScript is off |
@@ -124,6 +130,12 @@ omitted when printing.
 | `src/ai_amplifier-traces.ads/.adb` | Four recorded wrong turns of the XOR trainer, and the next-step checker. Plain Ada |
 | `src/ai_amplifier-traces-demo.ads/.adb` | The page's trace, menu, and verdict |
 | `docs/WRONG_TURNS.md` | What those traces show, and what they do not claim |
+| `src/ai_amplifier-audit.ads/.adb` | The benchmark auditor. Recomputes answers, flags five kinds of defect, and refuses a score that still includes a flag. Plain Ada |
+| `src/ai_amplifier-audit-demo.ads/.adb` | The page's audit report and the two score lines |
+| `src/ai_amplifier-audit-manifest.ads` | The planted task ids and rules. The auditor does not with this unit |
+| `docs/BENCHMARK_AUDIT.md` | What the audit shows, and what it does not claim |
+| `src/audit_test.adb` | Native tests. The planted list, a second file with the same breaks, the page wrapper, and `audit_cli` |
+| `src/audit_cli.adb` | Native program. Audits the built-in file, or a task file given on the command line |
 | `src/traces_test.adb` | Native tests. The rules, the four traces, the page wrapper, and a stand-in for the model caller |
 | `src/traces_cli.adb` | Native program. Replays the traces. Calls a model only when the user sets a key, a URL, and a model name |
 | `src/hello.adb` | Native program. Prints the stamp. Also calls the splash so the native build compiles it |
@@ -136,7 +148,7 @@ omitted when printing.
 | `build.sh` | AdaWebPack 24 to `obj/wasm/ai_amplifier.wasm`, smoke, then `site/index.html` |
 | `prove.sh` | GNATprove level 2 on the SPARK units. Writes `proof/`. CI runs it |
 | `tools/get-toolchain.sh` | Downloads the wasm compiler into `toolchain/` (gitignored) |
-| `tools/wasm-smoke.mjs` | Node: stamp, no wasm imports, splash numbers, product and softmax, leaky ReLU, XOR training, the weight text, BPE round trip, attention rows, the wrong-turn checker |
+| `tools/wasm-smoke.mjs` | Node: stamp, no wasm imports, splash numbers, product and softmax, leaky ReLU, XOR training, the weight text, BPE round trip, attention rows, the wrong-turn checker, the benchmark audit |
 | `tools/page-smoke.mjs` | Headless Chrome: splash, the tensor panel, leaky ReLU, the training panel, the weight workbench, the speed panel, the token panel, the recorded chains, the wrong-turn panel, Enter, tap, F9, crash panel, failed module |
 | `tools/howto-steps.sh` | The commands in the How-To. CI job `how-to steps` runs this file |
 | `docs/HOWTO.md` | Newcomer guide |
@@ -161,7 +173,7 @@ alr -n build
 on). Expected line:
 
 ```text
-ada-ai-amplifier v0.11.0-traces
+ada-ai-amplifier v0.12.0-audit
 ```
 
 Then:
@@ -172,6 +184,8 @@ Then:
 ./bin/attention_test
 ./bin/recurse_test
 ./bin/traces_test
+./bin/audit_test
+./bin/audit_cli
 ```
 
 Expected lines:
@@ -182,7 +196,11 @@ mlp ok
 attention ok
 recurse ok
 traces ok
+audit ok
 ```
+
+`audit_cli` prints the twenty lines and the two score sentences.
+The full-set sentence says the score is not accepted.
 
 ## Proof status
 
@@ -210,8 +228,9 @@ body). `hello.adb`, the test procedures, `AI_Amplifier.Splash`,
 the tensor demo children, `AI_Amplifier.MLP` and its demo,
 `AI_Amplifier.BPE`, `AI_Amplifier.Attention` and its demo, and
 `AI_Amplifier.Recurse` and its demo, and `AI_Amplifier.Traces`
-and its demo are `SPARK_Mode => Off`. `recurse_cli.adb` and
-`traces_cli.adb` are too. GNATprove lists them and proves nothing
+and its demo, and `AI_Amplifier.Audit`, its demo, and its manifest,
+are `SPARK_Mode => Off`. `recurse_cli.adb`,
+`traces_cli.adb`, and `audit_cli.adb` are too. GNATprove lists them and proves nothing
 in them.
 
 | Kernel | Level | What is proved |
@@ -233,6 +252,7 @@ in them.
 | Attention, including its demo | not proved | Plain Ada. The hand-computed pass is a test |
 | Recursive prompts, including the demo and the native caller | not proved | Plain Ada. The recorded chains and the stand-in caller are tests |
 | Wrong turns, including the demo and the native caller | not proved | Plain Ada. The four traces and the checker are tests |
+| Benchmark audit, including the demo, the manifest, and `audit_cli` | not proved | Plain Ada. The planted tasks and the second file are tests |
 
 `Summand_Bound` is `1.0E18`. The float value of that literal is a
 little under `1.0E18`, and the real square of that float is a little
@@ -304,11 +324,12 @@ node tools/page-smoke.mjs
 
 `build.sh` compiles every `src/*.adb` except `hello.adb`,
 `tensors_test.adb`, `mlp_test.adb`, `attention_test.adb`,
-`recurse_test.adb`, `recurse_cli.adb`, `traces_test.adb`, and
-`traces_cli.adb` (Text_IO is not part of
+`recurse_test.adb`, `recurse_cli.adb`, `traces_test.adb`,
+`traces_cli.adb`, `audit_test.adb`, and
+`audit_cli.adb` (Text_IO is not part of
 this runtime), links `--no-entry`, and exports the
 version, splash, tensor-demo, leaky ReLU, training, weight,
-speed, token-attention, recorded-chain, and wrong-turn entry points. It also links
+speed, token-attention, recorded-chain, wrong-turn, and benchmark-audit entry points. It also links
 `tools/wasm-checks.c`. It does not pass `--allow-undefined`. The module
 this build emits has no imports. Runtime checks stay on. A failed check
 traps that module; it does not propagate.
@@ -746,6 +767,46 @@ only when `TRACES_LLM_URL`, `TRACES_LLM_KEY`, and `TRACES_LLM_MODEL`
 are set. The key is written to a mode 0600 file for curl and is not
 placed on the command line. The page does not run this program.
 
+## Benchmark audit
+
+Twenty tasks, stored as text inside `AI_Amplifier.Audit`. Each one
+asks something this repository can recompute: an XOR label, the
+size of that dataset, a Fibonacci answer or stop word from
+`AI_Amplifier.Recurse`, or the status `Read_Weights` reports for a
+hand-written file. The expected field is the key. The sample field
+is a fixed reply. Ada recomputes the answer before it scores.
+
+Five tasks are broken on purpose. The planted list is
+`AI_Amplifier.Audit.Manifest`. The auditor does not with that
+unit. The native test is what compares the two.
+
+| Rule | What it catches here |
+|---|---|
+| `wrong-expected` | `fib-5-wrong` expects 9. The checker says 5 |
+| `unsolvable` | `fib-21` is past the index the checker will build |
+| `duplicate` | `xor-01-copy` repeats `xor-01` |
+| `accept-anything` | `weight-any` uses `grade any`, so `nope` passes |
+| `answer-leaked` | `fib-4-leaked` writes the token `3` in the prompt |
+
+Scoring a set that still contains a flag is refused. The page
+prints both tallies:
+
+```text
+Full set: 14 of 20. Not accepted: audit-flagged.
+Cleaned set: 9 of 15. Accepted.
+```
+
+14 of 20 counts the five broken tasks as hits. 9 of 15 is the same
+samples with those tasks removed. Six of the clean samples are
+wrong on purpose. JavaScript copies the lines. It does not grade.
+[docs/BENCHMARK_AUDIT.md](docs/BENCHMARK_AUDIT.md) is the longer
+account, including the licences of the public work this idea
+comes from, and what this audit does not catch.
+
+`bin/audit_cli` with no arguments prints that report. With a path,
+it audits that task file with the same procedures. The page does
+not read a file from disk.
+
 ## Backlog
 
 1. **Repo skeleton — done.** Crate, stamp, native hello, wasm target, placeholder page.
@@ -759,23 +820,23 @@ placed on the command line. The page does not run this program.
 9. **Recursive prompts with an Ada checker — done.** The state blob, the checker, four recorded chains on the page, and a native caller that stays offline unless the user supplies a key. [docs/RECURSIVE_PROMPTS.md](docs/RECURSIVE_PROMPTS.md). This is not a reproduction of [recursive_llm](https://github.com/andyk/recursive_llm). That repository has no license. Nothing here was copied from it.
 10. **Training-speed harness — done.** The baseline and the faster variant above. [docs/TRAINING_SPEED.md](docs/TRAINING_SPEED.md). This is not a reproduction of the Anthropic Institute essay or of the note linked from that file.
 11. **Wrong-turn traces — done.** Four recorded traces of this XOR trainer, a next-step checker, and the panel on the page. [docs/WRONG_TURNS.md](docs/WRONG_TURNS.md). This is not a reproduction of the Anthropic Institute essay, and it is not a test of research taste.
-12. **Benchmark audit — planned.** Not started.
+12. **Benchmark audit — done.** Twenty tasks about this repository, five planted breaks, and an auditor that refuses the score until those tasks are dropped. [docs/BENCHMARK_AUDIT.md](docs/BENCHMARK_AUDIT.md). This is not a copy of SWE-bench, of the OpenAI notes linked there, or of MMLU-Redux.
 13. **Reward-hacking demo — planned.** Not started.
 14. **Same model, different harness — planned.** Not started.
 15. **Checked steps, not just answers — planned.** Not started.
 16. **README update after items 1–15 — planned.** Not this change. Not started.
 
-Items landed one at a time. Item 11 is the last one done. Items 12 through 16 are not started.
+Items landed one at a time. Item 12 is the last one done. Items 13 through 16 are not started.
 
 ## Honesty
 
-1. The splash arithmetic is plain Ada. It is not proved. `SPARK_Mode` is off on that unit so it is not presented as a proof target. The contracts on `AI_Amplifier.Version` are the ones from the skeleton. The stamp text in that unit is `v0.11.0-traces`.
+1. The splash arithmetic is plain Ada. It is not proved. `SPARK_Mode` is off on that unit so it is not presented as a proof target. The contracts on `AI_Amplifier.Version` are the ones from the skeleton. The stamp text in that unit is `v0.12.0-audit`.
 2. The tensor kernels are SPARK, at the levels in the proof status table. Silver is absence of run-time error (and, where the table says so, a range). Gold is the component rule. `Leaky_ReLU` is Gold. Its slope on the page is `0.01`. The `Pre` and `Post` are still checked when the program runs. The proof does not replace that check. Sigmoid, tanh, and softmax do not claim to match the real functions.
-3. CI builds the native program, runs `bin/tensors_test`, `bin/mlp_test`, `bin/attention_test`, `bin/recurse_test`, and `bin/traces_test`, runs `./prove.sh` (GNATprove level 2, unproved checks are errors), builds the wasm module and the page, then runs the headless smoke. The committed `proof/gnatprove.out` is that level 2 run. It proves the root, the version unit, and the tensors. It does not prove the splash, the network, the tokenizer, the attention block, the chain checker, the speed harness, or the wrong-turn checker.
+3. CI builds the native program, runs `bin/tensors_test`, `bin/mlp_test`, `bin/attention_test`, `bin/recurse_test`, `bin/traces_test`, and `bin/audit_test`, runs `./prove.sh` (GNATprove level 2, unproved checks are errors), builds the wasm module and the page, then runs the headless smoke. The committed `proof/gnatprove.out` is that level 2 run. It proves the root, the version unit, and the tensors. It does not prove the splash, the network, the tokenizer, the attention block, the chain checker, the speed harness, the wrong-turn checker, or the benchmark auditor.
 4. The wasm module's lack of imports is what this build emits, and `tools/wasm-smoke.mjs` checks it. The tensor body does reference a failed-check path. `tools/wasm-checks.c` defines `__gnat_last_chance_handler` and `system__assertions__raise_assert_failure` as traps, so that path links without an import. On the native runtime the same check raises. `-gnatp` is not used. `-gnatw.X` is the same switch as the native Alire profile: this runtime forbids exception propagation, and the compiler's reminder of that is turned off.
-5. JavaScript does not compute the splash, the product, the softmax, the loss, the decision boundary, the merges, the attention, the weight text, the chain check, the training-speed verdict, or the wrong-turn verdict. It reads coordinates, copies numbers, and sends UTF-8 bytes. It adds up the weights it already read when it writes the sentence under the heatmap. On the speed panel it reads the host wall clock before and after the Ada call and passes those two readings in. Ada subtracts them. If the module is missing, not WebAssembly, missing an export, or its stamp differs from the badge, the page says "The Ada module did not load" and still shows the title and the badge. The tensor demo then says it has no product. The leaky ReLU panel says it has no leaky ReLU. The training panel says it cannot train. The weight buttons say the weights cannot be edited. The speed panel says it cannot time a run. The token panel says it cannot tokenize. The chain panel says it cannot check a chain. The wrong-turn panel says it cannot check a next step.
+5. JavaScript does not compute the splash, the product, the softmax, the loss, the decision boundary, the merges, the attention, the weight text, the chain check, the training-speed verdict, the wrong-turn verdict, or the benchmark audit. It reads coordinates, copies numbers, and sends UTF-8 bytes. It adds up the weights it already read when it writes the sentence under the heatmap. On the speed panel it reads the host wall clock before and after the Ada call and passes those two readings in. Ada subtracts them. If the module is missing, not WebAssembly, missing an export, or its stamp differs from the badge, the page says "The Ada module did not load" and still shows the title and the badge. The tensor demo then says it has no product. The leaky ReLU panel says it has no leaky ReLU. The training panel says it cannot train. The weight buttons say the weights cannot be edited. The speed panel says it cannot time a run. The token panel says it cannot tokenize. The chain panel says it cannot check a chain. The wrong-turn panel says it cannot check a next step. The audit panel says it cannot audit the tasks.
 6. The network on the splash is not a model. The tensor demo is not a model. The training panel is a model: forward, binary cross-entropy, backprop, and gradient descent, in the MLP unit. The token panel tokenizes and runs attention, forward only. Those weights are the seed. They are not trained.
-7. The MLP, the tokenizer, the attention block, the chain checker, the speed harness, and the wrong-turn checker are plain Ada. `SPARK_Mode` is off. The finite-difference check, the hand-computed attention pass, the recorded chains, and the four traces are tests, not proofs. There is no Silver claim and no Gold claim on these units. The MLP and attention call the tensor kernels, so a component outside `Summand_Bound` or a softmax logit outside `Logit_Bound` fails the kernel `Pre` at run time. The seeded nets and the tests stay inside those bounds. The chain checker does not call those kernels. A bad blob is a result, not a trap. A weight outside `Weight_Limit` is a verdict, not a trap: the checker does not call the loss on it.
+7. The MLP, the tokenizer, the attention block, the chain checker, the speed harness, the wrong-turn checker, and the benchmark auditor are plain Ada. `SPARK_Mode` is off. The finite-difference check, the hand-computed attention pass, the recorded chains, the four traces, and the planted tasks are tests, not proofs. There is no Silver claim and no Gold claim on these units. The MLP and attention call the tensor kernels, so a component outside `Summand_Bound` or a softmax logit outside `Logit_Bound` fails the kernel `Pre` at run time. The seeded nets and the tests stay inside those bounds. The chain checker does not call those kernels. A bad blob is a result, not a trap. A weight outside `Weight_Limit` is a verdict, not a trap: the checker does not call the loss on it.
 8. `Float` results are approximate. The tensor test and the attention test allow `0.000_05`. Softmax of a non-empty vector sums to 1 within that tolerance, because the largest logit becomes `exp(0) = 1`. The gradient check allows `0.002` plus 5 percent of the analytical value, at a central step of `0.001`. The log, square root, sine, and cosine in the MLP body, and the square root in the attention body, are series, not `Ada.Numerics`. The hand-computed layer-norm values in the attention section are this Newton square root.
 9. Eight hidden units do not solve the spirals. The numbers in the network section are this seed, at the rates named there. They are not a claim about every seed.
 10. The BPE rules are whatever this excerpt and this tie-break produce. They are not a published tokenizer. ß is one token here. ä is not. A different excerpt would learn different merges. The 32, 288, and 376 figures are this text.
@@ -786,6 +847,7 @@ Items landed one at a time. Item 11 is the last one done. Items 12 through 16 ar
 15. The recorded chains are Ada source written for this repository. They are not the output of a language model, and they are not a rerun of the recursive-prompt repository linked from `docs/RECURSIVE_PROMPTS.md`. That repository has no license file. The page shows checked recordings. `recurse_cli --ask` can call a model, and only on the machine where the user set a key. The browser does not. There is no claim that a model produces the same chains, and no claim that these runs match anyone else's numbers.
 16. The training-speed harness is plain Ada. It is not proved. A counted time is the native process CPU time, or the wasm host wall time around the same call. Those two clocks are not a ratio. The published microseconds are one machine's record, not a pass mark. The `0.48` figure is that record's faster variant against its own baseline. It is not a claim about any other trainer. JavaScript passes the two wall-clock readings in and copies Ada's sentence out. Ada subtracts, checks the loss and the four answers, and rejects a time that does not count.
 17. The wrong-turn traces are Ada source written for this repository. They are not a language model's session, and they are not a rerun of the essay linked from `docs/WRONG_TURNS.md`. The checker runs the real trainer and applies the loss, XOR, and weight rules named in that file. A verdict is a test, not a proof. The page does not call a model. `traces_cli --ask` can, and only on the machine where the user set a key. There is no claim that a model picks the known-good step, and no claim that these toy repairs measure research taste.
+18. The benchmark auditor is plain Ada. It is not proved. It only flags the five defect kinds named in `docs/BENCHMARK_AUDIT.md`, and only by recomputing an answer this repository already computes. It is not a general benchmark validator. The 14 of 20 and 9 of 15 figures are the seeded samples. The full-set figure is printed and is not an accepted score. The public projects linked from that file are the credit for the idea. Nothing from them was copied. JavaScript copies Ada's lines. The page does not call a model.
 
 ## License
 

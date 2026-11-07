@@ -507,4 +507,43 @@ if (exp.aa_tr_verdict() !== 2 || exp.aa_tr_reason() !== 5) {
   fail("wasm tr zeros " + [exp.aa_tr_verdict(), exp.aa_tr_reason()]);
 }
 if (exp.aa_tr_line_byte(1, 0) !== 0 || exp.aa_tr_name_byte(0) !== 0) fail("wasm tr clamp");
+const auNeed = ["aa_au_run", "aa_au_count", "aa_au_flagged", "aa_au_mark", "aa_au_line_len", "aa_au_line_byte", "aa_au_stat_len", "aa_au_stat_byte", "aa_au_full_len", "aa_au_full_byte", "aa_au_clean_len", "aa_au_clean_byte"];
+for (const name of auNeed) {
+  if (typeof exp[name] !== "function") fail("missing export " + name);
+}
+function auText(len, byte) {
+  const n = len();
+  let s = "";
+  for (let i = 1; i <= n; i += 1) s += String.fromCharCode(byte(i) & 255);
+  return s;
+}
+exp.aa_au_run();
+if (exp.aa_au_count() !== 20 || exp.aa_au_flagged() !== 5) {
+  fail("wasm audit census " + exp.aa_au_count() + " " + exp.aa_au_flagged());
+}
+if (exp.aa_au_mark(0) !== 0 || exp.aa_au_line_byte(1, 0) !== 0) fail("wasm audit clamp");
+const auFull = auText(() => exp.aa_au_full_len(), (i) => exp.aa_au_full_byte(i));
+const auClean = auText(() => exp.aa_au_clean_len(), (i) => exp.aa_au_clean_byte(i));
+const auStat = auText(() => exp.aa_au_stat_len(), (i) => exp.aa_au_stat_byte(i));
+if (auFull !== "Full set: 14 of 20. Not accepted: audit-flagged.") fail("wasm audit full " + auFull);
+if (auClean !== "Cleaned set: 9 of 15. Accepted.") fail("wasm audit clean " + auClean);
+if (auStat !== "20 tasks. 5 flagged before scoring.") fail("wasm audit stat " + auStat);
+const auRules = ["wrong-expected", "unsolvable", "duplicate", "accept-anything", "answer-leaked"];
+let auPass = 0;
+let auFlag = 0;
+for (let i = 1; i <= 20; i += 1) {
+  const line = auText(() => exp.aa_au_line_len(i), (p) => exp.aa_au_line_byte(i, p));
+  if (exp.aa_au_mark(i) === 0) {
+    auPass += 1;
+    if (!line.includes("  pass")) fail("wasm audit pass " + line);
+  } else {
+    auFlag += 1;
+    if (exp.aa_au_mark(i) !== 1 || !line.includes("  flag  ")) fail("wasm audit flag " + line);
+  }
+}
+if (auPass !== 15 || auFlag !== 5) fail("wasm audit marks " + auPass + " " + auFlag);
+const auJoined = Array.from({length: 20}, (_, k) => auText(() => exp.aa_au_line_len(k + 1), (p) => exp.aa_au_line_byte(k + 1, p))).join("\n");
+for (const rule of auRules) {
+  if (!auJoined.includes(rule)) fail("wasm audit missing " + rule);
+}
 console.log("wasm ok", got);

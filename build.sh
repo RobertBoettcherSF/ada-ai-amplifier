@@ -19,7 +19,7 @@ rm -rf obj/wasm && mkdir -p obj/wasm
 cd obj/wasm
 for F in ../../src/*.adb; do
   case $(basename "$F") in
-    hello.adb|tensors_test.adb|mlp_test.adb|attention_test.adb|recurse_test.adb|recurse_cli.adb|traces_test.adb|traces_cli.adb) continue ;;
+    hello.adb|tensors_test.adb|mlp_test.adb|attention_test.adb|recurse_test.adb|recurse_cli.adb|traces_test.adb|traces_cli.adb|audit_test.adb|audit_cli.adb) continue ;;
   esac
   # -gnatw.X: this runtime forbids exception propagation, and the
   # compiler warns that a check would call Last_Chance_Handler. The
@@ -91,6 +91,11 @@ ar x "$T/lib/rts-native/adalib/libgnat.a" s-memcop.o s-memmov.o s-memset.o
   --export=aa_tr_report_len --export=aa_tr_report_byte \
   --export=aa_tr_good_len --export=aa_tr_good_byte \
   --export=aa_tr_state_len --export=aa_tr_state_byte \
+  --export=aa_au_run --export=aa_au_count --export=aa_au_flagged \
+  --export=aa_au_mark --export=aa_au_line_len --export=aa_au_line_byte \
+  --export=aa_au_stat_len --export=aa_au_stat_byte \
+  --export=aa_au_full_len --export=aa_au_full_byte \
+  --export=aa_au_clean_len --export=aa_au_clean_byte \
   -z stack-size=2097152 --initial-memory=16777216 \
   -o ai_amplifier.wasm *.o
 cd ../..
