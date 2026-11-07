@@ -6,7 +6,7 @@ title: ""
 
 ## Which item
 
-One item. Items 1 through 11 are done. Items 12 through 16 are planned. A new change is still one item.
+One item. Items 1 through 12 are done. Items 13 through 16 are planned. A new change is still one item.
 
 ## Plan or Go
 

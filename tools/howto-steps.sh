@@ -16,6 +16,8 @@ alr -n build
 ./bin/recurse_cli
 ./bin/traces_test
 ./bin/traces_cli
+./bin/audit_test
+./bin/audit_cli
 npm ci
 ./build.sh
 node tools/page-smoke.mjs

@@ -32,6 +32,8 @@ jobs:
           ./bin/attention_test
           ./bin/recurse_test
           ./bin/traces_test
+          ./bin/audit_test
+          ./bin/audit_cli
 
       # Level 2, on the SPARK units only. prove.sh installs FSF
       # gnatprove 16.1.0 if the runner does not already have it.
