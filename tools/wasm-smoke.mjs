@@ -661,11 +661,12 @@ const lkNeed = ["aa_lk_count", "aa_lk_item", "aa_lk_name_len", "aa_lk_name_byte"
 for (const name of lkNeed) {
   if (typeof exp[name] !== "function") fail("missing export " + name);
 }
-if (exp.aa_lk_count() !== 16) fail("wasm locked count " + exp.aa_lk_count());
-if (exp.aa_lk_item(0) !== 0 || exp.aa_lk_name_byte(1, 0) !== 0 || exp.aa_lk_text_byte(17, 1) !== 0) {
+if (exp.aa_lk_count() !== 17) fail("wasm locked count " + exp.aa_lk_count());
+if (exp.aa_lk_item(0) !== 0 || exp.aa_lk_name_byte(1, 0) !== 0 || exp.aa_lk_text_byte(18, 1) !== 0) {
   fail("wasm locked clamp");
 }
 if (exp.aa_lk_item(16) !== 17) fail("wasm locked item 17 " + exp.aa_lk_item(16));
+if (exp.aa_lk_item(17) !== 18) fail("wasm locked item 18 " + exp.aa_lk_item(17));
 for (let i = 1; i <= 15; i += 1) {
   const status = rwText(() => exp.aa_lk_status_len(i), (p) => exp.aa_lk_status_byte(i, p));
   const fp = rwText(() => exp.aa_lk_fp_len(i), (p) => exp.aa_lk_fp_byte(i, p));
@@ -684,7 +685,11 @@ const item17 = rwText(() => exp.aa_lk_text_len(16), (p) => exp.aa_lk_text_byte(1
 const item17fp = rwText(() => exp.aa_lk_fp_len(16), (p) => exp.aa_lk_fp_byte(16, p));
 const item17hash = createHash("sha256").update(readFileSync(new URL("specs/item_17.adb", root))).digest("hex");
 if (!item17.includes("item 17 pass") || item17fp !== item17hash) fail("wasm locked item 17");
-if (!lkStat.includes("16 of 16 statements passed") || !lkStat.includes("cannot tell whether a spec is the right one")) {
+const item18 = rwText(() => exp.aa_lk_text_len(17), (p) => exp.aa_lk_text_byte(17, p));
+const item18fp = rwText(() => exp.aa_lk_fp_len(17), (p) => exp.aa_lk_fp_byte(17, p));
+const item18hash = createHash("sha256").update(readFileSync(new URL("specs/item_18.adb", root))).digest("hex");
+if (!item18.includes("item 18 pass") || item18fp !== item18hash) fail("wasm locked item 18");
+if (!lkStat.includes("17 of 17 statements passed") || !lkStat.includes("cannot tell whether a spec is the right one")) {
   fail("wasm locked stat " + lkStat);
 }
 console.log("wasm ok", got);

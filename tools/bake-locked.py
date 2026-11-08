@@ -33,6 +33,7 @@ TITLES = {
     "item_14.adb": "Same model, different harness",
     "item_15.adb": "Checked steps",
     "item_17.adb": "Second checker",
+    "item_18.adb": "Checking status",
 }
 
 
@@ -60,7 +61,7 @@ def spans(lengths: list[int]) -> str:
 
 
 def main() -> int:
-    numbers = list(range(1, 16)) + [17]
+    numbers = list(range(1, 16)) + [17, 18]
     files = [SPEC_DIR / f"item_{n:02d}.adb" for n in numbers]
     missing = [path.name for path in files if not path.is_file()]
     if missing:

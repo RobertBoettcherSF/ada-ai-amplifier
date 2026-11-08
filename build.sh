@@ -24,7 +24,7 @@ rm -rf obj/wasm && mkdir -p obj/wasm
 cd obj/wasm
 for F in ../../src/*.adb; do
   case $(basename "$F") in
-    hello.adb|tensors_test.adb|mlp_test.adb|attention_test.adb|recurse_test.adb|recurse_cli.adb|traces_test.adb|traces_cli.adb|audit_test.adb|audit_cli.adb|reward_test.adb|reward_cli.adb|harness_test.adb|harness_cli.adb|steps_test.adb|steps_cli.adb|recheck_test.adb|ai_amplifier-recheck.adb|ai_amplifier-locked.adb) continue ;;
+    hello.adb|tensors_test.adb|mlp_test.adb|attention_test.adb|recurse_test.adb|recurse_cli.adb|traces_test.adb|traces_cli.adb|audit_test.adb|audit_cli.adb|reward_test.adb|reward_cli.adb|harness_test.adb|harness_cli.adb|steps_test.adb|steps_cli.adb|recheck_test.adb|ai_amplifier-recheck.adb|ai_amplifier-locked.adb|status_cli.adb|ai_amplifier-status.adb) continue ;;
   esac
   # -gnatw.X: this runtime forbids exception propagation, and the
   # compiler warns that a check would call Last_Chance_Handler. The
@@ -161,10 +161,18 @@ if out.count(report_token) != 1:
 if "<" in report or ">" in report:
     raise SystemExit("recheck report must stay plain text")
 out = out.replace(report_token, report.rstrip("\n"), 1)
+status_token = "__STATUS_REPORT__"
+status = pathlib.Path("obj/gen/STATUS.out").read_text()
+if out.count(status_token) != 1:
+    raise SystemExit("web/template.html must contain __STATUS_REPORT__ once")
+if "<" in status or ">" in status:
+    raise SystemExit("status report must stay plain text")
+out = out.replace(status_token, status.rstrip("\n"), 1)
 site = pathlib.Path("site")
 site.mkdir(exist_ok=True)
 (site / "index.html").write_text(out)
 (site / "version.txt").write_text(pathlib.Path("version.txt").read_text())
+(site / "STATUS.txt").write_text(status if status.endswith("\n") else status + "\n")
 if token in out:
     raise SystemExit("placeholder survived into site/index.html")
 print(f"Wrote site/index.html ({len(out)} bytes)")

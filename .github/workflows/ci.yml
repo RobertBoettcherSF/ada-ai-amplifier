@@ -60,6 +60,12 @@ jobs:
       - name: GNATprove
         run: ./prove.sh
 
+      # The native step already wrote the test logs. This reads
+      # the proof log prove.sh just copied and fails if STATUS
+      # is not that text.
+      - name: Checking status
+        run: ./tools/check-status.sh --logs-only
+
       - name: Chrome
         run: |
           wget -q -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb

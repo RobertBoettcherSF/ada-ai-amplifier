@@ -6,7 +6,7 @@ title: ""
 
 ## Which item
 
-One item. Items 1 through 17 are done. Items 18 through 20 are planned. Item 20, the README update, is last. A new change is still one item.
+One item. Items 1 through 18 are done. Items 19 and 20 are planned. Item 20, the README update, is last. A new change is still one item.
 
 ## Plan or Go
 

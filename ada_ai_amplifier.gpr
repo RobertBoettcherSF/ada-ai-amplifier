@@ -14,10 +14,12 @@ project Ada_AI_Amplifier is
       "reward_test.adb", "reward_cli.adb",
       "harness_test.adb", "harness_cli.adb",
       "steps_test.adb", "steps_cli.adb", "recheck_test.adb",
+      "status_cli.adb",
       "item_01.adb", "item_02.adb", "item_03.adb", "item_04.adb",
       "item_05.adb", "item_06.adb", "item_07.adb", "item_08.adb",
       "item_09.adb", "item_10.adb", "item_11.adb", "item_12.adb",
-      "item_13.adb", "item_14.adb", "item_15.adb", "item_17.adb");
+      "item_13.adb", "item_14.adb", "item_15.adb", "item_17.adb",
+      "item_18.adb");
 
    package Compiler is
       --  -gnata checks the Pre and Post on AI_Amplifier.Tensors.

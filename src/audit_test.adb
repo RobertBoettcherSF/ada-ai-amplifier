@@ -20,6 +20,12 @@ is
    package IO renames Ada.Text_IO;
 
    Failures : Natural := 0;
+   Cases    : Natural := 0;
+
+   procedure Mark is
+   begin
+      Cases := Cases + 1;
+   end Mark;
 
    procedure Fail (Message : String) is
    begin
@@ -82,6 +88,7 @@ is
       Last  : Natural;
       Count : Natural;
    begin
+      Mark;
       if Index = 0 then
          Fail ("missing " & Id);
          return;
@@ -96,6 +103,7 @@ is
    procedure Check_Clean (Bank : A.Set; Id : String) is
       Index : constant Natural := Find (Bank, Id);
    begin
+      Mark;
       if Index = 0 then
          Fail ("missing " & Id);
          return;
@@ -640,6 +648,7 @@ begin
    Check_Demo;
    Check_Cli;
    if Failures = 0 then
+      IO.Put_Line ("cases audit_test" & Cases'Image);
       IO.Put_Line ("audit ok");
    else
       IO.Put_Line ("audit failed" & Natural'Image (Failures));

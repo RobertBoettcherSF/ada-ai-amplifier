@@ -4,9 +4,9 @@ A walkthrough for someone new to this repository, and possibly new to
 Ada. The logic lives in Ada. JavaScript only draws. The live page is one
 HTML file with that Ada compiled to WebAssembly inside it.
 
-Visible stamp: **v0.17.0-second**
+Visible stamp: **v0.18.0-status**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.17.0-second
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.18.0-status
 
 The yellow badge, `version.txt`, and `AI_Amplifier.Version.Version_Text`
 are that same text. The query on the link is the cache bust (the stamp
@@ -106,7 +106,7 @@ mean something:
 | `alr -n toolchain --select …` | Puts GNAT 16.1.0 and gprbuild 26.0.1 on the Alire toolchain |
 | `./tools/get-toolchain.sh` | Downloads AdaWebPack 24 into `toolchain/` (gitignored). Later runs see the compiler and return |
 | `alr -n build` | Native build. Warnings and checks are on, including `-gnata`, so `Pre` and `Post` run |
-| `./bin/hello` | Prints `ada-ai-amplifier v0.17.0-second` |
+| `./bin/hello` | Prints `ada-ai-amplifier v0.18.0-status` |
 | `./tools/check-version.sh` | That line, `version.txt`, and the badge in `web/template.html` must be the same stamp |
 | `./bin/tensors_test` | Prints `tensors ok` |
 | `./bin/mlp_test` | Prints `mlp ok` |
@@ -125,11 +125,11 @@ mean something:
 | `./bin/steps_cli` | Prints the twelve step grades. A file whose steps fail exits 1 |
 | `./bin/recheck_test` | Compares the two checkers. It prints `recheck ok` when every case agrees |
 | `npm ci` | Installs `puppeteer-core` from the lockfile |
-| `./build.sh` | Runs the locked specs, compiles the library to WebAssembly, runs `tools/wasm-smoke.mjs`, writes `site/index.html` and `site/version.txt` |
-| `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, the speed panel, tokens, recorded chains, wrong turns, the benchmark audit, the reward table, the harness table, the checked-steps table, the locked statements, the second checker, F9, crash report, a failed module |
+| `./build.sh` | Checks `STATUS`, runs the locked specs, compiles the library to WebAssembly, runs `tools/wasm-smoke.mjs`, writes `site/index.html`, `site/version.txt`, and `site/STATUS.txt` |
+| `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, the speed panel, tokens, recorded chains, wrong turns, the benchmark audit, the reward table, the harness table, the checked-steps table, the locked statements, the second checker, the checking-status table, F9, crash report, a failed module |
 
 Then open `site/index.html` in a browser yourself. The badge reads
-`v0.17.0-second`. Leaky ReLU shows slope `0.01` and the output
+`v0.18.0-status`. Leaky ReLU shows slope `0.01` and the output
 `-0.02`, `0`, `3`. Compute still shows the product `14`, `14`, `17`.
 
 The file, which CI runs as `./tools/howto-steps.sh`:
@@ -345,10 +345,11 @@ statements: a fixed spec per finished item, and a CI gate that fails
 if a spec's fingerprint changes without `specs/LOCK`, or if
 `pragma Assume` or `pragma Annotate` appear. Item 17 is a second Ada
 checker, written separately, for the verdicts of items 11, 12, and
-15. CI fails if the two checkers disagree. Items 18 through 20 are
-planned and not started. Item 18 labels items 1–15 proved, tested,
-or unchecked, with real numbers, on the page and in the README.
-Item 19 is a short written summary of one item-15 solution. Each
+15. CI fails if the two checkers disagree. Item 18 labels
+items 1–17 proved, tested, or unchecked, from the build logs,
+and CI fails if `STATUS` is not that report. Tested is not
+proved. Items 19 and 20 are planned and not started. Item 19
+is a short written summary of one item-15 solution. Each
 claim links to the step that backs it, and a claim with no step is
 flagged. Item 20, the README update, is last, after items 1–19, and
 is not started. The ideas for items 16 and 17 are the
@@ -357,10 +358,10 @@ check in [formal-math](https://github.com/anthropics/formal-math)
 (Apache-2.0). The ideas for items 18 and 19 are results at
 different stages of verification, and reasoning summaries, in
 [openai/math](https://github.com/openai/math) (Apache-2.0).
-Both are ideas only where they are still planned. Item 16 and
-item 17 are independent reimplementations. Nothing from either
-repository is copied. Do not start item 18 in a change that is
-still about item 17.
+Item 19 is still an idea only. Items 16, 17, and 18 are
+independent reimplementations. Nothing from either
+repository is copied. Do not start item 19 in a change that is
+still about item 18.
 
 **Honesty.** Say what is checked at run time and what a prover has
 seen. On the tensor kernels, Silver means no run-time error and Gold
@@ -448,4 +449,4 @@ tests too. `docs/WEIGHT_SPACE.md` is that account.
 `docs/SECOND_CHECKER.md` is the account of the agreement.
 `AI_Amplifier.Version` is SPARK,
 with the contracts from the skeleton. The stamp there is
-`v0.17.0-second`.
+`v0.18.0-status`.

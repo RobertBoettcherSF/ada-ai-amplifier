@@ -23,6 +23,12 @@ is
    package IO renames Ada.Text_IO;
 
    Failures : Natural := 0;
+   Cases    : Natural := 0;
+
+   procedure Mark is
+   begin
+      Cases := Cases + 1;
+   end Mark;
 
    procedure Fail (Message : String) is
    begin
@@ -58,6 +64,7 @@ is
       Line                           : String (1 .. T.Max_Line);
       Last                           : Natural;
    begin
+      Mark;
       T.Trace_Name (Index, Line, Last);
       if Text_Of (Line, Last) /= Name then
          Fail ("name " & Name);
@@ -637,6 +644,7 @@ begin
    Check_Rules;
    Check_Cli;
    if Failures = 0 then
+      IO.Put_Line ("cases traces_test" & Cases'Image);
       IO.Put_Line ("traces ok");
    else
       IO.Put_Line ("traces failed" & Natural'Image (Failures));

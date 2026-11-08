@@ -18,6 +18,12 @@ is
 
    Tol      : constant := 0.000_05;
    Failures : Natural := 0;
+   Cases    : Natural := 0;
+
+   procedure Mark is
+   begin
+      Cases := Cases + 1;
+   end Mark;
 
    procedure Fail (Message : String) is
    begin
@@ -36,6 +42,7 @@ is
 
    procedure Expect (Name : String; Got, Want : Float) is
    begin
+      Mark;
       if not Near (Got, Want) then
          Fail (Name & " got " & Float'Image (Got)
            & " want " & Float'Image (Want));
@@ -46,6 +53,7 @@ is
       Tokens : constant B.Token_List := B.Encode (Bytes);
       Back   : B.Byte_List;
    begin
+      Mark;
       if Tokens.Count > Bytes'Length then
          Fail (Name & " grew");
       end if;
@@ -565,6 +573,7 @@ begin
    end if;
 
    if Failures = 0 then
+      Ada.Text_IO.Put_Line ("cases attention_test" & Cases'Image);
       Ada.Text_IO.Put_Line ("attention ok");
    else
       Ada.Text_IO.Put_Line
