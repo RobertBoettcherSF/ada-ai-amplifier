@@ -136,14 +136,15 @@ try {
   assert(!items[10].includes("planned"), items[10]);
   assert(items[11].includes("Benchmark audit") && items[11].includes("done"), items[11]);
   assert(!items[11].includes("planned"), items[11]);
-  assert(items[12].includes("Reward-hacking demo") && items[12].includes("planned"), items[12]);
+  assert(items[12].includes("Reward-hacking demo") && items[12].includes("done"), items[12]);
+  assert(!items[12].includes("planned"), items[12]);
   assert(items[13].includes("Same model, different harness") && items[13].includes("planned"), items[13]);
   assert(items[14].includes("Checked steps, not just answers") && items[14].includes("planned"), items[14]);
   assert(items[15].includes("README update after items 1–15") && items[15].includes("planned"), items[15]);
   const status16 = await page.$eval("#backlog li:nth-child(16) .st", (el) => el.textContent.trim());
   assert(status16 === "planned", status16);
   const proof = await page.$$eval("#proof tbody tr", (els) => els.map((el) => el.innerText.replace(/\s+/g, " ").trim()));
-  assert(proof.length === 19, "proof rows " + proof.length);
+  assert(proof.length === 20, "proof rows " + proof.length);
   const statusOf = (name) => {
     const row = proof.find((r) => r.slice(0, name.length) === name && (r.length === name.length || r[name.length] === " "));
     return row ? row.slice(name.length).trim() : "";
@@ -167,6 +168,7 @@ try {
   assert(statusOf("Recursive prompts") === "not proved", "recurse proof " + statusOf("Recursive prompts"));
   assert(statusOf("Wrong turns") === "not proved", "turns proof " + statusOf("Wrong turns"));
   assert(statusOf("Benchmark audit") === "not proved", "audit proof " + statusOf("Benchmark audit"));
+  assert(statusOf("Reward hacking") === "not proved", "reward proof " + statusOf("Reward hacking"));
   const hrefs = await page.$$eval("#links a", (els) => els.map((a) => a.href));
   assert(hrefs.some((h) => h === "https://github.com/RobertBoettcherSF/ada-ai-amplifier"), "repo link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/HOWTO.md")), "howto link " + hrefs);
@@ -175,6 +177,7 @@ try {
   assert(hrefs.some((h) => h.includes("/docs/TRAINING_SPEED.md")), "speed link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/WRONG_TURNS.md")), "turns link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/BENCHMARK_AUDIT.md")), "audit link " + hrefs);
+  assert(hrefs.some((h) => h.includes("/docs/REWARD_HACKING.md")), "reward link " + hrefs);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
   assert(overflow, "desktop main overflows");
   const numbered = await page.$$eval("#backlog .n", (els) => els.map((el) => el.textContent.trim()));
@@ -482,6 +485,34 @@ try {
   const auditErr = await page.$eval("#auditerr", (el) => el.hidden);
   assert(auditErr, "audit error visible");
   await page.screenshot({ path: resolve(shotDir, "audit.png") });
+
+  await page.evaluate(() => document.getElementById("reward").scrollIntoView({ block: "center" }));
+  const rewardStat = await page.$eval("#rewardstat", (el) => el.textContent);
+  assert(rewardStat.includes("5 submissions") && rewardStat.includes("1 passes"), rewardStat);
+  assert(rewardStat.includes("20261104") && rewardStat.includes("120 steps"), rewardStat);
+  const rewardRows = await page.$$eval("#rewardtable tbody tr", (els) => els.map((el) => el.textContent));
+  assert(rewardRows.length === 5, "reward rows " + rewardRows.length);
+  assert(rewardRows[0].includes("honest-trained") && rewardRows[0].includes("counts") && rewardRows[0].includes("none"), rewardRows[0]);
+  assert(rewardRows[1].includes("hard-coded-loss") && rewardRows[1].includes("reported-loss") && rewardRows[1].includes("rejected"), rewardRows[1]);
+  assert(rewardRows[2].includes("constant-half") && rewardRows[2].includes("rejected"), rewardRows[2]);
+  assert(rewardRows[3].includes("memorized-two") && rewardRows[3].includes("two-of-four") && rewardRows[3].includes("0.50"), rewardRows[3]);
+  assert(rewardRows[4].includes("right-stamp") && rewardRows[4].includes("right-stamp") && rewardRows[4].includes("rejected"), rewardRows[4]);
+  const rewardTally = await page.$eval("#rewardtally", (el) => el.textContent);
+  assert(rewardTally.includes("1 of 5") && rewardTally.includes("Only the real check counts"), rewardTally);
+  const flawedEnd = await page.$eval("#rewardflawedend", (el) => el.textContent);
+  const realEnd = await page.$eval("#rewardrealend", (el) => el.textContent);
+  assert(flawedEnd.includes("Real check fails."), flawedEnd);
+  assert(realEnd.includes("Real 1.00") && realEnd.includes("Real check passes."), realEnd);
+  const reward = await page.evaluate(() => window.__reward);
+  assert(reward.steps === 121, "reward steps " + reward.steps);
+  assert(reward.flawedProxy[reward.flawedProxy.length - 1] > reward.flawedProxy[0] + 0.25, "proxy rise");
+  assert(reward.flawedHolds.every((v) => v === 0), "flawed search passed");
+  assert(reward.realScore[reward.realScore.length - 1] === 1, "real end score");
+  assert(reward.realHolds[reward.realHolds.length - 1] === 1, "real search hold");
+  assert(reward.realHolds[0] === 0, "real search already passed");
+  const rewardErr = await page.$eval("#rewarderr", (el) => el.hidden);
+  assert(rewardErr, "reward error visible");
+  await page.screenshot({ path: resolve(shotDir, "reward.png") });
   const speedH = await page.$eval("#speed-base", (el) => el.getBoundingClientRect().height);
   assert(speedH >= 44, "speed height " + speedH);
   const speedBlurb = await page.$eval("#speedstat", (el) => el.textContent);
@@ -577,6 +608,12 @@ try {
   const phoneAudit = await phonePage.$eval("#auditlist", (el) => el.textContent);
   assert(phoneAudit.includes("answer-leaked"), "phone audit " + phoneAudit);
   assert(phoneAudit.includes("wrong-expected"), "phone audit flag");
+  await phonePage.evaluate(() => document.getElementById("reward").scrollIntoView({ block: "center" }));
+  const phoneReward = await phonePage.$eval("#rewardtable", (el) => el.textContent);
+  assert(phoneReward.includes("reported-loss"), "phone reward " + phoneReward);
+  assert(phoneReward.includes("two-of-four"), "phone reward gap");
+  const phoneRewardEnd = await phonePage.$eval("#rewardrealend", (el) => el.textContent);
+  assert(phoneRewardEnd.includes("passes"), "phone reward end " + phoneRewardEnd);
   const phoneAuditFull = await phonePage.$eval("#auditfull", (el) => el.textContent);
   assert(phoneAuditFull.includes("Not accepted"), phoneAuditFull);
   const phoneTurnH = await phonePage.$eval("#turn-go-5", (el) => el.getBoundingClientRect().height);
@@ -650,6 +687,7 @@ try {
   assert(await badPage.$eval("#recerr", (el) => !el.hidden && el.textContent.includes("cannot check a chain")), "recurse down");
   assert(await badPage.$eval("#turnerr", (el) => !el.hidden && el.textContent.includes("cannot check a next step")), "turns down");
   assert(await badPage.$eval("#auditerr", (el) => !el.hidden && el.textContent.includes("cannot audit")), "audit down");
+  assert(await badPage.$eval("#rewarderr", (el) => !el.hidden && el.textContent.includes("cannot score")), "reward down");
   assert(badErrors.length === 0, "nowasm errors " + badErrors);
 
   const html = readFileSync(resolve(root, "site/index.html"), "utf8");

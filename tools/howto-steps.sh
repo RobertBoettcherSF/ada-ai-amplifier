@@ -18,6 +18,8 @@ alr -n build
 ./bin/traces_cli
 ./bin/audit_test
 ./bin/audit_cli
+./bin/reward_test
+./bin/reward_cli
 npm ci
 ./build.sh
 node tools/page-smoke.mjs

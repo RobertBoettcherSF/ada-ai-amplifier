@@ -10,7 +10,8 @@ project Ada_AI_Amplifier is
      ("hello.adb", "tensors_test.adb", "mlp_test.adb",
       "attention_test.adb", "recurse_test.adb", "recurse_cli.adb",
       "traces_test.adb", "traces_cli.adb",
-      "audit_test.adb", "audit_cli.adb");
+      "audit_test.adb", "audit_cli.adb",
+      "reward_test.adb", "reward_cli.adb");
 
    package Compiler is
       --  -gnata checks the Pre and Post on AI_Amplifier.Tensors.

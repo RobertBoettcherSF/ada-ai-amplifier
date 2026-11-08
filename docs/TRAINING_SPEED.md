@@ -4,9 +4,9 @@ A yardstick for the XOR trainer this repository already has.
 The numbers below are that trainer. They are not a reproduction of
 anyone else's result.
 
-Visible stamp: **v0.12.0-audit**
+Visible stamp: **v0.13.0-reward**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.12.0-audit
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.13.0-reward
 
 ## What this is, and what it is not
 
