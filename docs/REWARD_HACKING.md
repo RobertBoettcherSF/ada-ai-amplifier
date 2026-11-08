@@ -3,7 +3,7 @@
 One task, two graders, and a hill-climb that can please the weak
 grader without solving the task.
 
-Visible stamp: **v0.18.0-status**
+Visible stamp: **v0.19.0-summary**
 
 Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.18.0-status
 

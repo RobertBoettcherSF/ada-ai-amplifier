@@ -6,20 +6,56 @@ project Ada_AI_Amplifier is
    for Object_Dir use "obj/" & Ada_AI_Amplifier_Config.Build_Profile;
    for Create_Missing_Dirs use "True";
    for Exec_Dir use "bin";
-   for Main use
-     ("hello.adb", "tensors_test.adb", "mlp_test.adb",
-      "attention_test.adb", "recurse_test.adb", "recurse_cli.adb",
-      "traces_test.adb", "traces_cli.adb",
-      "audit_test.adb", "audit_cli.adb",
-      "reward_test.adb", "reward_cli.adb",
-      "harness_test.adb", "harness_cli.adb",
-      "steps_test.adb", "steps_cli.adb", "recheck_test.adb",
-      "status_cli.adb",
-      "item_01.adb", "item_02.adb", "item_03.adb", "item_04.adb",
-      "item_05.adb", "item_06.adb", "item_07.adb", "item_08.adb",
-      "item_09.adb", "item_10.adb", "item_11.adb", "item_12.adb",
-      "item_13.adb", "item_14.adb", "item_15.adb", "item_17.adb",
-      "item_18.adb");
+
+   --  prove.sh passes -XPROOF_SET=legacy so the 419-check log
+   --  stays the root, the version unit, and the tensors.
+   --  AI_Amplifier.Summary_Rules is proved by summary_rules.gpr.
+   type Proof_Set is ("all", "legacy");
+   Proof_Set_Kind : Proof_Set := External ("PROOF_SET", "all");
+
+   case Proof_Set_Kind is
+      when "all" =>
+         for Main use
+           ("hello.adb", "tensors_test.adb", "mlp_test.adb",
+            "attention_test.adb", "recurse_test.adb", "recurse_cli.adb",
+            "traces_test.adb", "traces_cli.adb",
+            "audit_test.adb", "audit_cli.adb",
+            "reward_test.adb", "reward_cli.adb",
+            "harness_test.adb", "harness_cli.adb",
+            "steps_test.adb", "steps_cli.adb", "recheck_test.adb",
+            "summary_test.adb", "summary_cli.adb",
+            "status_cli.adb",
+            "item_01.adb", "item_02.adb", "item_03.adb", "item_04.adb",
+            "item_05.adb", "item_06.adb", "item_07.adb", "item_08.adb",
+            "item_09.adb", "item_10.adb", "item_11.adb", "item_12.adb",
+            "item_13.adb", "item_14.adb", "item_15.adb", "item_17.adb",
+            "item_18.adb", "item_19.adb");
+      when "legacy" =>
+         for Main use
+           ("hello.adb", "tensors_test.adb", "mlp_test.adb",
+            "attention_test.adb", "recurse_test.adb", "recurse_cli.adb",
+            "traces_test.adb", "traces_cli.adb",
+            "audit_test.adb", "audit_cli.adb",
+            "reward_test.adb", "reward_cli.adb",
+            "harness_test.adb", "harness_cli.adb",
+            "steps_test.adb", "steps_cli.adb", "recheck_test.adb",
+            "status_cli.adb",
+            "item_01.adb", "item_02.adb", "item_03.adb", "item_04.adb",
+            "item_05.adb", "item_06.adb", "item_07.adb", "item_08.adb",
+            "item_09.adb", "item_10.adb", "item_11.adb", "item_12.adb",
+            "item_13.adb", "item_14.adb", "item_15.adb", "item_17.adb",
+            "item_18.adb");
+         for Excluded_Source_Files use
+           ("ai_amplifier-summary.ads",
+            "ai_amplifier-summary.adb",
+            "ai_amplifier-summary-demo.ads",
+            "ai_amplifier-summary-demo.adb",
+            "ai_amplifier-summary_rules.ads",
+            "ai_amplifier-summary_rules.adb",
+            "summary_test.adb",
+            "summary_cli.adb",
+            "item_19.adb");
+   end case;
 
    package Compiler is
       --  -gnata checks the Pre and Post on AI_Amplifier.Tensors.

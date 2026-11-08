@@ -2,7 +2,7 @@
 
 The idea, and what this repository actually shows.
 
-Visible stamp: **v0.18.0-status**
+Visible stamp: **v0.19.0-summary**
 
 Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.18.0-status
 

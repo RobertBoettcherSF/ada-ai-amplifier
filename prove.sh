@@ -67,9 +67,15 @@ if ! command -v gnatprove >/dev/null 2>&1; then
     install_gnatprove_archive
   fi
 fi
-gnatprove -P ada_ai_amplifier.gpr -j0
+#  The legacy set is the root, the version unit, and the
+#  tensors. Summary_Rules is excluded there so this log stays
+#  the 419 checks. The flag rules are proved just below.
+gnatprove -P ada_ai_amplifier.gpr -XPROOF_SET=legacy -j0
 mkdir -p proof
 out=$(find obj -path '*/gnatprove/gnatprove.out' -print | head -1)
 cp "$out" proof/gnatprove.out
+gnatprove -P summary_rules.gpr -j0
+rules=$(find obj/summary_rules -path '*/gnatprove/gnatprove.out' -print | head -1)
+cp "$rules" proof/summary_rules.out
 gnatprove --version | head -1 > proof/version.txt
-echo "Wrote proof/gnatprove.out"
+echo "Wrote proof/gnatprove.out and proof/summary_rules.out"

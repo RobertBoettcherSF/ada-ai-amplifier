@@ -4,7 +4,7 @@ A yardstick for the XOR trainer this repository already has.
 The numbers below are that trainer. They are not a reproduction of
 anyone else's result.
 
-Visible stamp: **v0.18.0-status**
+Visible stamp: **v0.19.0-summary**
 
 Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.18.0-status
 

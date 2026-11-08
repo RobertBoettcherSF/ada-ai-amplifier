@@ -15,4 +15,5 @@ item 14 tested harness_test cases 406 spec item_14 pass asserts 19; live-ask unc
 item 15 tested steps_test cases 16 spec item_15 pass asserts 10
 item 16 tested check-locked cases 16 spec pass; no item_16.adb
 item 17 tested recheck_test agree 44 of 44, 22 of 22, 12 of 12 spec item_17 pass asserts 18
+item 19 tested summary_test cases 36 spec item_19 pass asserts 22
 summary proved 3 of 17, tested 14, unchecked 0

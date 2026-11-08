@@ -3,7 +3,7 @@
 Items 1 through 17, each with one label. The label is computed
 from this build. The page and the README copy that text.
 
-Visible stamp: **v0.18.0-status**
+Visible stamp: **v0.19.0-summary**
 
 Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.18.0-status
 
@@ -117,6 +117,7 @@ proved 3 of 17, tested 14, unchecked 0.
 | 15 Checked steps | tested | steps_test cases 16 spec item_15 pass asserts 10 |
 | 16 Locked statements | tested | check-locked cases 16 spec pass; no item_16.adb |
 | 17 Second checker | tested | recheck_test agree 44 of 44, 22 of 22, 12 of 12 spec item_17 pass asserts 18 |
+| 19 Reasoning summary | tested | summary_test cases 36 spec item_19 pass asserts 22 |
 
 ## What is proved
 
@@ -130,3 +131,10 @@ The labels describe only the checks this repository runs. They
 do not describe anyone else's proof, and they do not describe a
 live model. A fingerprint, an agreement, and a passing test are
 still tests.
+
+Item 19 is a row after those seventeen. It is not inside the
+summary `proved 3 of 17, tested 14, unchecked 0`. Its label is
+tested when `summary_test` passes and `item_19` passes. The
+flag rules are a separate proof of 22 checks in
+`proof/summary_rules.out`. That proof does not cover the
+summaries or the step checker, so the row is not proved.

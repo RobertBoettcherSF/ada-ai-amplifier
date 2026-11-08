@@ -1,0 +1,26 @@
+--  Proof project for the summary flag rules only.
+--  prove.sh runs this after the 419-check log, and writes
+--  proof/summary_rules.out. It is not part of that 419.
+project Summary_Rules_Proof is
+
+   for Source_Dirs use ("src");
+   for Source_Files use
+     ("ai_amplifier.ads",
+      "ai_amplifier-summary_rules.ads",
+      "ai_amplifier-summary_rules.adb");
+   for Object_Dir use "obj/summary_rules";
+   for Create_Missing_Dirs use "True";
+
+   package Compiler is
+      for Default_Switches ("Ada") use ("-gnat2012", "-gnata");
+   end Compiler;
+
+   package Prove is
+      for Proof_Switches ("Ada") use
+        ("--level=2",
+         "--timeout=120",
+         "--report=all",
+         "--checks-as-errors=on");
+   end Prove;
+
+end Summary_Rules_Proof;
