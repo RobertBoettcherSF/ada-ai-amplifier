@@ -47,7 +47,7 @@ These four are the same text:
 
 | Place | Text |
 |---|---|
-| `AI_Amplifier.Version.Version_Text` | `v0.21.0-moreproofs` on this tree |
+| `AI_Amplifier.Version.Version_Text` | `v0.22.0-askcheck` on this tree |
 | `web/template.html`, the `#ver` badge | the same, so it shows with JavaScript off |
 | `version.txt` | the same, one line |
 | `alire.toml` `version` | the same without the leading `v` |
@@ -58,7 +58,7 @@ Bump the stamp when the page, or the Ada a visitor runs, would differ.
 Do not reuse a stamp. Pages deploys from `main` only, so the bump lands
 with the change that deploys. The link you send is
 
-`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.21.0-moreproofs`
+`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.22.0-askcheck`
 
 with `?v=` set to the stamp without the leading `v`. Before you say
 that stamp is live, fetch the page and `version.txt` and see the text
@@ -101,7 +101,8 @@ seen.
    after Alire, Node 22, Chrome, and `./tools/howto-packages.sh`.
    `python3 tools/check-locked.py` checks `specs/LOCK`. `./tools/check-locked-selftest.sh` checks that a bad edit fails the gate.
    `./tools/check-recheck-selftest.sh` checks that a planted bug in either checker fails the comparison.
-   `./tools/check-status-selftest.sh` checks that a missing `mlp ok` is not labelled tested.
+   `./tools/check-status-selftest.sh` checks that a missing `mlp ok` is not labelled tested, and that a missing stand-in line is not called a stand-in test.
+   `./tools/check-ask.sh` is the stand-in run inside `check-status.sh`. It does not call a real model.
 4. **Does the stamp match?** `./tools/check-version.sh`.
 5. **Do the docs name the numbers the code uses?** The How-To quotes
    `tools/howto-packages.sh` and `tools/howto-steps.sh`.

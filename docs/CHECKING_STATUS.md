@@ -3,9 +3,9 @@
 Items 1 through 19, each with one label. The label is computed
 from this build. The page and the README copy that text.
 
-Visible stamp: **v0.21.0-moreproofs**
+Visible stamp: **v0.22.0-askcheck**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.21.0-moreproofs
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.22.0-askcheck
 
 ## The idea, and the licence
 
@@ -68,22 +68,25 @@ check. A unit whose detail lines sum to 0 checks is not proved.
 The page wrappers are not in item 3's run. The row says so.
 The proved label is the tensor unit.
 
-## What stays unchecked
+## The stand-in, and what stays unchecked
 
 Items 9 and 11 are proved for the step rule and the verdict
-rule. Item 14 is tested. Each of those rows says the live
-`--ask` mode is unchecked. That mode needs a key, a URL, and
-a model name. CI does not call a live model. A proved or
-tested label does not cover that command.
+rule. Item 14 is tested. Each of those rows says `--ask` was
+tested against a stand-in model. The stand-in runs on the CI
+machine, returns fixed chat replies, and needs no network and
+no real key. The three commands are pointed at it with
+`RECURSE_LLM_URL`, `RECURSE_LLM_KEY`, and `RECURSE_LLM_MODEL`,
+and the same three names for traces and for the harness.
+`ask_standin` records 36 cases: a reply the checker accepts,
+a wrong answer, a broken body, and a timeout, for each command.
+A missing `ask-standin ok` line puts the old unchecked wording
+back. It does not change the proved label.
 
-| Item | Command | What it would take |
-|---|---|---|
-| 9 | `recurse_cli --ask` | `RECURSE_LLM_URL`, `RECURSE_LLM_KEY`, `RECURSE_LLM_MODEL` |
-| 11 | `traces_cli --ask` | `TRACES_LLM_URL`, `TRACES_LLM_KEY`, `TRACES_LLM_MODEL` |
-| 14 | `harness_cli --ask` | `HARNESS_LLM_URL`, `HARNESS_LLM_KEY`, `HARNESS_LLM_MODEL` |
+No real model is called. Real-model behaviour stays unchecked.
+A proved or tested label does not cover a real model.
 
 There is no unchecked item among 1–19 on this tree. The summary's
-0 is that count. It is not a claim that a live model was run.
+0 is that count. It is not a claim that a real model was run.
 
 ## The file CI checks
 
@@ -93,7 +96,11 @@ byte. `tools/check-built-status.py` fails if an `item_NN.adb`
 main in `ada_ai_amplifier.gpr` has no `item NN` row in `STATUS`.
 A throwaway copy of the test log with `mlp ok` removed
 has to label items 4, 8, and 10 unchecked, and it has to leave
-item 3 proved. Removing `proof/item_03.out`, or appending
+item 3 proved. Removing the `ask-standin ok` line has to put
+`live-ask unchecked` back on items 9, 11, and 14, and it has
+to leave those labels proved, proved, and tested. Removing
+`proof/item_09.out` has to drop item 9's proved label even
+when the stand-in line is still there. Removing `proof/item_03.out`, or appending
 `unproved` to `proof/item_07.out`, has to drop that proved
 label. A throwaway `proof/item_18.out` that names
 `ai_amplifier-status` and not `ai_amplifier-label_rule` has
@@ -121,16 +128,16 @@ proved 12 of 19, tested 7, unchecked 0.
 | 6 How-To and leaky ReLU | tested | item_06 cases 17 spec pass; tensors_test cases 67; not proved: the how-to is a document and the leaky demo is not analyzed |
 | 7 SPARK proofs of the kernels | proved | gnatprove proof/item_07.out summary 414 flow 36 provers 378 unproved 0; unit ai_amplifier-tensors 30/30 checks 378; spec item_07 pass asserts 24 |
 | 8 Weight-space programming | tested | mlp_test cases 185 spec item_08 pass asserts 27; not proved: weight-file checks run with the program and are not proved |
-| 9 Recursive prompts | proved | gnatprove proof/item_09.out summary 6 flow 3 provers 3 unproved 0; unit ai_amplifier-chain_rule 3/3 checks 3; recurse_test cases 37 spec item_09 pass asserts 15; live-ask unchecked: recurse_cli --ask needs RECURSE_LLM_URL, RECURSE_LLM_KEY, and RECURSE_LLM_MODEL; CI does not call a live model |
+| 9 Recursive prompts | proved | gnatprove proof/item_09.out summary 6 flow 3 provers 3 unproved 0; unit ai_amplifier-chain_rule 3/3 checks 3; recurse_test cases 37 spec item_09 pass asserts 15; tested against a stand-in model: recurse_cli --ask used RECURSE_LLM_URL, RECURSE_LLM_KEY, and RECURSE_LLM_MODEL; ask_standin cases 36; no real model is called; real-model behaviour stays unchecked |
 | 10 Training-speed harness | tested | mlp_test cases 185 spec item_10 pass asserts 18; not proved: a measured training time is not a proof |
-| 11 Wrong-turn traces | proved | gnatprove proof/item_11.out summary 15 flow 4 provers 11 unproved 0; unit ai_amplifier-trace_rule 4/4 checks 11; traces_test cases 4 spec item_11 pass asserts 22; live-ask unchecked: traces_cli --ask needs TRACES_LLM_URL, TRACES_LLM_KEY, and TRACES_LLM_MODEL; CI does not call a live model |
+| 11 Wrong-turn traces | proved | gnatprove proof/item_11.out summary 15 flow 4 provers 11 unproved 0; unit ai_amplifier-trace_rule 4/4 checks 11; traces_test cases 4 spec item_11 pass asserts 22; tested against a stand-in model: traces_cli --ask used TRACES_LLM_URL, TRACES_LLM_KEY, and TRACES_LLM_MODEL; ask_standin cases 36; no real model is called; real-model behaviour stays unchecked |
 | 12 Benchmark audit | proved | gnatprove proof/item_12.out summary 2 flow 1 provers 1 unproved 0; unit ai_amplifier-audit_rule 2/2 checks 1; audit_test cases 13 spec item_12 pass asserts 11 |
 | 13 Reward hacking | proved | gnatprove proof/item_13.out summary 4 flow 2 provers 2 unproved 0; unit ai_amplifier-reward_rule 3/3 checks 2; proved for the accept/reject gate; reward_test cases 9 spec item_13 pass asserts 43; not proved: the two graders score float nets and are not proved |
-| 14 Harness comparison | tested | harness_test cases 406 spec item_14 pass asserts 19; live-ask unchecked: harness_cli --ask needs HARNESS_LLM_URL, HARNESS_LLM_KEY, and HARNESS_LLM_MODEL; CI does not call a live model; not proved: the harness schedule is not a proof target |
+| 14 Harness comparison | tested | harness_test cases 406 spec item_14 pass asserts 19; tested against a stand-in model: harness_cli --ask used HARNESS_LLM_URL, HARNESS_LLM_KEY, and HARNESS_LLM_MODEL; ask_standin cases 36; no real model is called; real-model behaviour stays unchecked; not proved: the harness schedule is not a proof target |
 | 15 Checked steps | proved | gnatprove proof/item_15.out summary 8 flow 4 provers 4 unproved 0; unit ai_amplifier-step_rule 5/5 checks 4; proved for the step-grade rule; steps_test cases 16 spec item_15 pass asserts 10; not proved: a step grade recomputes values and is not a proof |
 | 16 Locked statements | proved | gnatprove proof/item_16.out summary 11 flow 2 provers 9 unproved 0; unit ai_amplifier-lock_rule 3/3 checks 9; proved for the lock-compare rule; check-locked cases 17 spec item_16 pass asserts 14; not proved: a fingerprint detects an edit and does not prove the spec |
 | 17 Second checker | proved | gnatprove proof/item_17.out summary 9 flow 2 provers 7 unproved 0; unit ai_amplifier-agree_rule 4/4 checks 7; proved for the agreement count; recheck_test agree 44 of 44, 22 of 22, 12 of 12 spec item_17 pass asserts 18; not proved: agreement of two checkers is not a proof of either |
-| 18 Checking status | proved | gnatprove proof/item_18.out summary 6 flow 3 provers 3 unproved 0; unit ai_amplifier-label_rule 4/4 checks 3; proved for the label rule; spec item_18 asserts 45; not in this run: ai_amplifier-status; not proved: AI_Amplifier.Status is plain Ada and is not a proof target |
+| 18 Checking status | proved | gnatprove proof/item_18.out summary 6 flow 3 provers 3 unproved 0; unit ai_amplifier-label_rule 4/4 checks 3; proved for the label rule; spec item_18 asserts 57; not in this run: ai_amplifier-status; not proved: AI_Amplifier.Status is plain Ada and is not a proof target |
 | 19 Reasoning summary | proved | gnatprove proof/item_19.out summary 22 flow 7 provers 15 unproved 0; unit ai_amplifier-summary_rules 6/6 checks 15; summary_test cases 36 spec item_19 pass asserts 22; not in this run: ai_amplifier-summary |
 
 ## What is proved

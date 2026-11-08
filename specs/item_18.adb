@@ -2,7 +2,10 @@
 --  The labels are computed from the build logs. A tested
 --  label is not a proof. Item 18 is proved for the label
 --  rule only. Reading the logs is still plain Ada. A live
---  --ask mode is not a test that CI ran.
+--  --ask mode is tested against a stand-in model.
+--  That run does not call a real model. Real-model
+--  behaviour stays unchecked, and it does not change
+--  the proved label.
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 with AI_Amplifier.Status;
@@ -76,13 +79,25 @@ begin
    pragma Assert (Has (7, "proof/item_07.out"));
    pragma Assert (Has (7, "ai_amplifier-tensors"));
    pragma Assert (Has (7, "unproved 0"));
-   pragma Assert (Has (9, "live-ask unchecked"));
+   pragma Assert (Has (9, "tested against a stand-in model"));
    pragma Assert (Has (9, "RECURSE_LLM_KEY"));
+   pragma Assert (Has (9, "no real model is called"));
+   pragma Assert (Has (9, "real-model behaviour stays unchecked"));
+   pragma Assert (not Has (9, "live-ask unchecked"));
    pragma Assert (Has (9, "ai_amplifier-chain_rule"));
-   pragma Assert (Has (11, "live-ask unchecked"));
+   pragma Assert (S.Item_Label (9) = S.Proved);
+   pragma Assert (Has (11, "tested against a stand-in model"));
    pragma Assert (Has (11, "TRACES_LLM_KEY"));
-   pragma Assert (Has (14, "live-ask unchecked"));
+   pragma Assert (Has (11, "no real model is called"));
+   pragma Assert (Has (11, "real-model behaviour stays unchecked"));
+   pragma Assert (not Has (11, "live-ask unchecked"));
+   pragma Assert (S.Item_Label (11) = S.Proved);
+   pragma Assert (Has (14, "tested against a stand-in model"));
    pragma Assert (Has (14, "HARNESS_LLM_KEY"));
+   pragma Assert (Has (14, "no real model is called"));
+   pragma Assert (Has (14, "real-model behaviour stays unchecked"));
+   pragma Assert (not Has (14, "live-ask unchecked"));
+   pragma Assert (S.Item_Label (14) = S.Tested);
    pragma Assert (Has (16, "spec item_16"));
    pragma Assert (Has (16, "not proved:"));
    pragma Assert (S.Item_Label (19) = S.Proved);

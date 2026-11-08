@@ -5,9 +5,9 @@ and the list of steps that were actually taken. Ada checks
 each step on its own, then compares the summary with those
 steps.
 
-Visible stamp: **v0.21.0-moreproofs**
+Visible stamp: **v0.22.0-askcheck**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.21.0-moreproofs
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.22.0-askcheck
 
 ## The idea, and the licence
 

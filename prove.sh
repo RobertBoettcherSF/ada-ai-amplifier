@@ -98,6 +98,7 @@ prove_one proof/item_15.out ai_amplifier-step_rule.adb
 prove_one proof/item_16.out ai_amplifier-lock_rule.adb
 prove_one proof/item_17.out ai_amplifier-agree_rule.adb
 prove_one proof/item_18.out ai_amplifier-label_rule.adb
+prove_one proof/ask_rule.out ai_amplifier-ask_rule.adb
 gnatprove --version | head -1 > proof/version.txt
 
 # Item 19's flag rules. Separate project, separate log.

@@ -6,7 +6,7 @@ title: ""
 
 ## Stamp
 
-The yellow badge, bottom right. Example: `v0.21.0-moreproofs`.
+The yellow badge, bottom right. Example: `v0.22.0-askcheck`.
 
 ## What you expected
 

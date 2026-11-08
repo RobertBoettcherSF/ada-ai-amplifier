@@ -27,7 +27,32 @@ grep -q '^item 10 unchecked ' "$tmp/out"
 grep -q '^item 03 proved ' "$tmp/out"
 grep -q '^item 07 proved ' "$tmp/out"
 grep -q 'would take mlp_test' "$tmp/out"
-grep -q 'live-ask unchecked' "$tmp/out"
+grep -q 'tested against a stand-in model' "$tmp/out"
+grep -q 'no real model is called' "$tmp/out"
+grep -q 'real-model behaviour stays unchecked' "$tmp/out"
+grep -q '^item 09 proved ' "$tmp/out"
+grep -q '^item 11 proved ' "$tmp/out"
+grep -q '^item 14 tested ' "$tmp/out"
+if grep -q 'live-ask unchecked' "$tmp/out"; then
+  echo "a stand-in log still said live-ask unchecked" >&2
+  exit 1
+fi
+sed '/^ask-standin ok/d' obj/gen/tests.out > "$tmp/noask.tests"
+./bin/status_cli \
+  proof \
+  "$tmp/noask.tests" \
+  obj/gen/specs.out \
+  obj/gen/recheck-report.txt \
+  specs > "$tmp/noask"
+grep -q 'live-ask unchecked' "$tmp/noask"
+grep -q '^item 09 proved ' "$tmp/noask"
+grep -q '^item 11 proved ' "$tmp/noask"
+grep -q '^item 14 tested ' "$tmp/noask"
+grep -q '^summary proved 12 of 19, tested 7, unchecked 0$' "$tmp/noask"
+if grep -q 'tested against a stand-in model' "$tmp/noask"; then
+  echo "a missing stand-in log still claimed the stand-in" >&2
+  exit 1
+fi
 if diff -q STATUS "$tmp/out" >/dev/null; then
   echo "tampered log matched STATUS" >&2
   exit 1
@@ -45,6 +70,19 @@ if grep -q '^item 03 proved ' "$tmp/missing"; then
   echo "missing proof file still proved item 03" >&2
   exit 1
 fi
+rm -f "$tmp/proof/item_09.out"
+./bin/status_cli \
+  "$tmp/proof" \
+  obj/gen/tests.out \
+  obj/gen/specs.out \
+  obj/gen/recheck-report.txt \
+  specs > "$tmp/missing9"
+if grep -q '^item 09 proved ' "$tmp/missing9"; then
+  echo "a stand-in log proved item 09 without its proof file" >&2
+  exit 1
+fi
+grep -q 'tested against a stand-in model' "$tmp/missing9"
+cp proof/item_09.out "$tmp/proof/item_09.out"
 cp proof/item_07.out "$tmp/proof/item_07.out"
 printf '\nunproved\n' >> "$tmp/proof/item_07.out"
 ./bin/status_cli \

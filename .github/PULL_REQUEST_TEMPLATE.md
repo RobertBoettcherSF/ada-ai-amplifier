@@ -19,7 +19,7 @@ touches a proved kernel, and which level that kernel is.
 
 - [ ] Previous behaviour is still there (splash, tensor demo, leaky ReLU, training, tokens, F9, crash report, badge, How-To link)
 - [ ] `./bin/tensors_test`, `./bin/mlp_test`, `./bin/attention_test`, `./bin/recurse_test`, `./bin/traces_test`, `./bin/audit_test`, `./bin/reward_test`, `./bin/harness_test`, `./bin/steps_test`, `./bin/summary_test`, and `./bin/recheck_test` print `ok`
-- [ ] `./tools/check-status.sh` matches `STATUS`
+- [ ] `./tools/check-status.sh` matches `STATUS` (this runs `./tools/check-ask.sh`; no real model)
 - [ ] `./build.sh` and `node tools/page-smoke.mjs` pass
 - [ ] `./tools/check-version.sh` passes
 - [ ] `python3 tools/check-howto-quote.py` passes if the guide or its scripts changed

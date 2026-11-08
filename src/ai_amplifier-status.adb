@@ -2,6 +2,7 @@ with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 with AI_Amplifier.Agree_Rule;
+with AI_Amplifier.Ask_Rule;
 with AI_Amplifier.Label_Rule;
 
 package body AI_Amplifier.Status
@@ -70,8 +71,10 @@ is
    Pair_A : array (1 .. 3) of Natural := (others => 0);
    Pair_T : array (1 .. 3) of Natural := (others => 0);
    Pair_On : array (1 .. 3) of Boolean := (others => False);
-   Files_Ok : Boolean := False;
-   Why      : Ev;
+   Files_Ok   : Boolean := False;
+   Ask_On     : Boolean := False;
+   Ask_Cases  : Natural := 0;
+   Why        : Ev;
 
    function Trim (N : Natural) return String is
       Img : constant String := Natural'Image (N);
@@ -464,6 +467,13 @@ is
                Tests (T_Locked).OK := True;
             elsif Known_Ok (Line) then
                Tests (Test_Of_Ok (Line)).OK := True;
+            elsif Starts (Line, "ask-standin ")
+              and then Word (Line, 2) = "ok"
+              and then Word (Line, 3) = "cases"
+              and then To_Nat (Word (Line, 4)) > 0
+            then
+               Ask_On := True;
+               Ask_Cases := To_Nat (Word (Line, 4));
             elsif Starts (Line, "cases ") then
                declare
                   Token : constant String := Word (Line, 2);
@@ -643,21 +653,50 @@ is
 
    procedure Add_Ask (E : in out Ev; Which : Positive) is
    begin
-      Add (E, "; live-ask unchecked: ");
-      if Which = 9 then
-         Add (E, "recurse_cli --ask");
-         Add (E, " needs RECURSE_LLM_URL, RECURSE_LLM_KEY,");
-         Add (E, " and RECURSE_LLM_MODEL");
-      elsif Which = 11 then
-         Add (E, "traces_cli --ask");
-         Add (E, " needs TRACES_LLM_URL, TRACES_LLM_KEY,");
-         Add (E, " and TRACES_LLM_MODEL");
+      --  The stand-in log does not change the proved label.
+      --  Real_Model_Checked is false, so a passing stand-in
+      --  run still says that a real model was not called.
+      if Ask_On and then not Ask_Rule.Real_Model_Checked then
+         Add (E, "; tested against a stand-in model: ");
+         if Which = 9 then
+            Add (E, "recurse_cli --ask");
+            Add (E, " used RECURSE_LLM_URL, RECURSE_LLM_KEY,");
+         elsif Which = 11 then
+            Add (E, "traces_cli --ask");
+            Add (E, " used TRACES_LLM_URL, TRACES_LLM_KEY,");
+         else
+            Add (E, "harness_cli --ask");
+            Add (E, " used HARNESS_LLM_URL, HARNESS_LLM_KEY,");
+         end if;
+         Add (E, " and ");
+         if Which = 9 then
+            Add (E, "RECURSE_LLM_MODEL");
+         elsif Which = 11 then
+            Add (E, "TRACES_LLM_MODEL");
+         else
+            Add (E, "HARNESS_LLM_MODEL");
+         end if;
+         Add (E, "; ask_standin cases ");
+         Add_Nat (E, Ask_Cases);
+         Add (E, "; no real model is called");
+         Add (E, "; real-model behaviour stays unchecked");
       else
-         Add (E, "harness_cli --ask");
-         Add (E, " needs HARNESS_LLM_URL, HARNESS_LLM_KEY,");
-         Add (E, " and HARNESS_LLM_MODEL");
+         Add (E, "; live-ask unchecked: ");
+         if Which = 9 then
+            Add (E, "recurse_cli --ask");
+            Add (E, " needs RECURSE_LLM_URL, RECURSE_LLM_KEY,");
+            Add (E, " and RECURSE_LLM_MODEL");
+         elsif Which = 11 then
+            Add (E, "traces_cli --ask");
+            Add (E, " needs TRACES_LLM_URL, TRACES_LLM_KEY,");
+            Add (E, " and TRACES_LLM_MODEL");
+         else
+            Add (E, "harness_cli --ask");
+            Add (E, " needs HARNESS_LLM_URL, HARNESS_LLM_KEY,");
+            Add (E, " and HARNESS_LLM_MODEL");
+         end if;
+         Add (E, "; CI does not call a live model");
       end if;
-      Add (E, "; CI does not call a live model");
    end Add_Ask;
 
    function Agree_Ok return Boolean is
@@ -1099,6 +1138,8 @@ is
       Pair_T := (others => 0);
       Pair_On := (others => False);
       Files_Ok := False;
+      Ask_On := False;
+      Ask_Cases := 0;
       Clear (Why);
    end Reset;
 
