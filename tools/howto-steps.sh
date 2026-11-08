@@ -22,6 +22,8 @@ alr -n build
 ./bin/reward_cli
 ./bin/harness_test
 ./bin/harness_cli
+./bin/steps_test
+./bin/steps_cli
 npm ci
 ./build.sh
 node tools/page-smoke.mjs

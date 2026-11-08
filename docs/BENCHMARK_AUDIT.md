@@ -4,9 +4,9 @@ Twenty short tasks about code this repository already has, five of
 them broken on purpose, and an Ada auditor that runs before any
 score is accepted.
 
-Visible stamp: **v0.14.0-harness**
+Visible stamp: **v0.15.0-steps**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.14.0-harness
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.15.0-steps
 
 ## The idea, and the licences
 

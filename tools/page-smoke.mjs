@@ -140,12 +140,13 @@ try {
   assert(!items[12].includes("planned"), items[12]);
   assert(items[13].includes("Same model, different harness") && items[13].includes("done"), items[13]);
   assert(!items[13].includes("planned"), items[13]);
-  assert(items[14].includes("Checked steps, not just answers") && items[14].includes("planned"), items[14]);
-  assert(items[15].includes("README update after items 1–15") && items[15].includes("planned"), items[15]);
+  assert(items[14].includes("Checked steps, not just answers") && items[14].includes("done"), items[14]);
+  assert(!items[14].includes("planned"), items[14]);
+  assert(items[15].includes("README update after items 1–15") && items[15].includes("next"), items[15]);
   const status16 = await page.$eval("#backlog li:nth-child(16) .st", (el) => el.textContent.trim());
-  assert(status16 === "planned", status16);
+  assert(status16 === "next", status16);
   const proof = await page.$$eval("#proof tbody tr", (els) => els.map((el) => el.innerText.replace(/\s+/g, " ").trim()));
-  assert(proof.length === 21, "proof rows " + proof.length);
+  assert(proof.length === 22, "proof rows " + proof.length);
   const statusOf = (name) => {
     const row = proof.find((r) => r.slice(0, name.length) === name && (r.length === name.length || r[name.length] === " "));
     return row ? row.slice(name.length).trim() : "";
@@ -171,6 +172,7 @@ try {
   assert(statusOf("Benchmark audit") === "not proved", "audit proof " + statusOf("Benchmark audit"));
   assert(statusOf("Reward hacking") === "not proved", "reward proof " + statusOf("Reward hacking"));
   assert(statusOf("Harness comparison") === "not proved", "harness proof " + statusOf("Harness comparison"));
+  assert(statusOf("Checked steps") === "not proved", "steps proof " + statusOf("Checked steps"));
   const hrefs = await page.$$eval("#links a", (els) => els.map((a) => a.href));
   assert(hrefs.some((h) => h === "https://github.com/RobertBoettcherSF/ada-ai-amplifier"), "repo link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/HOWTO.md")), "howto link " + hrefs);
@@ -181,6 +183,7 @@ try {
   assert(hrefs.some((h) => h.includes("/docs/BENCHMARK_AUDIT.md")), "audit link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/REWARD_HACKING.md")), "reward link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/HARNESS.md")), "harness link " + hrefs);
+  assert(hrefs.some((h) => h.includes("/docs/CHECKED_STEPS.md")), "steps link " + hrefs);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
   assert(overflow, "desktop main overflows");
   const numbered = await page.$$eval("#backlog .n", (els) => els.map((el) => el.textContent.trim()));
@@ -541,6 +544,29 @@ try {
   await page.select("#harnesstask", "2");
   const harnessErr = await page.$eval("#harnesserr", (el) => el.hidden);
   assert(harnessErr, "harness error visible");
+  const stepsStat = await page.$eval("#stepsstat", (el) => el.textContent);
+  assert(stepsStat.includes("12 solutions") && stepsStat.includes("Answer-only passes 11") && stepsStat.includes("Steps pass 4"), stepsStat);
+  assert(stepsStat.includes("Only the steps count"), stepsStat);
+  const stepRows = await page.$$eval("#stepstable tbody tr", (els) => els.map((el) => el.textContent.replace(/\s+/g, " ").trim()));
+  assert(stepRows.length === 12, "step rows " + stepRows.length);
+  assert(stepRows[0].includes("xor-00-right") && stepRows[0].includes("pass") && !stepRows[0].includes("fail"), stepRows[0]);
+  assert(stepRows[1].includes("xor-10-cancel") && stepRows[1].includes("pass") && stepRows[1].includes("fail"), stepRows[1]);
+  assert(stepRows[4].includes("xor-01-wrong") && stepRows[4].includes("fail"), stepRows[4]);
+  const stepsOpen = await page.evaluate(() => window.__steps);
+  assert(stepsOpen.which === 2 && stepsOpen.bad === 2 && stepsOpen.rule === "bad-value", JSON.stringify(stepsOpen));
+  assert(stepsOpen.lines[1].includes("step h1") && stepsOpen.lines[1].includes("bad-value"), stepsOpen.lines[1]);
+  await page.click("#stepsbody tr:nth-child(11) button");
+  await page.waitForFunction(() => window.__steps && window.__steps.which === 11 && window.__steps.bad === 0);
+  const sumRule = await page.$eval("#steprule", (el) => el.textContent);
+  assert(sumRule.includes("Every step holds"), sumRule);
+  await page.click("#stepsbody tr:nth-child(4) button");
+  await page.waitForFunction(() => window.__steps && window.__steps.rule === "guessed-first");
+  const guessLine = await page.$eval("#steplist li.halt", (el) => el.textContent);
+  assert(guessLine.includes("answer 0") && guessLine.includes("guessed-first"), guessLine);
+  const stepsErr = await page.$eval("#stepserr", (el) => el.hidden);
+  assert(stepsErr, "steps error visible");
+  await page.evaluate(() => document.getElementById("steps").scrollIntoView({ block: "center" }));
+  await page.screenshot({ path: resolve(shotDir, "steps.png") });
   await page.screenshot({ path: resolve(shotDir, "harness.png") });
   const speedH = await page.$eval("#speed-base", (el) => el.getBoundingClientRect().height);
   assert(speedH >= 44, "speed height " + speedH);
@@ -723,6 +749,7 @@ try {
   assert(await badPage.$eval("#auditerr", (el) => !el.hidden && el.textContent.includes("cannot audit")), "audit down");
   assert(await badPage.$eval("#rewarderr", (el) => !el.hidden && el.textContent.includes("cannot score")), "reward down");
   assert(await badPage.$eval("#harnesserr", (el) => !el.hidden && el.textContent.includes("cannot run the harnesses")), "harness down");
+  assert(await badPage.$eval("#stepserr", (el) => !el.hidden && el.textContent.includes("cannot check the steps")), "steps down");
   assert(badErrors.length === 0, "nowasm errors " + badErrors);
 
   const html = readFileSync(resolve(root, "site/index.html"), "utf8");

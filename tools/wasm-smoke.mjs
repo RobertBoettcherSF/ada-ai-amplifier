@@ -628,4 +628,32 @@ for (let i = 1; i <= exp.aa_hn_logs(3); i += 1) {
 }
 exp.aa_hn_select(0);
 if (exp.aa_hn_solved(3) !== 1) fail("wasm harness select");
+const stNeed = ["aa_st_run", "aa_st_count", "aa_st_name_len", "aa_st_name_byte", "aa_st_answer_len", "aa_st_answer_byte", "aa_st_steps_len", "aa_st_steps_byte", "aa_st_select", "aa_st_which", "aa_st_rows", "aa_st_row_len", "aa_st_row_byte", "aa_st_bad", "aa_st_rule_len", "aa_st_rule_byte", "aa_st_stat_len", "aa_st_stat_byte"];
+for (const name of stNeed) {
+  if (typeof exp[name] !== "function") fail("missing export " + name);
+}
+if (exp.aa_st_count() !== 0 || exp.aa_st_name_byte(1, 1) !== 0) fail("wasm steps before run");
+exp.aa_st_run();
+if (exp.aa_st_count() !== 12 || exp.aa_st_which() !== 2) fail("wasm steps census");
+const stAnswer = ["pass", "pass", "pass", "pass", "fail", "pass", "pass", "pass", "pass", "pass", "pass", "pass"];
+const stSteps = ["pass", "fail", "fail", "fail", "fail", "pass", "fail", "pass", "fail", "fail", "pass", "fail"];
+for (let i = 1; i <= 12; i += 1) {
+  const answer = rwText(() => exp.aa_st_answer_len(i), (p) => exp.aa_st_answer_byte(i, p));
+  const steps = rwText(() => exp.aa_st_steps_len(i), (p) => exp.aa_st_steps_byte(i, p));
+  if (answer !== stAnswer[i - 1] || steps !== stSteps[i - 1]) {
+    fail("wasm steps row " + i + " " + answer + " " + steps);
+  }
+}
+if (exp.aa_st_bad() !== 2) fail("wasm steps bad " + exp.aa_st_bad());
+const stRule = rwText(() => exp.aa_st_rule_len(), (p) => exp.aa_st_rule_byte(p));
+if (stRule !== "bad-value") fail("wasm steps rule " + stRule);
+const stRow = rwText(() => exp.aa_st_row_len(2), (p) => exp.aa_st_row_byte(2, p));
+if (!stRow.startsWith("step h1 ")) fail("wasm steps h1 " + stRow);
+const stStat = rwText(() => exp.aa_st_stat_len(), (p) => exp.aa_st_stat_byte(p));
+if (!stStat.includes("Answer-only passes 11") || !stStat.includes("Steps pass 4")) fail("wasm steps stat " + stStat);
+exp.aa_st_select(0);
+if (exp.aa_st_which() !== 2) fail("wasm steps select clamp");
+exp.aa_st_select(11);
+if (exp.aa_st_bad() !== 0 || exp.aa_st_which() !== 11) fail("wasm steps sum");
+if (exp.aa_st_row_len(0) !== 0 || exp.aa_st_name_byte(1, 0) !== 0) fail("wasm steps clamp");
 console.log("wasm ok", got);

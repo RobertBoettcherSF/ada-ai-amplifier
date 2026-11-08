@@ -6,14 +6,14 @@ the feedback and crash files.
 The splash on the live page is a small picture of a network: Ada moves
 the points, and the page plots them.
 
-Visible stamp: **v0.14.0-harness**
+Visible stamp: **v0.15.0-steps**
 
 The same text is `AI_Amplifier.Version.Version_Text`, the yellow badge in
 `web/template.html`, `version.txt`, and the line printed by `bin/hello`.
-The Alire crate version is `0.14.0-harness` (the stamp without the leading
+The Alire crate version is `0.15.0-steps` (the stamp without the leading
 `v`, because Alire versions are semver).
 
-**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.14.0-harness
+**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.15.0-steps
 
 **Guide:** [docs/HOWTO.md](docs/HOWTO.md). The page links there. It is the install path, a walkthrough that adds leaky ReLU, and the code tour.
 
@@ -71,7 +71,15 @@ keep a failed step. Budgeted is that check with three calls.
 The score moves. The solver does not.
 [docs/HARNESS.md](docs/HARNESS.md) is that account. The solver
 is a tiny fixed procedure, so the table is not a measurement
-of a real model. Items 15 and 16 are planned and not started.
+of a real model. Item 15 grades twelve worked solutions of this
+repository's own arithmetic. The answer-only grade looks at the
+final number. The step grade accepts a solution only when every
+step matches a value this code recomputes. Eleven answers pass.
+Four solutions pass the steps.
+[docs/CHECKED_STEPS.md](docs/CHECKED_STEPS.md) is that account.
+Ada can check these steps because each one is recomputed from
+our own code. Most real reasoning is not like that. Item 16,
+the README update, is planned and not started.
 
 ## Why plain Ada
 
@@ -112,6 +120,7 @@ of a real model. Items 15 and 16 are planned and not started.
 | Benchmark audit | Ada flags each task, then scores the same samples on the full set and on the set with flagged tasks removed |
 | Reward hacking | Ada scores five XOR submissions with a flawed grader and the real check, then draws two hill-climb curves |
 | Harness | One Ada solver, four harnesses, the same eight tasks. The page shows the score table and one task under each harness |
+| Checked steps | Twelve worked solutions. Ada shows an answer-only grade and a step grade. The first bad step is marked |
 | Feedback, or F9 | Asks for a short note, then writes `feedback-*.json` (version, browser, screen, the recent UI events, and the note). On a phone that can share files, it offers the share sheet |
 | Crash report | If the previous visit did not end cleanly, or the module traps, a panel offers `crash-report-*.json` |
 | Yellow badge | The stamp, on every screen, including when JavaScript is off |
@@ -164,6 +173,12 @@ omitted when printing.
 | `docs/HARNESS.md` | What that comparison shows, and what it does not claim |
 | `src/harness_test.adb` | Native tests. The solver text does not depend on the harness. The checked harness does not keep a known-wrong step |
 | `src/harness_cli.adb` | Native program. Prints the table. Calls a model only when the user sets a key, a URL, and a model name |
+| `src/ai_amplifier-steps.ads/.adb` | Twelve worked solutions and the two grades. Plain Ada |
+| `src/ai_amplifier-steps-demo.ads/.adb` | The page's table and the steps of the selected solution |
+| `src/ai_amplifier-steps-manifest.ads` | Planted flaws and the first bad step. The checker does not read it |
+| `docs/CHECKED_STEPS.md` | What those grades show, and what they do not claim |
+| `src/steps_test.adb` | Native tests. Every planted flaw fails at the named step. No correct solution is rejected |
+| `src/steps_cli.adb` | Native program. Prints the table, or grades one solution file |
 | `src/traces_test.adb` | Native tests. The rules, the four traces, the page wrapper, and a stand-in for the model caller |
 | `src/traces_cli.adb` | Native program. Replays the traces. Calls a model only when the user sets a key, a URL, and a model name |
 | `src/hello.adb` | Native program. Prints the stamp. Also calls the splash so the native build compiles it |
@@ -176,8 +191,8 @@ omitted when printing.
 | `build.sh` | AdaWebPack 24 to `obj/wasm/ai_amplifier.wasm`, smoke, then `site/index.html` |
 | `prove.sh` | GNATprove level 2 on the SPARK units. Writes `proof/`. CI runs it |
 | `tools/get-toolchain.sh` | Downloads the wasm compiler into `toolchain/` (gitignored) |
-| `tools/wasm-smoke.mjs` | Node: stamp, no wasm imports, splash numbers, product and softmax, leaky ReLU, XOR training, the weight text, BPE round trip, attention rows, the wrong-turn checker, the benchmark audit, the reward table and both searches, the harness table |
-| `tools/page-smoke.mjs` | Headless Chrome: splash, the tensor panel, leaky ReLU, the training panel, the weight workbench, the speed panel, the token panel, the recorded chains, the wrong-turn panel, the benchmark audit, the reward table and curves, the harness table and one task's four walks, Enter, tap, F9, crash panel, failed module |
+| `tools/wasm-smoke.mjs` | Node: stamp, no wasm imports, splash numbers, product and softmax, leaky ReLU, XOR training, the weight text, BPE round trip, attention rows, the wrong-turn checker, the benchmark audit, the reward table and both searches, the harness table, the step grades |
+| `tools/page-smoke.mjs` | Headless Chrome: splash, the tensor panel, leaky ReLU, the training panel, the weight workbench, the speed panel, the token panel, the recorded chains, the wrong-turn panel, the benchmark audit, the reward table and curves, the harness table and one task's four walks, the checked-steps table, Enter, tap, F9, crash panel, failed module |
 | `tools/howto-steps.sh` | The commands in the How-To. CI job `how-to steps` runs this file |
 | `docs/HOWTO.md` | Newcomer guide |
 | `CONTRIBUTING.md` | Stamp, one item at a time, honesty, the pre-push list, F9 |
@@ -201,7 +216,7 @@ alr -n build
 on). Expected line:
 
 ```text
-ada-ai-amplifier v0.14.0-harness
+ada-ai-amplifier v0.15.0-steps
 ```
 
 Then:
@@ -218,6 +233,8 @@ Then:
 ./bin/reward_cli
 ./bin/harness_test
 ./bin/harness_cli
+./bin/steps_test
+./bin/steps_cli
 ```
 
 Expected lines:
@@ -231,6 +248,7 @@ traces ok
 audit ok
 reward ok
 harness ok
+steps ok
 ```
 
 `audit_cli` prints the twenty lines and the two score sentences.
@@ -239,6 +257,8 @@ The full-set sentence says the score is not accepted.
 sentences. Only the real check counts.
 `harness_cli` prints the four harness rows. Checked keeps
 no wrong step. The page's table is that printout.
+`steps_cli` prints the twelve solutions. Eleven answers pass.
+Four solutions pass the steps. A file whose steps fail exits 1.
 
 ## Proof status
 
@@ -269,10 +289,12 @@ the tensor demo children, `AI_Amplifier.MLP` and its demo,
 and its demo, and `AI_Amplifier.Audit`, its demo, and its manifest,
 and `AI_Amplifier.Reward` and its demo,
 and `AI_Amplifier.Harness` and its demo,
+and `AI_Amplifier.Steps`, its demo, and its manifest,
 are `SPARK_Mode => Off`. `recurse_cli.adb`,
 `traces_cli.adb`, `audit_cli.adb`, `reward_test.adb`,
 `reward_cli.adb`, `harness_test.adb`,
-and `harness_cli.adb` are too. GNATprove lists them and proves nothing
+`harness_cli.adb`, `steps_test.adb`,
+and `steps_cli.adb` are too. GNATprove lists them and proves nothing
 in them.
 
 | Kernel | Level | What is proved |
@@ -297,6 +319,7 @@ in them.
 | Benchmark audit, including the demo, the manifest, and `audit_cli` | not proved | Plain Ada. The planted tasks and the second file are tests |
 | Reward hacking, including the demo and `reward_cli` | not proved | Plain Ada. The planted cheats and the two searches are tests |
 | Same model, different harness, including the demo and `harness_cli` | not proved | Plain Ada. The planted mistakes and the four rows are tests |
+| Checked steps, including the demo, the manifest, and `steps_cli` | not proved | Plain Ada. The planted flaws and the two grades are tests |
 
 `Summand_Bound` is `1.0E18`. The float value of that literal is a
 little under `1.0E18`, and the real square of that float is a little
@@ -371,11 +394,12 @@ node tools/page-smoke.mjs
 `recurse_test.adb`, `recurse_cli.adb`, `traces_test.adb`,
 `traces_cli.adb`, `audit_test.adb`,
 `audit_cli.adb`, `reward_test.adb`,
-`reward_cli.adb`, `harness_test.adb`, and
-`harness_cli.adb` (Text_IO is not part of
+`reward_cli.adb`, `harness_test.adb`,
+`harness_cli.adb`, `steps_test.adb`, and
+`steps_cli.adb` (Text_IO is not part of
 this runtime), links `--no-entry`, and exports the
 version, splash, tensor-demo, leaky ReLU, training, weight,
-speed, token-attention, recorded-chain, wrong-turn, benchmark-audit, reward-hacking, and harness entry points. It also links
+speed, token-attention, recorded-chain, wrong-turn, benchmark-audit, reward-hacking, harness, and checked-steps entry points. It also links
 `tools/wasm-checks.c`. It does not pass `--allow-undefined`. The module
 this build emits has no imports. Runtime checks stay on. A failed check
 traps that module; it does not propagate.
@@ -926,6 +950,45 @@ key, a URL, and a model name. The key is written to a mode
 0600 file for curl and is not placed on the command line.
 The page does not run this program.
 
+## Checked steps, not just answers
+
+Twelve solutions of this repository's own arithmetic. The
+answer-only grade reads the final line. The step grade calls
+the same code the solution claims to be using, and accepts the
+solution only when every step matches. A `Float` matches within
+`0.00005`. A Fibonacci step matches when `Recurse.Check_Step`
+accepts it against the true previous state.
+
+| Solution | Answer only | Steps | First bad step |
+|---|---|---|---|
+| `xor-00-right` | pass | pass | |
+| `xor-10-cancel` | pass | fail | 2, `bad-value` |
+| `xor-11-skip` | pass | fail | 2, `skipped-step` |
+| `xor-00-guess` | pass | fail | 1, `guessed-first` |
+| `xor-01-wrong` | fail | fail | 8, `wrong-answer` |
+| `train-right` | pass | pass | |
+| `train-cancel` | pass | fail | 6, `bad-value` |
+| `fib-6-right` | pass | pass | |
+| `fib-5-cancel` | pass | fail | 2, `bad-arithmetic` |
+| `fib-4-skip` | pass | fail | 2, `not-toward-base` |
+| `sum-right` | pass | pass | |
+| `sum-guess` | pass | fail | 1, `guessed-first` |
+
+Eleven answers pass. Four solutions pass the steps.
+`xor-10-cancel` writes both hidden units `0.05` below `Tanh`,
+and the shifts cancel in the output logit, so the class is
+still 1. `xor-00-guess` writes the class before any step.
+`fib-5-cancel` adds one too many and still ends on F(5).
+JavaScript copies the cells and the lines.
+[docs/CHECKED_STEPS.md](docs/CHECKED_STEPS.md) is the longer
+account. Ada can check these steps because each one is
+recomputed from our own code. Most real reasoning is not like
+that. The table is not a measurement of a process reward model.
+
+`bin/steps_cli` with no arguments prints this table.
+`steps_cli FILE` grades one solution file. A file whose steps
+fail exits 1. The page does not run this program.
+
 ## Backlog
 
 1. **Repo skeleton — done.** Crate, stamp, native hello, wasm target, placeholder page.
@@ -942,20 +1005,20 @@ The page does not run this program.
 12. **Benchmark audit — done.** Twenty tasks about this repository, five planted breaks, and an auditor that refuses the score until those tasks are dropped. [docs/BENCHMARK_AUDIT.md](docs/BENCHMARK_AUDIT.md). This is not a copy of SWE-bench, of the OpenAI notes linked there, or of MMLU-Redux.
 13. **Reward-hacking demo — done.** Two graders on the XOR task, four written cheats, and a hill-climb that can raise the flawed score while the real check still fails. [docs/REWARD_HACKING.md](docs/REWARD_HACKING.md). This is not a copy of the write-ups linked there, and it is not evidence about real models.
 14. **Same model, different harness — done.** One fixed solver, four harnesses, the same eight tasks and the same seed. [docs/HARNESS.md](docs/HARNESS.md). This is not a copy of the write-ups linked there, and the score gap is not a measurement of a real model.
-15. **Checked steps, not just answers — planned.** Not started.
-16. **README update after items 1–15 — planned.** Not this change. Not started.
+15. **Checked steps, not just answers — done.** Twelve solutions, an answer-only grade and a step grade, and the panel on the page. [docs/CHECKED_STEPS.md](docs/CHECKED_STEPS.md). This is not a copy of the papers linked there. Ada can check these steps because each one is recomputed from our own code. Most real reasoning is not like that.
+16. **README update after items 1–15 — planned.** Next. Not this change. Not started.
 
-Items landed one at a time. Item 14 is the last one done. Items 15 and 16 are not started.
+Items landed one at a time. Item 15 is the last one done. Item 16 is next.
 
 ## Honesty
 
-1. The splash arithmetic is plain Ada. It is not proved. `SPARK_Mode` is off on that unit so it is not presented as a proof target. The contracts on `AI_Amplifier.Version` are the ones from the skeleton. The stamp text in that unit is `v0.14.0-harness`.
+1. The splash arithmetic is plain Ada. It is not proved. `SPARK_Mode` is off on that unit so it is not presented as a proof target. The contracts on `AI_Amplifier.Version` are the ones from the skeleton. The stamp text in that unit is `v0.15.0-steps`.
 2. The tensor kernels are SPARK, at the levels in the proof status table. Silver is absence of run-time error (and, where the table says so, a range). Gold is the component rule. `Leaky_ReLU` is Gold. Its slope on the page is `0.01`. The `Pre` and `Post` are still checked when the program runs. The proof does not replace that check. Sigmoid, tanh, and softmax do not claim to match the real functions.
-3. CI builds the native program, runs `bin/tensors_test`, `bin/mlp_test`, `bin/attention_test`, `bin/recurse_test`, `bin/traces_test`, `bin/audit_test`, `bin/reward_test`, and `bin/harness_test`, runs `./prove.sh` (GNATprove level 2, unproved checks are errors), builds the wasm module and the page, then runs the headless smoke. The committed `proof/gnatprove.out` is that level 2 run. It proves the root, the version unit, and the tensors. It does not prove the splash, the network, the tokenizer, the attention block, the chain checker, the speed harness, the wrong-turn checker, the benchmark auditor, the reward demo, or the harness comparison.
+3. CI builds the native program, runs `bin/tensors_test`, `bin/mlp_test`, `bin/attention_test`, `bin/recurse_test`, `bin/traces_test`, `bin/audit_test`, `bin/reward_test`, `bin/harness_test`, and `bin/steps_test`, runs `./prove.sh` (GNATprove level 2, unproved checks are errors), builds the wasm module and the page, then runs the headless smoke. The committed `proof/gnatprove.out` is that level 2 run. It proves the root, the version unit, and the tensors. It does not prove the splash, the network, the tokenizer, the attention block, the chain checker, the speed harness, the wrong-turn checker, the benchmark auditor, the reward demo, the harness comparison, or the step checker.
 4. The wasm module's lack of imports is what this build emits, and `tools/wasm-smoke.mjs` checks it. The tensor body does reference a failed-check path. `tools/wasm-checks.c` defines `__gnat_last_chance_handler` and `system__assertions__raise_assert_failure` as traps, so that path links without an import. On the native runtime the same check raises. `-gnatp` is not used. `-gnatw.X` is the same switch as the native Alire profile: this runtime forbids exception propagation, and the compiler's reminder of that is turned off.
-5. JavaScript does not compute the splash, the product, the softmax, the loss, the decision boundary, the merges, the attention, the weight text, the chain check, the training-speed verdict, the wrong-turn verdict, the benchmark audit, the reward scores, or the harness table. It reads coordinates, copies numbers, and sends UTF-8 bytes. It adds up the weights it already read when it writes the sentence under the heatmap. On the speed panel it reads the host wall clock before and after the Ada call and passes those two readings in. Ada subtracts them. If the module is missing, not WebAssembly, missing an export, or its stamp differs from the badge, the page says "The Ada module did not load" and still shows the title and the badge. The tensor demo then says it has no product. The leaky ReLU panel says it has no leaky ReLU. The training panel says it cannot train. The weight buttons say the weights cannot be edited. The speed panel says it cannot time a run. The token panel says it cannot tokenize. The chain panel says it cannot check a chain. The wrong-turn panel says it cannot check a next step. The audit panel says it cannot audit the tasks. The reward panel says it cannot score the submissions. The harness panel says it cannot run the harnesses.
+5. JavaScript does not compute the splash, the product, the softmax, the loss, the decision boundary, the merges, the attention, the weight text, the chain check, the training-speed verdict, the wrong-turn verdict, the benchmark audit, the reward scores, the harness table, or the step grades. It reads coordinates, copies numbers, and sends UTF-8 bytes. It adds up the weights it already read when it writes the sentence under the heatmap. On the speed panel it reads the host wall clock before and after the Ada call and passes those two readings in. Ada subtracts them. If the module is missing, not WebAssembly, missing an export, or its stamp differs from the badge, the page says "The Ada module did not load" and still shows the title and the badge. The tensor demo then says it has no product. The leaky ReLU panel says it has no leaky ReLU. The training panel says it cannot train. The weight buttons say the weights cannot be edited. The speed panel says it cannot time a run. The token panel says it cannot tokenize. The chain panel says it cannot check a chain. The wrong-turn panel says it cannot check a next step. The audit panel says it cannot audit the tasks. The reward panel says it cannot score the submissions. The harness panel says it cannot run the harnesses. The steps panel says it cannot check the steps.
 6. The network on the splash is not a model. The tensor demo is not a model. The training panel is a model: forward, binary cross-entropy, backprop, and gradient descent, in the MLP unit. The token panel tokenizes and runs attention, forward only. Those weights are the seed. They are not trained.
-7. The MLP, the tokenizer, the attention block, the chain checker, the speed harness, the wrong-turn checker, the benchmark auditor, the reward demo, and the harness comparison are plain Ada. `SPARK_Mode` is off. The finite-difference check, the hand-computed attention pass, the recorded chains, the four traces, and the planted tasks are tests, not proofs. There is no Silver claim and no Gold claim on these units. The MLP and attention call the tensor kernels, so a component outside `Summand_Bound` or a softmax logit outside `Logit_Bound` fails the kernel `Pre` at run time. The seeded nets and the tests stay inside those bounds. The chain checker does not call those kernels. A bad blob is a result, not a trap. A weight outside `Weight_Limit` is a verdict, not a trap: the checker does not call the loss on it.
+7. The MLP, the tokenizer, the attention block, the chain checker, the speed harness, the wrong-turn checker, the benchmark auditor, the reward demo, the harness comparison, and the step checker are plain Ada. `SPARK_Mode` is off. The finite-difference check, the hand-computed attention pass, the recorded chains, the four traces, and the planted tasks are tests, not proofs. There is no Silver claim and no Gold claim on these units. The MLP and attention call the tensor kernels, so a component outside `Summand_Bound` or a softmax logit outside `Logit_Bound` fails the kernel `Pre` at run time. The seeded nets and the tests stay inside those bounds. The chain checker does not call those kernels. A bad blob is a result, not a trap. A weight outside `Weight_Limit` is a verdict, not a trap: the checker does not call the loss on it.
 8. `Float` results are approximate. The tensor test and the attention test allow `0.000_05`. Softmax of a non-empty vector sums to 1 within that tolerance, because the largest logit becomes `exp(0) = 1`. The gradient check allows `0.002` plus 5 percent of the analytical value, at a central step of `0.001`. The log, square root, sine, and cosine in the MLP body, and the square root in the attention body, are series, not `Ada.Numerics`. The hand-computed layer-norm values in the attention section are this Newton square root.
 9. Eight hidden units do not solve the spirals. The numbers in the network section are this seed, at the rates named there. They are not a claim about every seed.
 10. The BPE rules are whatever this excerpt and this tie-break produce. They are not a published tokenizer. ß is one token here. ä is not. A different excerpt would learn different merges. The 32, 288, and 376 figures are this text.
@@ -969,6 +1032,7 @@ Items landed one at a time. Item 14 is the last one done. Items 15 and 16 are no
 18. The benchmark auditor is plain Ada. It is not proved. It only flags the five defect kinds named in `docs/BENCHMARK_AUDIT.md`, and only by recomputing an answer this repository already computes. It is not a general benchmark validator. The 14 of 20 and 9 of 15 figures are the seeded samples. The full-set figure is printed and is not an accepted score. The public projects linked from that file are the credit for the idea. Nothing from them was copied. JavaScript copies Ada's lines. The page does not call a model.
 19. The reward demo is plain Ada. It is not proved. The four cheats are written to fit planted gaps, and the hill-climb is handed the objective it climbs. The table in the reward section is those five submissions. The flawed search ends with the real check failed. The real search ends with it passed. That is not evidence of how often a real model reward-hacks. The public pages linked from `docs/REWARD_HACKING.md` are the credit for the idea. Nothing from them was copied. JavaScript copies Ada's cells and draws the curves. The page does not call a model.
 20. The harness comparison is plain Ada. It is not proved. The solver is one procedure, and the four rows differ in what they keep and what they send back. The table is 1 of 8, 2 of 8, 8 of 8, and 5 of 8, with 7, 6, 0, and 0 wrong answers kept. That shows a harness can change this solver's score. It does not show the size of that change for a real model. The public pages linked from `docs/HARNESS.md` are the credit for the idea. Nothing from them was copied. JavaScript copies Ada's cells and the walk. The page does not call a model. `harness_cli --ask` can, and only on the machine where the user set a key.
+21. The step checker is plain Ada. It is not proved. It accepts a step only when that step matches a value this repository already computes: the hand-written XOR forward pass, one `Step` of that net, a Fibonacci chain through `Recurse.Check_Step`, or one `Tensors.Add`. A `Float` matches within `0.00005`. Eleven of the twelve answers pass. Four solutions pass every step. The eight planted flaws fail at the step named in `docs/CHECKED_STEPS.md`. That is possible because each step is recomputed from our own code. Most real reasoning is not like that, and this checker cannot grade it. The public pages linked from that file are the credit for the idea. Nothing from them was copied. JavaScript copies Ada's cells and the lines. The page does not call a model.
 
 ## License
 
