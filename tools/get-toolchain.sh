@@ -100,8 +100,27 @@ cp usr/lib64/llvm16/lib/libLLVM-16.so usr/lib64/llvm16/lib/libclang-cpp.so.16 li
 [ -e /usr/lib/x86_64-linux-gnu/libedit.so.0 ] || ln -sf /usr/lib/x86_64-linux-gnu/libedit.so.2 lib/libedit.so.0
 # The compiler itself is written in Ada and needs the GNAT 14 runtime library.
 if ! ldconfig -p | grep -q libgnat-14.so; then
-  retry alr -n install --prefix="$PWD/gnat14" gnat_native=14.2.1
-  cp "$(find gnat14 -name libgnat-14.so | head -1)" lib/
+  # Alire's download page has been returning 504. The crate
+  # gnat_native=14.2.1 is this archive. The asset API still
+  # serves it.
+  if ! alr -n install --prefix="$PWD/gnat14" gnat_native=14.2.1; then
+    echo "alr could not fetch GNAT 14; downloading the release asset" >&2
+    archive=$(mktemp)
+    asset=$(github_asset \
+      "https://github.com/alire-project/GNAT-FSF-builds/releases/download/gnat-14.2.0-1/gnat-x86_64-linux-14.2.0-1.tar.gz")
+    retry curl -fL --retry 5 --retry-all-errors --retry-delay 5 \
+      -H "Accept: application/octet-stream" \
+      -o "$archive" "$asset"
+    mkdir -p gnat14
+    tar -xzf "$archive" -C gnat14
+    rm -f "$archive"
+  fi
+  lib=$(find gnat14 -name 'libgnat-14.so' | head -1)
+  if [ -z "$lib" ]; then
+    echo "libgnat-14.so was not in the GNAT 14 archive" >&2
+    exit 1
+  fi
+  cp "$lib" lib/
 fi
 rm -rf usr/lib64 gnat14
 echo "Toolchain ready in $PWD"
