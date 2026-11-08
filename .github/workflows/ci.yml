@@ -50,6 +50,8 @@ jobs:
           ./bin/harness_cli
           ./bin/steps_test
           ./bin/steps_cli
+          ./bin/summary_test
+          ./bin/summary_cli
           ./bin/recheck_test
           ./tools/run-specs.sh
 

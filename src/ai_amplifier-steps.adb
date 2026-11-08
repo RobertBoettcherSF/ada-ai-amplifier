@@ -924,6 +924,259 @@ is
       end;
    end Copy_Line;
 
+   procedure Check_Alone
+     (Problem : String;
+      Line    : String;
+      Item    : out Alone;
+      Rule    : out Rule_Name)
+   is
+      P    : String (1 .. Max_Line) := (others => ' ');
+      L    : String (1 .. Max_Line) := (others => ' ');
+      PL   : Natural := 0;
+      LL   : Natural := 0;
+      Kind : Kind_Name := No_Kind;
+      Have : Boolean := False;
+      X1   : Float := 0.0;
+      X2   : Float := 0.0;
+      Fib_N : Natural := 0;
+      Truth : Value_List := (others => 0.0);
+      Class : Integer := 0;
+      Bias  : Float := 0.0;
+      Total : Float := 0.0;
+      Fib   : Chain;
+      Fib_OK : Boolean := False;
+      Expect : Float := 0.0;
+
+      procedure Copy_In
+        (Src  : String;
+         Dest : out String;
+         Last : out Natural)
+      is
+      begin
+         Last := 0;
+         Dest := (others => ' ');
+         if Src'Length = 0 or else Src'Length > Dest'Length then
+            return;
+         end if;
+         for I in Src'Range loop
+            Last := Last + 1;
+            Dest (Last) := Src (I);
+         end loop;
+      end Copy_In;
+
+      procedure Read_Problem is
+         A, B, N : Natural;
+         Word_A, Word_B : Natural;
+         Num : Natural;
+         Num_OK : Boolean;
+      begin
+         if PL < 1 then
+            return;
+         end if;
+         A := 1;
+         B := PL;
+         Take_Word (P, A, B, Word_A, Word_B, N);
+         if Word_B < Word_A then
+            return;
+         end if;
+         if Same_Span (P, Word_A, Word_B, "xor") then
+            declare
+               D1, D2 : Natural;
+               N1, N2 : Natural;
+               OK1, OK2 : Boolean;
+            begin
+               Parse_Nat (P, N, B, D1, N1, OK1);
+               Parse_Nat (P, N1, B, D2, N2, OK2);
+               if not OK1 or else not OK2
+                 or else not Blank_Span (P, N2, B)
+                 or else (D1 /= 0 and then D1 /= 1)
+                 or else (D2 /= 0 and then D2 /= 1)
+               then
+                  return;
+               end if;
+               Kind := XOR_Kind;
+               X1 := Float (D1);
+               X2 := Float (D2);
+               XOR_Truth (X1, X2, Truth, Class);
+               Expect := Float (Class);
+               Have := True;
+            end;
+         elsif Same_Span (P, Word_A, Word_B, "train") then
+            if not Blank_Span (P, N, B) then
+               return;
+            end if;
+            Kind := Train_Kind;
+            Train_Truth (Truth, Bias);
+            Expect := Bias;
+            Have := True;
+         elsif Same_Span (P, Word_A, Word_B, "sum") then
+            if not Blank_Span (P, N, B) then
+               return;
+            end if;
+            Kind := Sum_Kind;
+            Sum_Truth (Truth, Total);
+            Expect := Total;
+            Have := True;
+         elsif Same_Span (P, Word_A, Word_B, "fib") then
+            Parse_Nat (P, N, B, Num, N, Num_OK);
+            if not Num_OK
+              or else Num > Fib_Limit
+              or else not Blank_Span (P, N, B)
+            then
+               return;
+            end if;
+            Kind := Fib_Kind;
+            Fib_N := Num;
+            Build_Fib (Fib_N, Fib, Fib_OK);
+            if not Fib_OK then
+               return;
+            end if;
+            Expect := Float (Fib (Fib_N).Minus_One);
+            Have := True;
+         end if;
+      end Read_Problem;
+
+      procedure Decide_Answer (From : Natural) is
+         Num : Float;
+         Next : Natural;
+         Num_OK : Boolean;
+      begin
+         Parse_Float (L, From, LL, Num, Next, Num_OK);
+         if not Num_OK or else not Blank_Span (L, Next, LL) then
+            Item := Not_Checkable;
+            Rule := Bad_Parse;
+            return;
+         end if;
+         if Close (Num, Expect) then
+            Item := Checked_Correct;
+            Rule := None;
+         else
+            Item := Checked_Wrong;
+            Rule := Wrong_Answer;
+         end if;
+      end Decide_Answer;
+
+      procedure Decide_Fib (From : Natural) is
+         N1, N2, N3 : Natural;
+         V1, V2, V3 : Natural;
+         OK1, OK2, OK3 : Boolean;
+         Step_Kind : R.Check_Name;
+         Found : Boolean := False;
+      begin
+         Parse_Nat (L, From, LL, V1, N1, OK1);
+         Parse_Nat (L, N1, LL, V2, N2, OK2);
+         Parse_Nat (L, N2, LL, V3, N3, OK3);
+         if not OK1 or else not OK2 or else not OK3
+           or else not Blank_Span (L, N3, LL)
+         then
+            Item := Not_Checkable;
+            Rule := None;
+            return;
+         end if;
+         for K in 1 .. Fib_N loop
+            if Fib (K).Fib_Index = V1 then
+               Found := True;
+               R.Check_Step
+                 (Fib (K - 1),
+                  (Fib_Index => V1, Minus_One => V2, Curr_Value => V3),
+                  Step_Kind);
+               if (Step_Kind = R.Accepted or else Step_Kind = R.Reached_Base)
+                 and then V2 = Fib (K).Minus_One
+                 and then V3 = Fib (K).Curr_Value
+               then
+                  Item := Checked_Correct;
+                  Rule := None;
+               else
+                  Item := Checked_Wrong;
+                  if Step_Kind = R.Bad_Arithmetic then
+                     Rule := Bad_Arithmetic;
+                  elsif Step_Kind = R.Not_Toward_Base
+                    or else Step_Kind = R.Past_Base
+                  then
+                     Rule := Not_Toward_Base;
+                  else
+                     Rule := Bad_Arithmetic;
+                  end if;
+               end if;
+               exit;
+            end if;
+         end loop;
+         if not Found then
+            Item := Checked_Wrong;
+            Rule := Not_Toward_Base;
+         end if;
+      end Decide_Fib;
+
+      procedure Decide_Named (From : Natural) is
+         Word_A, Word_B : Natural;
+         Next, Rest : Natural;
+         Code : Natural;
+         Num : Float;
+         Num_OK : Boolean;
+      begin
+         Take_Word (L, From, LL, Word_A, Word_B, Next);
+         if Word_B < Word_A then
+            Item := Not_Checkable;
+            Rule := Bad_Parse;
+            return;
+         end if;
+         Lookup (Kind, L (Word_A .. Word_B), Code);
+         if Code = 0 then
+            Item := Not_Checkable;
+            Rule := Unknown_Step;
+            return;
+         end if;
+         Parse_Float (L, Next, LL, Num, Rest, Num_OK);
+         if not Num_OK or else not Blank_Span (L, Rest, LL) then
+            Item := Not_Checkable;
+            Rule := Bad_Parse;
+            return;
+         end if;
+         if Close (Num, Truth (Code)) then
+            Item := Checked_Correct;
+            Rule := None;
+         else
+            Item := Checked_Wrong;
+            Rule := Bad_Value;
+         end if;
+      end Decide_Named;
+
+      A, B, N : Natural;
+      Word_A, Word_B : Natural;
+   begin
+      Item := Not_Checkable;
+      Rule := Unknown_Problem;
+      Copy_In (Problem, P, PL);
+      Copy_In (Line, L, LL);
+      if PL < 1 or else LL < 1 then
+         return;
+      end if;
+      Read_Problem;
+      if not Have then
+         return;
+      end if;
+      A := 1;
+      B := LL;
+      Take_Word (L, A, B, Word_A, Word_B, N);
+      if Word_B < Word_A then
+         Item := Not_Checkable;
+         Rule := None;
+         return;
+      end if;
+      if Same_Span (L, Word_A, Word_B, "answer") then
+         Decide_Answer (N);
+      elsif Same_Span (L, Word_A, Word_B, "step") then
+         if Kind = Fib_Kind then
+            Decide_Fib (N);
+         else
+            Decide_Named (N);
+         end if;
+      else
+         Item := Not_Checkable;
+         Rule := None;
+      end if;
+   end Check_Alone;
+
    procedure Grade (Text : String; Item : out Report) is
       List  : Parsed_List;
       Count : Natural := 0;

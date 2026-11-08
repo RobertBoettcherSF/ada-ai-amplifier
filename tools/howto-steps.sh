@@ -24,6 +24,8 @@ alr -n build
 ./bin/harness_cli
 ./bin/steps_test
 ./bin/steps_cli
+./bin/summary_test
+./bin/summary_cli
 ./bin/recheck_test
 npm ci
 ./build.sh
