@@ -120,7 +120,7 @@ try {
   const about = await page.$eval("#about", (el) => el.textContent);
   assert(about.includes("Ada computes every position"), "about");
   const items = await page.$$eval("#backlog li", (els) => els.map((el) => el.textContent.replace(/\s+/g, " ").trim()));
-  assert(items.length === 16, "backlog length " + items.length);
+  assert(items.length === 20, "backlog length " + items.length);
   assert(items[1].includes("Splash and live page") && items[1].includes("done"), items[1]);
   assert(items[2].includes("Core tensor and maths") && items[2].includes("done"), items[2]);
   assert(items[3].includes("Tiny trainable MLP") && items[3].includes("done"), items[3]);
@@ -142,9 +142,20 @@ try {
   assert(!items[13].includes("planned"), items[13]);
   assert(items[14].includes("Checked steps, not just answers") && items[14].includes("done"), items[14]);
   assert(!items[14].includes("planned"), items[14]);
-  assert(items[15].includes("README update after items 1–15") && items[15].includes("next"), items[15]);
+  assert(items[15].includes("Locked statements") && items[15].includes("next"), items[15]);
+  assert(items[15].includes("formal-math") && items[15].includes("Apache-2.0"), items[15]);
+  assert(!items[15].includes("README update"), items[15]);
+  assert(items[16].includes("independent checker") && items[16].includes("planned"), items[16]);
+  assert(items[16].includes("formal-math") && items[16].includes("Apache-2.0"), items[16]);
+  assert(items[17].includes("Checking status") && items[17].includes("planned"), items[17]);
+  assert(items[17].includes("openai/math") && items[17].includes("Apache-2.0"), items[17]);
+  assert(items[18].includes("Reasoning summary") && items[18].includes("planned"), items[18]);
+  assert(items[18].includes("openai/math") && items[18].includes("Apache-2.0"), items[18]);
+  assert(items[19].includes("README update after items 1–19") && items[19].includes("last"), items[19]);
   const status16 = await page.$eval("#backlog li:nth-child(16) .st", (el) => el.textContent.trim());
   assert(status16 === "next", status16);
+  const status20 = await page.$eval("#backlog li:nth-child(20) .st", (el) => el.textContent.trim());
+  assert(status20 === "last", status20);
   const proof = await page.$$eval("#proof tbody tr", (els) => els.map((el) => el.innerText.replace(/\s+/g, " ").trim()));
   assert(proof.length === 22, "proof rows " + proof.length);
   const statusOf = (name) => {
@@ -187,7 +198,7 @@ try {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
   assert(overflow, "desktop main overflows");
   const numbered = await page.$$eval("#backlog .n", (els) => els.map((el) => el.textContent.trim()));
-  assert(numbered.join(" ") === "1. 2. 3. 4. 5. 6. 7. 8. 9. 10. 11. 12. 13. 14. 15. 16.", "backlog numbers " + numbered);
+  assert(numbered.join(" ") === "1. 2. 3. 4. 5. 6. 7. 8. 9. 10. 11. 12. 13. 14. 15. 16. 17. 18. 19. 20.", "backlog numbers " + numbered);
   const product = await page.$$eval("#y1, #y2, #y3", (els) => els.map((el) => el.textContent.trim()));
   assert(product.join(",") === "14,14,17", "product " + product);
   const soft = await page.$$eval("#s1, #s2, #s3", (els) => els.map((el) => Number(el.textContent)));
