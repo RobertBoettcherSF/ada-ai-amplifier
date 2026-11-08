@@ -1,8 +1,10 @@
 --  Checking status for items 1 through 19.
 --  The summary counts every one of those nineteen.
 --
---  Plain Ada (SPARK_Mode off). Nothing here is proved. The
---  label is computed from the build logs: one GNATprove
+--  Plain Ada (SPARK_Mode off). Reading the logs is not
+--  proved. The label itself is AI_Amplifier.Label_Rule:
+--  own log, a positive check count, and unproved 0.
+--  The label is computed from the build logs: one GNATprove
 --  report per item, the test programs' output, the locked
 --  specs, and the item-17 agreement counts. Proved is
 --  printed only when that item's own report exists and its

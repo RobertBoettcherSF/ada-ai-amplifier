@@ -1,5 +1,6 @@
 with AI_Amplifier.MLP;
 with AI_Amplifier.Recurse;
+with AI_Amplifier.Step_Rule;
 with AI_Amplifier.Tensors;
 
 package body AI_Amplifier.Steps
@@ -1425,20 +1426,24 @@ is
             return;
          end if;
          Need := Required (Kind, Fib_N);
-         if Slot.Code < Next_Code then
-            Blame (Where, Out_Of_Order);
-         elsif Slot.Code > Next_Code then
-            if Slot.Code = Need then
-               Blame (Where, Guessed_First);
-            else
-               Blame (Where, Skipped_Step);
-            end if;
-            Next_Code := Slot.Code + 1;
+         if Need < 1 or else Slot.Code < 1 or else Next_Code < 1 then
+            Blame (Where, Bad_Parse);
          else
-            if not Close (Slot.Value, Truth (Slot.Code)) then
-               Blame (Where, Bad_Value);
-            end if;
-            Next_Code := Slot.Code + 1;
+            case Step_Rule.Order_Of (Slot.Code, Next_Code, Need) is
+               when Step_Rule.Earlier_Step =>
+                  Blame (Where, Out_Of_Order);
+               when Step_Rule.Guessed_Answer =>
+                  Blame (Where, Guessed_First);
+                  Next_Code := Slot.Code + 1;
+               when Step_Rule.Skipped_Middle =>
+                  Blame (Where, Skipped_Step);
+                  Next_Code := Slot.Code + 1;
+               when Step_Rule.In_Order =>
+                  if not Close (Slot.Value, Truth (Slot.Code)) then
+                     Blame (Where, Bad_Value);
+                  end if;
+                  Next_Code := Slot.Code + 1;
+            end case;
          end if;
       end Take_Step;
 
@@ -1485,15 +1490,18 @@ is
          else
             Done := Next_Code > Need;
          end if;
-         if not Done then
-            if Later_Step (Index) then
+         case Step_Rule.Answer_Fault
+           (Done, Later_Step (Index), Answer_OK)
+         is
+            when Step_Rule.Answer_Guessed =>
                Blame (Where, Guessed_First);
-            else
+            when Step_Rule.Answer_Skipped =>
                Blame (Where, Skipped_Step);
-            end if;
-         elsif not Answer_OK then
-            Blame (Where, Wrong_Answer);
-         end if;
+            when Step_Rule.Answer_Wrong =>
+               Blame (Where, Wrong_Answer);
+            when Step_Rule.Answer_Held =>
+               null;
+         end case;
       end Take_Answer;
 
       procedure Store_Name (Slot : Parsed; Where : Natural) is
@@ -1663,14 +1671,16 @@ is
             Item.Answer_Grade := Fail;
          end;
       end if;
-      if Kind = Fib_Kind then
-         Steps_Done := Have and then Fib_Seen = Fib_N;
-      else
-         Steps_Done := Have and then Next_Code > Required (Kind, Fib_N);
-      end if;
-      if Item.Bad_At = 0
-        and then Item.Answer_Grade = Pass
-        and then Steps_Done
+      Steps_Done :=
+        Step_Rule.Steps_Complete
+          (Known     => Have,
+           Fib       => Kind = Fib_Kind,
+           Seen      => Fib_Seen,
+           Index     => Fib_N,
+           Next_Code => Next_Code,
+           Need      => Required (Kind, Fib_N));
+      if Step_Rule.Step_Grade_Passes
+        (Item.Bad_At, Item.Answer_Grade = Pass, Steps_Done)
       then
          Item.Step_Grade := Pass;
       else

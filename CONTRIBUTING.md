@@ -19,8 +19,9 @@ GitHub Pages from `main`, not with a secret gist.
 
 Items 1 through 20 are done. Item 16 is the locked statements.
 Item 17 is the second checker. Item 18 labels items 1–19
-proved, tested, or unchecked. The summary is proved 7 of 19,
-tested 12, unchecked 0. Item 18 itself is tested. Item 19 sets
+proved, tested, or unchecked. The summary is proved 12 of 19,
+tested 7, unchecked 0. Item 18 is proved for the label rule.
+Item 19 sets
 a written summary against the checked steps. Item 20 is the
 README: one line per item, with the label from `STATUS`.
 Ideas inspired by
@@ -46,7 +47,7 @@ These four are the same text:
 
 | Place | Text |
 |---|---|
-| `AI_Amplifier.Version.Version_Text` | `v0.20.0-readme` on this tree |
+| `AI_Amplifier.Version.Version_Text` | `v0.21.0-moreproofs` on this tree |
 | `web/template.html`, the `#ver` badge | the same, so it shows with JavaScript off |
 | `version.txt` | the same, one line |
 | `alire.toml` `version` | the same without the leading `v` |
@@ -57,7 +58,7 @@ Bump the stamp when the page, or the Ada a visitor runs, would differ.
 Do not reuse a stamp. Pages deploys from `main` only, so the bump lands
 with the change that deploys. The link you send is
 
-`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.20.0-readme`
+`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.21.0-moreproofs`
 
 with `?v=` set to the stamp without the leading `v`. Before you say
 that stamp is live, fetch the page and `version.txt` and see the text

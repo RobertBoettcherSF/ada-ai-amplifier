@@ -1,7 +1,7 @@
 --  Item 18. The checking status of items 1 through 19.
 --  The labels are computed from the build logs. A tested
---  label is not a proof. Item 18 itself is tested: this
---  program is plain Ada and has no gnatprove run. A live
+--  label is not a proof. Item 18 is proved for the label
+--  rule only. Reading the logs is still plain Ada. A live
 --  --ask mode is not a test that CI ran.
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
@@ -26,11 +26,11 @@ is
       10 => S.Tested,
       11 => S.Proved,
       12 => S.Proved,
-      13 => S.Tested,
+      13 => S.Proved,
       14 => S.Tested,
-      15 => S.Tested,
-      16 => S.Tested,
-      17 => S.Tested);
+      15 => S.Proved,
+      16 => S.Proved,
+      17 => S.Proved);
 
    function Has (Number : Positive; Piece : String) return Boolean is
       Text : constant String := S.Item_Evidence (Number);
@@ -49,11 +49,22 @@ begin
       pragma Assert (S.Item_Label (N) = Expected (N));
    end loop;
    pragma Assert
-     (S.Summary = "proved 7 of 19, tested 12, unchecked 0");
-   pragma Assert (S.Item_Label (18) = S.Tested);
-   pragma Assert (S.Item_Label (18) /= S.Proved);
+     (S.Summary = "proved 12 of 19, tested 7, unchecked 0");
+   pragma Assert (S.Item_Label (18) = S.Proved);
+   pragma Assert (Has (18, "proof/item_18.out"));
+   pragma Assert (Has (18, "unproved 0"));
+   pragma Assert (Has (18, "ai_amplifier-label_rule"));
+   pragma Assert (Has (18, "proved for the label rule"));
+   pragma Assert (Has (18, "not in this run: ai_amplifier-status"));
    pragma Assert (Has (18, "not proved:"));
-   pragma Assert (Has (18, "no gnatprove run"));
+   pragma Assert (Has (13, "proved for the accept/reject gate"));
+   pragma Assert (Has (13, "not proved:"));
+   pragma Assert (Has (15, "proved for the step-grade rule"));
+   pragma Assert (Has (15, "not proved:"));
+   pragma Assert (Has (16, "proved for the lock-compare rule"));
+   pragma Assert (Has (16, "not proved:"));
+   pragma Assert (Has (17, "proved for the agreement count"));
+   pragma Assert (Has (17, "not proved:"));
    pragma Assert (Has (1, "proof/item_01.out"));
    pragma Assert (Has (1, "unproved 0"));
    pragma Assert (Has (1, "ai_amplifier-version"));

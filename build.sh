@@ -24,7 +24,7 @@ rm -rf obj/wasm && mkdir -p obj/wasm
 cd obj/wasm
 for F in ../../src/*.adb; do
   case $(basename "$F") in
-    hello.adb|tensors_test.adb|mlp_test.adb|attention_test.adb|recurse_test.adb|recurse_cli.adb|traces_test.adb|traces_cli.adb|audit_test.adb|audit_cli.adb|reward_test.adb|reward_cli.adb|harness_test.adb|harness_cli.adb|steps_test.adb|steps_cli.adb|summary_test.adb|summary_cli.adb|recheck_test.adb|ai_amplifier-recheck.adb|ai_amplifier-locked.adb|status_cli.adb|ai_amplifier-status.adb) continue ;;
+    hello.adb|tensors_test.adb|mlp_test.adb|attention_test.adb|recurse_test.adb|recurse_cli.adb|traces_test.adb|traces_cli.adb|audit_test.adb|audit_cli.adb|reward_test.adb|reward_cli.adb|harness_test.adb|harness_cli.adb|steps_test.adb|steps_cli.adb|summary_test.adb|summary_cli.adb|recheck_test.adb|ai_amplifier-recheck.adb|ai_amplifier-locked.adb|status_cli.adb|ai_amplifier-status.adb|lock_match.adb) continue ;;
   esac
   # -gnatw.X: this runtime forbids exception propagation, and the
   # compiler warns that a check would call Last_Chance_Handler. The

@@ -59,6 +59,64 @@ def load_lock(path: Path, errors: list[str]) -> dict[str, str]:
     return found
 
 
+_LOCK_MATCH: Path | None = None
+
+
+def compiler_repo() -> Path:
+    return Path(__file__).resolve().parent.parent
+
+
+def lock_match_exe() -> Path:
+    """Build the native compare once. The throwaway --root is not this repo."""
+    global _LOCK_MATCH
+    if _LOCK_MATCH is not None:
+        return _LOCK_MATCH
+    home = compiler_repo()
+    binary = home / "bin" / "lock_match"
+    ran = subprocess.run(
+        ["gprbuild", "-P", str(home / "lock_match.gpr"), "-p"],
+        cwd=home,
+        capture_output=True,
+        text=True,
+    )
+    if ran.returncode != 0 or not binary.is_file():
+        raise SystemExit(
+            "could not build lock_match\n" + ran.stdout + ran.stderr
+        )
+    _LOCK_MATCH = binary
+    return binary
+
+
+def digits_match(left: str, right: str) -> bool:
+    if len(left) != 64 or len(right) != 64:
+        return False
+    ran = subprocess.run(
+        [str(lock_match_exe()), left, right],
+        capture_output=True,
+        text=True,
+    )
+    if ran.returncode == 0:
+        return True
+    if ran.returncode == 1:
+        return False
+    raise SystemExit("lock_match failed\n" + ran.stdout + ran.stderr)
+
+
+def set_holds(flags: list[bool]) -> bool:
+    if not flags or len(flags) > 19:
+        return False
+    ran = subprocess.run(
+        [str(lock_match_exe()), "--all", *("1" if flag else "0" for flag in flags)],
+        capture_output=True,
+        text=True,
+    )
+    if ran.returncode == 0:
+        return True
+    if ran.returncode == 1:
+        return False
+    raise SystemExit("lock_match --all failed\n" + ran.stdout + ran.stderr)
+
+
 def check_hashes(root: Path, errors: list[str]) -> None:
     spec_dir = root / "specs"
     lock_path = spec_dir / "LOCK"
@@ -74,15 +132,22 @@ def check_hashes(root: Path, errors: list[str]) -> None:
             fail(errors, "specs/LOCK does not name " + ", ".join(missing))
         if extra:
             fail(errors, "specs/LOCK names missing " + ", ".join(extra))
+    flags: list[bool] = []
     for name in files:
         digest = sha256(spec_dir / name)
         recorded = locked.get(name)
-        if recorded is not None and recorded != digest:
+        if recorded is None:
+            continue
+        same = digits_match(recorded, digest)
+        flags.append(same)
+        if not same:
             fail(
                 errors,
                 f"{name} changed without specs/LOCK updated in the same change "
                 f"(file {digest}, LOCK {recorded})",
             )
+    if flags and not set_holds(flags):
+        fail(errors, "the lock-compare rule rejected the set")
 
 
 def check_source(root: Path, errors: list[str]) -> None:

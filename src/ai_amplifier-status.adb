@@ -1,6 +1,8 @@
 with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
+with AI_Amplifier.Agree_Rule;
+with AI_Amplifier.Label_Rule;
 
 package body AI_Amplifier.Status
   with SPARK_Mode => Off
@@ -166,21 +168,22 @@ is
       if I = 0 then
          return False;
       end if;
-      return Proofs (Item).Units (I).Saw_Proof
-        and then not Proofs (Item).Units (I).Saw_Bad
-        and then Proofs (Item).Units (I).Analyzed > 0
-        and then Proofs (Item).Units (I).Analyzed =
-          Proofs (Item).Units (I).Total
-        and then Proofs (Item).Units (I).Checks > 0;
+      return Label_Rule.Unit_Counts
+        (Proofs (Item).Units (I).Saw_Proof,
+         Proofs (Item).Units (I).Saw_Bad,
+         Proofs (Item).Units (I).Analyzed,
+         Proofs (Item).Units (I).Total,
+         Proofs (Item).Units (I).Checks);
    end Unit_Proved;
 
    function Own_Proof (Item : Positive; Nam : String) return Boolean is
-     (Proofs (Item).Present
-      and then Proofs (Item).Seen
-      and then Proofs (Item).Unproved = 0
-      and then Proofs (Item).Total > 0
-      and then not Proofs (Item).Bad
-      and then Unit_Proved (Item, Nam));
+     (Label_Rule.Own_Log
+        (Proofs (Item).Present,
+         Proofs (Item).Seen,
+         Proofs (Item).Bad,
+         Proofs (Item).Unproved,
+         Proofs (Item).Total,
+         Unit_Proved (Item, Nam)));
 
    procedure Add_Unit (E : in out Ev; Item : Positive; Nam : String) is
       I : constant Natural := Find (Item, Nam);
@@ -597,6 +600,20 @@ is
       Add (E, Reason);
    end Add_Why;
 
+   function As_Kind (Log_OK, Ran_OK : Boolean) return Kind is
+      Item : constant Label_Rule.Kind :=
+        Label_Rule.From_Flags (Log_OK, Ran_OK);
+   begin
+      case Item is
+         when Label_Rule.Proved =>
+            return Proved;
+         when Label_Rule.Tested =>
+            return Tested;
+         when Label_Rule.Unchecked =>
+            return Unchecked;
+      end case;
+   end As_Kind;
+
    function Run_Ok (Id : Test_Id) return Boolean is
      (Tests (Id).OK
       and then Tests (Id).Has_Cases
@@ -645,9 +662,10 @@ is
 
    function Agree_Ok return Boolean is
      (Pair_On (1) and then Pair_On (2) and then Pair_On (3)
-      and then Pair_A (1) = Pair_T (1) and then Pair_T (1) > 0
-      and then Pair_A (2) = Pair_T (2) and then Pair_T (2) > 0
-      and then Pair_A (3) = Pair_T (3) and then Pair_T (3) > 0);
+      and then Agree_Rule.All_Hold
+        (Pair_A (1), Pair_T (1),
+         Pair_A (2), Pair_T (2),
+         Pair_A (3), Pair_T (3)));
 
    procedure Add_Agree (E : in out Ev) is
    begin
@@ -689,7 +707,7 @@ is
    procedure Classify (Number : Positive; K : out Kind; E : in out Ev) is
    begin
       Clear (E);
-      K := Unchecked;
+      K := As_Kind (False, False);
       if not Files_Ok then
          Add (E, Why.Text (1 .. Why.Last));
          return;
@@ -700,7 +718,7 @@ is
               and then Spec_Ok (1)
               and then Tests (T_Version).OK
             then
-               K := Proved;
+               K := As_Kind (True, False);
                Add_Run_Head (E, 1);
                Add_Unit (E, 1, "ai_amplifier-version");
                Add (E, "; ");
@@ -713,7 +731,7 @@ is
             end if;
          when 3 =>
             if Own_Proof (3, "ai_amplifier-tensors") and then Spec_Ok (3) then
-               K := Proved;
+               K := As_Kind (True, False);
                Add_Run_Head (E, 3);
                Add_Unit (E, 3, "ai_amplifier-tensors");
                Add (E, "; not in this run:");
@@ -727,7 +745,7 @@ is
             end if;
          when 7 =>
             if Own_Proof (7, "ai_amplifier-tensors") and then Spec_Ok (7) then
-               K := Proved;
+               K := As_Kind (True, False);
                Add_Run_Head (E, 7);
                Add_Unit (E, 7, "ai_amplifier-tensors");
                Add (E, "; ");
@@ -739,7 +757,7 @@ is
             end if;
          when 2 =>
             if Spec_Ok (2) then
-               K := Tested;
+               K := As_Kind (False, True);
                Add (E, "item_02 cases ");
                Add_Nat (E, Asserts (2));
                Add (E, " spec pass");
@@ -751,7 +769,7 @@ is
             end if;
          when 4 =>
             if Run_Ok (T_Mlp) and then Spec_Ok (4) then
-               K := Tested;
+               K := As_Kind (False, True);
                Add_Run (E, "mlp_test", T_Mlp);
                Add (E, " ");
                Add_Spec (E, 4);
@@ -764,7 +782,7 @@ is
             end if;
          when 5 =>
             if Run_Ok (T_Attention) and then Spec_Ok (5) then
-               K := Tested;
+               K := As_Kind (False, True);
                Add_Run (E, "attention_test", T_Attention);
                Add (E, " ");
                Add_Spec (E, 5);
@@ -777,7 +795,7 @@ is
             end if;
          when 6 =>
             if Run_Ok (T_Tensors) and then Spec_Ok (6) then
-               K := Tested;
+               K := As_Kind (False, True);
                Add (E, "item_06 cases ");
                Add_Nat (E, Asserts (6));
                Add (E, " spec pass; ");
@@ -790,7 +808,7 @@ is
             end if;
          when 8 =>
             if Run_Ok (T_Mlp) and then Spec_Ok (8) then
-               K := Tested;
+               K := As_Kind (False, True);
                Add_Run (E, "mlp_test", T_Mlp);
                Add (E, " ");
                Add_Spec (E, 8);
@@ -805,7 +823,7 @@ is
               and then Run_Ok (T_Recurse)
               and then Spec_Ok (9)
             then
-               K := Proved;
+               K := As_Kind (True, False);
                Add_Run_Head (E, 9);
                Add_Unit (E, 9, "ai_amplifier-chain_rule");
                Add (E, "; ");
@@ -814,7 +832,7 @@ is
                Add_Spec (E, 9);
                Add_Ask (E, 9);
             elsif Run_Ok (T_Recurse) and then Spec_Ok (9) then
-               K := Tested;
+               K := As_Kind (False, True);
                Add_Run (E, "recurse_test", T_Recurse);
                Add (E, " ");
                Add_Spec (E, 9);
@@ -828,7 +846,7 @@ is
             end if;
          when 10 =>
             if Run_Ok (T_Mlp) and then Spec_Ok (10) then
-               K := Tested;
+               K := As_Kind (False, True);
                Add_Run (E, "mlp_test", T_Mlp);
                Add (E, " ");
                Add_Spec (E, 10);
@@ -842,7 +860,7 @@ is
               and then Run_Ok (T_Traces)
               and then Spec_Ok (11)
             then
-               K := Proved;
+               K := As_Kind (True, False);
                Add_Run_Head (E, 11);
                Add_Unit (E, 11, "ai_amplifier-trace_rule");
                Add (E, "; ");
@@ -851,7 +869,7 @@ is
                Add_Spec (E, 11);
                Add_Ask (E, 11);
             elsif Run_Ok (T_Traces) and then Spec_Ok (11) then
-               K := Tested;
+               K := As_Kind (False, True);
                Add_Run (E, "traces_test", T_Traces);
                Add (E, " ");
                Add_Spec (E, 11);
@@ -868,7 +886,7 @@ is
               and then Run_Ok (T_Audit)
               and then Spec_Ok (12)
             then
-               K := Proved;
+               K := As_Kind (True, False);
                Add_Run_Head (E, 12);
                Add_Unit (E, 12, "ai_amplifier-audit_rule");
                Add (E, "; ");
@@ -876,7 +894,7 @@ is
                Add (E, " ");
                Add_Spec (E, 12);
             elsif Run_Ok (T_Audit) and then Spec_Ok (12) then
-               K := Tested;
+               K := As_Kind (False, True);
                Add_Run (E, "audit_test", T_Audit);
                Add (E, " ");
                Add_Spec (E, 12);
@@ -887,8 +905,21 @@ is
                Add (E, " and spec item_12 pass");
             end if;
          when 13 =>
-            if Run_Ok (T_Reward) and then Spec_Ok (13) then
-               K := Tested;
+            if Own_Proof (13, "ai_amplifier-reward_rule")
+              and then Run_Ok (T_Reward)
+              and then Spec_Ok (13)
+            then
+               K := As_Kind (True, True);
+               Add_Run_Head (E, 13);
+               Add_Unit (E, 13, "ai_amplifier-reward_rule");
+               Add (E, "; proved for the accept/reject gate; ");
+               Add_Run (E, "reward_test", T_Reward);
+               Add (E, " ");
+               Add_Spec (E, 13);
+               Add_Why (E, "the two graders score float nets");
+               Add (E, " and are not proved");
+            elsif Run_Ok (T_Reward) and then Spec_Ok (13) then
+               K := As_Kind (False, True);
                Add_Run (E, "reward_test", T_Reward);
                Add (E, " ");
                Add_Spec (E, 13);
@@ -900,7 +931,7 @@ is
             end if;
          when 14 =>
             if Run_Ok (T_Harness) and then Spec_Ok (14) then
-               K := Tested;
+               K := As_Kind (False, True);
                Add_Run (E, "harness_test", T_Harness);
                Add (E, " ");
                Add_Spec (E, 14);
@@ -912,8 +943,21 @@ is
                Add (E, " A live model still needs a key");
             end if;
          when 15 =>
-            if Run_Ok (T_Steps) and then Spec_Ok (15) then
-               K := Tested;
+            if Own_Proof (15, "ai_amplifier-step_rule")
+              and then Run_Ok (T_Steps)
+              and then Spec_Ok (15)
+            then
+               K := As_Kind (True, True);
+               Add_Run_Head (E, 15);
+               Add_Unit (E, 15, "ai_amplifier-step_rule");
+               Add (E, "; proved for the step-grade rule; ");
+               Add_Run (E, "steps_test", T_Steps);
+               Add (E, " ");
+               Add_Spec (E, 15);
+               Add_Why (E, "a step grade recomputes values");
+               Add (E, " and is not a proof");
+            elsif Run_Ok (T_Steps) and then Spec_Ok (15) then
+               K := As_Kind (False, True);
                Add_Run (E, "steps_test", T_Steps);
                Add (E, " ");
                Add_Spec (E, 15);
@@ -924,11 +968,26 @@ is
                Add (E, " and spec item_15 pass");
             end if;
          when 16 =>
-            if Tests (T_Locked).OK
+            if Own_Proof (16, "ai_amplifier-lock_rule")
+              and then Tests (T_Locked).OK
               and then Locked_Specs_Ok
               and then Spec_Ok (16)
             then
-               K := Tested;
+               K := As_Kind (True, True);
+               Add_Run_Head (E, 16);
+               Add_Unit (E, 16, "ai_amplifier-lock_rule");
+               Add (E, "; proved for the lock-compare rule; ");
+               Add (E, "check-locked cases ");
+               Add_Nat (E, Locked_Spec_Count);
+               Add (E, " ");
+               Add_Spec (E, 16);
+               Add_Why (E, "a fingerprint detects an edit");
+               Add (E, " and does not prove the spec");
+            elsif Tests (T_Locked).OK
+              and then Locked_Specs_Ok
+              and then Spec_Ok (16)
+            then
+               K := As_Kind (False, True);
                Add (E, "check-locked cases ");
                Add_Nat (E, Locked_Spec_Count);
                Add (E, " ");
@@ -941,9 +1000,23 @@ is
                Add (E, " through item_17 passing");
             end if;
          when 17 =>
-            if Tests (T_Recheck).OK and then Agree_Ok and then Spec_Ok (17)
+            if Own_Proof (17, "ai_amplifier-agree_rule")
+              and then Tests (T_Recheck).OK
+              and then Agree_Ok
+              and then Spec_Ok (17)
             then
-               K := Tested;
+               K := As_Kind (True, True);
+               Add_Run_Head (E, 17);
+               Add_Unit (E, 17, "ai_amplifier-agree_rule");
+               Add (E, "; proved for the agreement count; ");
+               Add_Agree (E);
+               Add (E, " ");
+               Add_Spec (E, 17);
+               Add_Why
+                 (E, "agreement of two checkers is not a proof of either");
+            elsif Tests (T_Recheck).OK and then Agree_Ok and then Spec_Ok (17)
+            then
+               K := As_Kind (False, True);
                Add_Agree (E);
                Add (E, " ");
                Add_Spec (E, 17);
@@ -955,25 +1028,27 @@ is
                Add (E, " and spec item_17 pass");
             end if;
          when 18 =>
-            --  This item is the status program. It has a locked
-            --  spec. It is proved only when proof/item_18.out is
-            --  that program's own clean run. There is no such
-            --  run on this tree, so the label is tested.
-            if Own_Proof (18, "ai_amplifier-status") then
-               K := Proved;
+            --  Proved for the label rule only. Reading the logs
+            --  stays in AI_Amplifier.Status, which is plain Ada
+            --  and is not in that run.
+            if Own_Proof (18, "ai_amplifier-label_rule")
+              and then Asserts (18) > 0
+            then
+               K := As_Kind (True, True);
                Add_Run_Head (E, 18);
-               Add_Unit (E, 18, "ai_amplifier-status");
-               if Asserts (18) > 0 then
-                  Add (E, "; spec item_18 asserts ");
-                  Add_Nat (E, Asserts (18));
-               end if;
+               Add_Unit (E, 18, "ai_amplifier-label_rule");
+               Add (E, "; proved for the label rule; spec item_18 asserts ");
+               Add_Nat (E, Asserts (18));
+               Add (E, "; not in this run: ai_amplifier-status");
+               Add_Why (E, "AI_Amplifier.Status is plain Ada");
+               Add (E, " and is not a proof target");
             elsif Asserts (18) > 0 then
-               K := Tested;
+               K := As_Kind (False, True);
                Add (E, "spec item_18 asserts ");
                Add_Nat (E, Asserts (18));
                if Proofs (18).Present then
                   Add_Why (E, "proof/item_18.out does not prove");
-                  Add (E, " ai_amplifier-status with checks above 0");
+                  Add (E, " ai_amplifier-label_rule with checks above 0");
                   Add (E, " and unproved 0");
                else
                   Add_Why (E, "AI_Amplifier.Status is plain Ada");
@@ -982,7 +1057,7 @@ is
             else
                Add (E, "would take specs/item_18.adb with asserts,");
                Add (E, " or proof/item_18.out proving");
-               Add (E, " ai_amplifier-status with checks above 0");
+               Add (E, " ai_amplifier-label_rule with checks above 0");
                Add (E, " and unproved 0");
             end if;
          when 19 =>
@@ -990,7 +1065,7 @@ is
               and then Run_Ok (T_Summary)
               and then Spec_Ok (19)
             then
-               K := Proved;
+               K := As_Kind (True, False);
                Add_Run_Head (E, 19);
                Add_Unit (E, 19, "ai_amplifier-summary_rules");
                Add (E, "; ");
@@ -999,7 +1074,7 @@ is
                Add_Spec (E, 19);
                Add (E, "; not in this run: ai_amplifier-summary");
             elsif Run_Ok (T_Summary) and then Spec_Ok (19) then
-               K := Tested;
+               K := As_Kind (False, True);
                Add_Run (E, "summary_test", T_Summary);
                Add (E, " ");
                Add_Spec (E, 19);

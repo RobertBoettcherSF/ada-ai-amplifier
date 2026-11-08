@@ -5,9 +5,9 @@ grader is `AI_Amplifier.Recheck`. It does not call
 `AI_Amplifier.Traces`, `AI_Amplifier.Audit`, or
 `AI_Amplifier.Steps`.
 
-Visible stamp: **v0.20.0-readme**
+Visible stamp: **v0.21.0-moreproofs**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.20.0-readme
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.21.0-moreproofs
 
 ## The idea, and the licence
 
@@ -92,10 +92,13 @@ panel says so.
 
 ## What is proved
 
-Nothing in this item is proved. `AI_Amplifier.Recheck` is plain
-Ada. `SPARK_Mode` is off. Agreement is not a proof of either
-checker. This change does not add an Assume pragma or an
-Annotate pragma.
+`AI_Amplifier.Agree_Rule` is proved for the agreement count.
+`proof/item_17.out` is summary 9, 7 checks on that unit,
+unproved 0. A pair holds when the agree count equals the
+total and the total is positive. `AI_Amplifier.Recheck` is
+plain Ada. `SPARK_Mode` is off. Agreement is not a proof of
+either checker. This change does not add an Assume pragma
+or an Annotate pragma.
 
 Agreement makes a shared bug less likely. It does not prove
 either checker right. A mistake that both graders share still

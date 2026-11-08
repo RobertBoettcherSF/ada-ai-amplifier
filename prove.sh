@@ -93,6 +93,11 @@ prove_one proof/item_07.out ai_amplifier-tensors.adb
 prove_one proof/item_09.out ai_amplifier-chain_rule.adb
 prove_one proof/item_11.out ai_amplifier-trace_rule.adb
 prove_one proof/item_12.out ai_amplifier-audit_rule.adb
+prove_one proof/item_13.out ai_amplifier-reward_rule.adb
+prove_one proof/item_15.out ai_amplifier-step_rule.adb
+prove_one proof/item_16.out ai_amplifier-lock_rule.adb
+prove_one proof/item_17.out ai_amplifier-agree_rule.adb
+prove_one proof/item_18.out ai_amplifier-label_rule.adb
 gnatprove --version | head -1 > proof/version.txt
 
 # Item 19's flag rules. Separate project, separate log.

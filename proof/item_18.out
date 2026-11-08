@@ -1,0 +1,41 @@
+=========================
+Summary of SPARK analysis
+=========================
+
+---------------------------------------------------------------------------------------------
+SPARK Analysis results        Total       Flow                 Provers   Justified   Unproved
+---------------------------------------------------------------------------------------------
+Data Dependencies                 .          .                       .           .          .
+Flow Dependencies                 .          .                       .           .          .
+Initialization                    .          .                       .           .          .
+Non-Aliasing                      .          .                       .           .          .
+Run-time Checks                   .          .                       .           .          .
+Assertions                        .          .                       .           .          .
+Functional Contracts              3          .    3 (CVC5 38%, Z3 63%)           .          .
+LSP Verification                  .          .                       .           .          .
+Termination                       3          3                       .           .          .
+Concurrency                       .          .                       .           .          .
+---------------------------------------------------------------------------------------------
+Total                             6    3 (50%)                 3 (50%)           .          .
+
+
+max steps used for successful proof: 1
+
+============================
+Most difficult proved checks
+============================
+
+No check found with max time greater than 1 second
+
+========================
+Detailed analysis report
+========================
+
+Analyzed 2 units
+in unit ai_amplifier, 1 subprograms and packages out of 1 analyzed
+  AI_Amplifier at ai_amplifier.ads:2 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
+in unit ai_amplifier-label_rule, 4 subprograms and packages out of 4 analyzed
+  AI_Amplifier.Label_Rule at ai_amplifier-label_rule.ads:9 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
+  AI_Amplifier.Label_Rule.From_Flags at ai_amplifier-label_rule.ads:39 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (1 checks)
+  AI_Amplifier.Label_Rule.Own_Log at ai_amplifier-label_rule.ads:26 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (1 checks)
+  AI_Amplifier.Label_Rule.Unit_Counts at ai_amplifier-label_rule.ads:15 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (1 checks)

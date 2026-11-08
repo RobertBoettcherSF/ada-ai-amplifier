@@ -1,5 +1,6 @@
 with Ada.Command_Line;
 with Ada.Text_IO;
+with AI_Amplifier.Agree_Rule;
 with AI_Amplifier.Audit;
 with AI_Amplifier.Recheck;
 with AI_Amplifier.Steps;
@@ -99,11 +100,14 @@ is
       Agree, Total : in out Natural)
    is
    begin
-      Total := Total + 1;
-      if Same (Left, Right) then
-         Agree := Agree + 1;
-         return;
-      end if;
+      declare
+         Match : constant Boolean := Same (Left, Right);
+      begin
+         AI_Amplifier.Agree_Rule.Count_Case (Match, Agree, Total);
+         if Match then
+            return;
+         end if;
+      end;
       Failures := Failures + 1;
       Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error, "disagree " & Item);
       Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error, Side & " " & Left);

@@ -63,15 +63,14 @@ fi
   obj/gen/specs.out \
   obj/gen/recheck-report.txt \
   specs > "$tmp/good"
-grep -q '^item 18 tested ' "$tmp/good"
-grep -q 'no gnatprove run' "$tmp/good"
-grep -q '^summary proved 7 of 19, tested 12, unchecked 0$' "$tmp/good"
-if grep -q '^item 18 proved ' "$tmp/good"; then
-  echo "item 18 was proved without a gnatprove run" >&2
-  exit 1
-fi
+grep -q '^item 18 proved ' "$tmp/good"
+grep -q 'proved for the label rule' "$tmp/good"
+grep -q 'ai_amplifier-label_rule' "$tmp/good"
+grep -q 'not in this run: ai_amplifier-status' "$tmp/good"
+grep -q '^summary proved 12 of 19, tested 7, unchecked 0$' "$tmp/good"
 mkdir -p "$tmp/proof18"
 cp proof/item_*.out "$tmp/proof18/"
+# A log of the status program is not the label rule.
 cat > "$tmp/proof18/item_18.out" << 'EOF'
 Total                             4    1 (25%)    3 (75%)           .          .
 
@@ -83,12 +82,14 @@ EOF
   obj/gen/tests.out \
   obj/gen/specs.out \
   obj/gen/recheck-report.txt \
-  specs > "$tmp/proved18"
-grep -q '^item 18 proved ' "$tmp/proved18"
-grep -q 'proof/item_18.out' "$tmp/proved18"
-grep -q 'unproved 0' "$tmp/proved18"
-grep -q 'ai_amplifier-status' "$tmp/proved18"
-grep -q '^summary proved 8 of 19, tested 11, unchecked 0$' "$tmp/proved18"
+  specs > "$tmp/statusunit"
+if grep -q '^item 18 proved ' "$tmp/statusunit"; then
+  echo "a log of ai_amplifier-status proved the label rule" >&2
+  exit 1
+fi
+grep -q '^item 18 tested ' "$tmp/statusunit"
+grep -q '^summary proved 11 of 19, tested 8, unchecked 0$' "$tmp/statusunit"
+cp proof/item_18.out "$tmp/proof18/item_18.out"
 printf '\nunproved\n' >> "$tmp/proof18/item_18.out"
 ./bin/status_cli \
   "$tmp/proof18" \

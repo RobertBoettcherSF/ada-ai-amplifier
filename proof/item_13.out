@@ -1,0 +1,40 @@
+=========================
+Summary of SPARK analysis
+=========================
+
+--------------------------------------------------------------------------------
+SPARK Analysis results        Total       Flow    Provers   Justified   Unproved
+--------------------------------------------------------------------------------
+Data Dependencies                 .          .          .           .          .
+Flow Dependencies                 .          .          .           .          .
+Initialization                    .          .          .           .          .
+Non-Aliasing                      .          .          .           .          .
+Run-time Checks                   .          .          .           .          .
+Assertions                        .          .          .           .          .
+Functional Contracts              2          .     2 (Z3)           .          .
+LSP Verification                  .          .          .           .          .
+Termination                       2          2          .           .          .
+Concurrency                       .          .          .           .          .
+--------------------------------------------------------------------------------
+Total                             4    2 (50%)    2 (50%)           .          .
+
+
+max steps used for successful proof: 1
+
+============================
+Most difficult proved checks
+============================
+
+No check found with max time greater than 1 second
+
+========================
+Detailed analysis report
+========================
+
+Analyzed 2 units
+in unit ai_amplifier, 1 subprograms and packages out of 1 analyzed
+  AI_Amplifier at ai_amplifier.ads:2 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
+in unit ai_amplifier-reward_rule, 3 subprograms and packages out of 3 analyzed
+  AI_Amplifier.Reward_Rule at ai_amplifier-reward_rule.ads:7 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
+  AI_Amplifier.Reward_Rule.Decide at ai_amplifier-reward_rule.ads:24 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (1 checks)
+  AI_Amplifier.Reward_Rule.Flawed_Accepts at ai_amplifier-reward_rule.ads:41 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (1 checks)

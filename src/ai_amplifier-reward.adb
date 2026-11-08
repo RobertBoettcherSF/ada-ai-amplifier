@@ -1,8 +1,11 @@
+with AI_Amplifier.Reward_Rule;
+
 package body AI_Amplifier.Reward
   with SPARK_Mode => Off
 is
 
    package M renames AI_Amplifier.MLP;
+   package G renames AI_Amplifier.Reward_Rule;
 
    function Zero_Net return M.Net is
       Model : M.Net;
@@ -169,36 +172,38 @@ is
             end if;
          end loop;
       end if;
-      if Item.Counts then
-         Item.Gap := None;
-         Item.Flawed := 1.0;
-         return;
-      end if;
-      if Item.Has_Loss
-        and then Item.Reported_Loss < Low_Loss
-        and then Loss >= Low_Loss
-      then
-         Item.Gap := Reported_Loss;
-         Item.Flawed := 1.0;
-         return;
-      end if;
-      if Near_Half then
-         Item.Gap := Constant_Half;
-         Item.Flawed := 1.0;
-         return;
-      end if;
-      if Highs >= 2 then
-         Item.Gap := Two_Of_Four;
-         Item.Flawed := 1.0;
-         return;
-      end if;
-      if Stamp_Is_Shape (Item) then
-         Item.Gap := Right_Stamp;
-         Item.Flawed := 1.0;
-         return;
-      end if;
-      Item.Gap := Unsolved;
-      Item.Flawed := 0.0;
+      declare
+         Choice : constant G.Gate :=
+           G.Decide
+             (Real_Ok    => Item.Counts,
+              Loss_Claim =>
+                Item.Has_Loss
+                and then Item.Reported_Loss < Low_Loss
+                and then Loss >= Low_Loss,
+              Near_Half  => Near_Half,
+              Two_High   => Highs >= 2,
+              Stamp_Ok   => Stamp_Is_Shape (Item));
+      begin
+         case Choice is
+            when G.Real_Pass =>
+               Item.Gap := None;
+            when G.Reported_Loss =>
+               Item.Gap := Reported_Loss;
+            when G.Constant_Half =>
+               Item.Gap := Constant_Half;
+            when G.Two_Of_Four =>
+               Item.Gap := Two_Of_Four;
+            when G.Right_Stamp =>
+               Item.Gap := Right_Stamp;
+            when G.Reject =>
+               Item.Gap := Unsolved;
+         end case;
+         if G.Flawed_Accepts (Choice) then
+            Item.Flawed := 1.0;
+         else
+            Item.Flawed := 0.0;
+         end if;
+      end;
    end Grade;
 
    --  Trained from the trainer's seed at rate 1. The report is

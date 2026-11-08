@@ -1,0 +1,41 @@
+=========================
+Summary of SPARK analysis
+=========================
+
+---------------------------------------------------------------------------------------------
+SPARK Analysis results        Total       Flow                 Provers   Justified   Unproved
+---------------------------------------------------------------------------------------------
+Data Dependencies                 .          .                       .           .          .
+Flow Dependencies                 .          .                       .           .          .
+Initialization                    .          .                       .           .          .
+Non-Aliasing                      .          .                       .           .          .
+Run-time Checks                   4          .    4 (CVC5 63%, Z3 38%)           .          .
+Assertions                        .          .                       .           .          .
+Functional Contracts              3          .    3 (CVC5 36%, Z3 64%)           .          .
+LSP Verification                  .          .                       .           .          .
+Termination                       2          2                       .           .          .
+Concurrency                       .          .                       .           .          .
+---------------------------------------------------------------------------------------------
+Total                             9    2 (22%)                 7 (78%)           .          .
+
+
+max steps used for successful proof: 1
+
+============================
+Most difficult proved checks
+============================
+
+No check found with max time greater than 1 second
+
+========================
+Detailed analysis report
+========================
+
+Analyzed 2 units
+in unit ai_amplifier, 1 subprograms and packages out of 1 analyzed
+  AI_Amplifier at ai_amplifier.ads:2 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
+in unit ai_amplifier-agree_rule, 4 subprograms and packages out of 4 analyzed
+  AI_Amplifier.Agree_Rule at ai_amplifier-agree_rule.ads:8 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
+  AI_Amplifier.Agree_Rule.All_Hold at ai_amplifier-agree_rule.ads:27 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (1 checks)
+  AI_Amplifier.Agree_Rule.Count_Case at ai_amplifier-agree_rule.ads:12 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (5 checks)
+  AI_Amplifier.Agree_Rule.Pair_Holds at ai_amplifier-agree_rule.ads:23 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (1 checks)
