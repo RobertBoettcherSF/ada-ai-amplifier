@@ -14,6 +14,8 @@ cd "$(dirname "$0")"
 # The locked panel is this build's spec run. The generated body
 # is compiled below in place of src/ai_amplifier-locked.adb.
 ./tools/run-specs.sh
+mkdir -p obj/gen
+./bin/recheck_test obj/gen/recheck-report.txt
 T=$PWD/toolchain/usr
 [ -x "$T/bin/llvm-gcc" ] || { echo "Run tools/get-toolchain.sh first"; exit 1; }
 export LD_LIBRARY_PATH="$PWD/toolchain/lib"
@@ -22,7 +24,7 @@ rm -rf obj/wasm && mkdir -p obj/wasm
 cd obj/wasm
 for F in ../../src/*.adb; do
   case $(basename "$F") in
-    hello.adb|tensors_test.adb|mlp_test.adb|attention_test.adb|recurse_test.adb|recurse_cli.adb|traces_test.adb|traces_cli.adb|audit_test.adb|audit_cli.adb|reward_test.adb|reward_cli.adb|harness_test.adb|harness_cli.adb|steps_test.adb|steps_cli.adb|ai_amplifier-locked.adb) continue ;;
+    hello.adb|tensors_test.adb|mlp_test.adb|attention_test.adb|recurse_test.adb|recurse_cli.adb|traces_test.adb|traces_cli.adb|audit_test.adb|audit_cli.adb|reward_test.adb|reward_cli.adb|harness_test.adb|harness_cli.adb|steps_test.adb|steps_cli.adb|recheck_test.adb|ai_amplifier-recheck.adb|ai_amplifier-locked.adb) continue ;;
   esac
   # -gnatw.X: this runtime forbids exception propagation, and the
   # compiler warns that a check would call Last_Chance_Handler. The
@@ -152,6 +154,13 @@ html = pathlib.Path("web/template.html").read_text()
 if html.count(token) != 1:
     raise SystemExit("web/template.html must contain __WASM_BASE64__ once")
 out = html.replace(token, base64.b64encode(wasm).decode("ascii"), 1)
+report_token = "__RECHECK_REPORT__"
+report = pathlib.Path("obj/gen/recheck-report.txt").read_text()
+if out.count(report_token) != 1:
+    raise SystemExit("web/template.html must contain __RECHECK_REPORT__ once")
+if "<" in report or ">" in report:
+    raise SystemExit("recheck report must stay plain text")
+out = out.replace(report_token, report.rstrip("\n"), 1)
 site = pathlib.Path("site")
 site.mkdir(exist_ok=True)
 (site / "index.html").write_text(out)

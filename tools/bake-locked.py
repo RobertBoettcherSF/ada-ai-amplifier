@@ -32,6 +32,7 @@ TITLES = {
     "item_13.adb": "Reward-hacking demo",
     "item_14.adb": "Same model, different harness",
     "item_15.adb": "Checked steps",
+    "item_17.adb": "Second checker",
 }
 
 
@@ -59,7 +60,8 @@ def spans(lengths: list[int]) -> str:
 
 
 def main() -> int:
-    files = [SPEC_DIR / f"item_{n:02d}.adb" for n in range(1, 16)]
+    numbers = list(range(1, 16)) + [17]
+    files = [SPEC_DIR / f"item_{n:02d}.adb" for n in numbers]
     missing = [path.name for path in files if not path.is_file()]
     if missing:
         print("missing " + ", ".join(missing), file=sys.stderr)
@@ -70,7 +72,8 @@ def main() -> int:
     statuses = []
     for path in files:
         title = TITLES[path.name]
-        names.append(f"{int(path.stem.split('_')[1]):02d}  {title}")
+        number = int(path.stem.split("_")[1])
+        names.append(f"{number:02d}  {title}")
         texts.append(path.read_text(encoding="utf-8"))
         fingerprints.append(hashlib.sha256(path.read_bytes()).hexdigest())
         binary = ROOT / "bin" / path.stem
@@ -107,6 +110,9 @@ package body AI_Amplifier.Locked
 is
 
    Count_N : constant := {count};
+
+   Item_No : constant array (1 .. Count_N) of Integer :=
+      ({", ".join(str(n) for n in numbers)});
 
    type Span is record
       First  : Positive;
@@ -156,7 +162,7 @@ is
       if not In_Range (Index) then
          return 0;
       end if;
-      return Index;
+      return Item_No (Index);
    end Item_Number;
 
    function Name_Length (Index : Integer) return Integer is

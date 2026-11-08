@@ -1,14 +1,14 @@
 # Locked statements
 
-Fifteen specs. One for each finished item. Each spec is a small
+Sixteen specs. Items 1 through 15, and item 17. Each spec is a small
 Ada program that calls this library and asserts numbers that
 item's tests already check. CI builds those programs and runs
 them. The page shows the source, the SHA-256, and whether this
 build passed.
 
-Visible stamp: **v0.16.0-locked**
+Visible stamp: **v0.17.0-second**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.16.0-locked
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.17.0-second
 
 ## The idea, and the licence
 
@@ -25,7 +25,8 @@ statement is a change to a file whose fingerprint is recorded.
 ## What the fingerprint does
 
 `specs/LOCK` stores the SHA-256 of `item_01.adb` through
-`item_15.adb`. CI hashes the files again. If a spec's bytes are
+`item_15.adb`, and `item_17.adb`. There is no `item_16.adb`:
+item 16 is this lock. CI hashes the files again. If a spec's bytes are
 not the bytes in `specs/LOCK`, the job fails. That is the silent
 edit: a spec that moved, and a lock file that did not.
 

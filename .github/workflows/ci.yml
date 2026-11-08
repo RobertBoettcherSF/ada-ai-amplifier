@@ -31,6 +31,7 @@ jobs:
         run: |
           python3 tools/check-locked.py
           ./tools/check-locked-selftest.sh
+          ./tools/check-recheck-selftest.sh
 
       - name: Native hello
         run: |
@@ -49,6 +50,7 @@ jobs:
           ./bin/harness_cli
           ./bin/steps_test
           ./bin/steps_cli
+          ./bin/recheck_test
           ./tools/run-specs.sh
 
       # Level 2, on the SPARK units only. prove.sh installs FSF

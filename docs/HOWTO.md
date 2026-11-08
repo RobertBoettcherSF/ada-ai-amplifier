@@ -4,9 +4,9 @@ A walkthrough for someone new to this repository, and possibly new to
 Ada. The logic lives in Ada. JavaScript only draws. The live page is one
 HTML file with that Ada compiled to WebAssembly inside it.
 
-Visible stamp: **v0.16.0-locked**
+Visible stamp: **v0.17.0-second**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.16.0-locked
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.17.0-second
 
 The yellow badge, `version.txt`, and `AI_Amplifier.Version.Version_Text`
 are that same text. The query on the link is the cache bust (the stamp
@@ -106,7 +106,7 @@ mean something:
 | `alr -n toolchain --select …` | Puts GNAT 16.1.0 and gprbuild 26.0.1 on the Alire toolchain |
 | `./tools/get-toolchain.sh` | Downloads AdaWebPack 24 into `toolchain/` (gitignored). Later runs see the compiler and return |
 | `alr -n build` | Native build. Warnings and checks are on, including `-gnata`, so `Pre` and `Post` run |
-| `./bin/hello` | Prints `ada-ai-amplifier v0.16.0-locked` |
+| `./bin/hello` | Prints `ada-ai-amplifier v0.17.0-second` |
 | `./tools/check-version.sh` | That line, `version.txt`, and the badge in `web/template.html` must be the same stamp |
 | `./bin/tensors_test` | Prints `tensors ok` |
 | `./bin/mlp_test` | Prints `mlp ok` |
@@ -123,12 +123,13 @@ mean something:
 | `./bin/harness_cli` | Prints the four harness rows. It does not call a model |
 | `./bin/steps_test` | Prints `steps ok` |
 | `./bin/steps_cli` | Prints the twelve step grades. A file whose steps fail exits 1 |
+| `./bin/recheck_test` | Compares the two checkers. It prints `recheck ok` when every case agrees |
 | `npm ci` | Installs `puppeteer-core` from the lockfile |
 | `./build.sh` | Runs the locked specs, compiles the library to WebAssembly, runs `tools/wasm-smoke.mjs`, writes `site/index.html` and `site/version.txt` |
-| `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, the speed panel, tokens, recorded chains, wrong turns, the benchmark audit, the reward table, the harness table, the checked-steps table, the locked statements, F9, crash report, a failed module |
+| `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, the speed panel, tokens, recorded chains, wrong turns, the benchmark audit, the reward table, the harness table, the checked-steps table, the locked statements, the second checker, F9, crash report, a failed module |
 
 Then open `site/index.html` in a browser yourself. The badge reads
-`v0.16.0-locked`. Leaky ReLU shows slope `0.01` and the output
+`v0.17.0-second`. Leaky ReLU shows slope `0.01` and the output
 `-0.02`, `0`, `3`. Compute still shows the product `14`, `14`, `17`.
 
 The file, which CI runs as `./tools/howto-steps.sh`:
@@ -161,6 +162,7 @@ alr -n build
 ./bin/harness_cli
 ./bin/steps_test
 ./bin/steps_cli
+./bin/recheck_test
 npm ci
 ./build.sh
 node tools/page-smoke.mjs
@@ -169,7 +171,8 @@ printf 'Open site/index.html in a browser. The badge should read %s.\n' "$(tr -d
 
 `build.sh` leaves runtime checks on. It does not pass `-gnatp`, and it
 does not pass `--allow-undefined`. Before the wasm compile it runs
-the fifteen locked specs and writes the body the page exports. The
+the locked specs and writes the body the page exports. It also
+writes the second-checker report the page draws. The
 module has no imports. A failed
 check traps that module. The native test is where a bad slope or a bad
 shape raises `Assertion_Error`.
@@ -278,6 +281,7 @@ header comment, whether it is in SPARK.
 | `AI_Amplifier.Steps.Demo` | `src/ai_amplifier-steps-demo.ads/.adb` | The page's table and the selected solution's steps |
 | `AI_Amplifier.Steps.Manifest` | `src/ai_amplifier-steps-manifest.ads` | Planted flaws. The checker does not read it |
 | `AI_Amplifier.Locked` | `src/ai_amplifier-locked.ads/.adb` | The page's locked statements. The wasm body is generated from the spec run |
+| `AI_Amplifier.Recheck` | `src/ai_amplifier-recheck.ads/.adb` | The second checker for items 11, 12, and 15. Plain Ada. It does not call the first checkers |
 | `Hello` | `src/hello.adb` | Prints the stamp. Native only |
 | `Recurse_Cli` | `src/recurse_cli.adb` | Replays the chains. Calls a model only when the user sets a key, a URL, and a model name. Native only |
 | `Traces_Cli` | `src/traces_cli.adb` | Replays the wrong-turn traces. Calls a model only when the user sets a key, a URL, and a model name. Native only |
@@ -303,7 +307,8 @@ JavaScript does not compute the splash, the product, the softmax, the
 leaky ReLU, the loss, the decision boundary, the weight text, the
 merges, the attention, the chain check, the training-speed verdict,
 or the wrong-turn verdict, or the reward scores, or the harness table,
-or the step grades, or the locked statements.
+or the step grades, or the locked statements, or the second-checker
+agreement. The comparison is a file this build writes.
 It reads coordinates, copies numbers, and sends UTF-8 bytes. On the
 speed panel it passes in two host wall-clock readings. Ada subtracts them.
 It adds up attention weights it already read, when it writes the
@@ -334,14 +339,14 @@ to the stamp without the `v`. A screenshot of the new page shows the
 new badge.
 
 **Plan, then Go, then one item.** Post a numbered plan for one change.
-Wait for Go. Build that item. Report, and stop. Items 1 through 16 are
+Wait for Go. Build that item. Report, and stop. Items 1 through 17 are
 done. Item 15 is the checked-steps demo. Item 16 is the locked
 statements: a fixed spec per finished item, and a CI gate that fails
 if a spec's fingerprint changes without `specs/LOCK`, or if
-`pragma Assume` or `pragma Annotate` appear. Items 17 through 19 are
-planned and not started. Item 17 is a second Ada checker, written
-separately, for the verdicts of items 11, 12, and 15. CI fails if
-the two checkers disagree. Item 18 labels items 1–15 proved, tested,
+`pragma Assume` or `pragma Annotate` appear. Item 17 is a second Ada
+checker, written separately, for the verdicts of items 11, 12, and
+15. CI fails if the two checkers disagree. Items 18 through 20 are
+planned and not started. Item 18 labels items 1–15 proved, tested,
 or unchecked, with real numbers, on the page and in the README.
 Item 19 is a short written summary of one item-15 solution. Each
 claim links to the step that backs it, and a claim with no step is
@@ -352,10 +357,10 @@ check in [formal-math](https://github.com/anthropics/formal-math)
 (Apache-2.0). The ideas for items 18 and 19 are results at
 different stages of verification, and reasoning summaries, in
 [openai/math](https://github.com/openai/math) (Apache-2.0).
-Both are ideas only. The work, when it is built, is an
-independent reimplementation. Nothing from either repository
-is copied. Do not start item 17 in a change that is still
-about item 16.
+Both are ideas only where they are still planned. Item 16 and
+item 17 are independent reimplementations. Nothing from either
+repository is copied. Do not start item 18 in a change that is
+still about item 17.
 
 **Honesty.** Say what is checked at run time and what a prover has
 seen. On the tensor kernels, Silver means no run-time error and Gold
@@ -363,13 +368,13 @@ means the component rule. Sigmoid, tanh, and softmax are Silver: the
 result lies in range, and the series is not the real function. The
 splash, the MLP, the tokenizer, attention, the chain checker,
 the wrong-turn checker, the benchmark auditor, the reward demo,
-the harness comparison, and the step checker are not proved. `Pre`
+the harness comparison, the step checker, and the second checker are not proved. `Pre`
 and `Post` are still ordinary Ada contracts, checked when the program
 runs. `Float` results are approximate; the tests name the tolerance.
 The spirals are not solved. The attention weights are a seed.
 
 **Pre-push.** Was the previous behaviour still there (splash, tensor
-demo, leaky ReLU, training, tokens, recorded chains, wrong turns, the benchmark audit, the reward table, the harness table, the checked-steps table, the locked statements, F9, crash report, badge)? Does the
+demo, leaky ReLU, training, tokens, recorded chains, wrong turns, the benchmark audit, the reward table, the harness table, the checked-steps table, the locked statements, the second checker, F9, crash report, badge)? Does the
 new behaviour work? `./tools/howto-steps.sh` is the long check, after
 the packages and the compilers are installed. `./tools/check-version.sh`
 is the stamp check. Docs that name a number should name the number the
@@ -414,6 +419,7 @@ The log is `proof/gnatprove.out`. The same table is on the live page.
 | Harness comparison | not proved |
 | Checked steps | not proved |
 | Locked statements | not proved |
+| Second checker | not proved |
 
 Silver on dot and the two products means no run-time error, and the
 numeric result lies in `[-Acc_Bound, Acc_Bound]`. It does not mean the
@@ -430,7 +436,7 @@ outside the bound fails the `Pre`.
 
 The splash, the page wrappers, the MLP, the tokenizer, attention,
 the chain checker, the wrong-turn checker, the benchmark
-auditor, the reward demo, the harness comparison, and the step checker are plain Ada. Their tests are tests. The weight
+auditor, the reward demo, the harness comparison, the step checker, and the second checker are plain Ada. Their tests are tests. The weight
 text and the hand-written XOR net live in the MLP unit, so they are
 tests too. `docs/WEIGHT_SPACE.md` is that account.
 `docs/RECURSIVE_PROMPTS.md` is the account of the recorded chains.
@@ -439,6 +445,7 @@ tests too. `docs/WEIGHT_SPACE.md` is that account.
 `docs/REWARD_HACKING.md` is the account of the two graders.
 `docs/HARNESS.md` is the account of the four harnesses.
 `docs/CHECKED_STEPS.md` is the account of the two grades.
+`docs/SECOND_CHECKER.md` is the account of the agreement.
 `AI_Amplifier.Version` is SPARK,
 with the contracts from the skeleton. The stamp there is
-`v0.16.0-locked`.
+`v0.17.0-second`.
