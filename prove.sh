@@ -7,8 +7,9 @@
 set -e
 cd "$(dirname "$0")"
 
-# GitHub has returned 504 for the gnatprove archive. One failed
-# fetch should not fail the job.
+# The release page on github.com has been returning 504. The
+# asset API still serves the same archive. Try Alire once, then
+# that API.
 retry() {
   n=1
   while [ "$n" -le 6 ]; do
@@ -24,12 +25,47 @@ retry() {
   done
 }
 
+install_gnatprove_archive() {
+  root="$HOME/.local/gnatprove-16.1.0"
+  bindir="$root/gnatprove-x86_64-linux-16.1.0-1/bin"
+  if [ -x "$bindir/gnatprove" ]; then
+    export PATH="$bindir:$PATH"
+    return 0
+  fi
+  meta=$(mktemp)
+  archive=$(mktemp)
+  retry curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 \
+    -o "$meta" \
+    https://api.github.com/repos/alire-project/GNAT-FSF-builds/releases/tags/gnatprove-16.1.0-1
+  asset=$(python3 -c '
+import json, sys
+data = json.load(open(sys.argv[1], encoding="utf-8"))
+name = "gnatprove-x86_64-linux-16.1.0-1.tar.gz"
+for item in data["assets"]:
+    if item["name"] == name:
+        print(item["url"])
+        raise SystemExit(0)
+raise SystemExit("missing " + name)
+' "$meta")
+  retry curl -fL --retry 5 --retry-all-errors --retry-delay 5 \
+    -H "Accept: application/octet-stream" \
+    -o "$archive" "$asset"
+  mkdir -p "$root"
+  tar -xzf "$archive" -C "$root"
+  rm -f "$meta" "$archive"
+  export PATH="$bindir:$PATH"
+}
+
 if [ ! -f config/ada_ai_amplifier_config.gpr ]; then
   alr -n build
 fi
 if ! command -v gnatprove >/dev/null 2>&1; then
-  retry alr -n install gnatprove=16.1.0
-  export PATH="$HOME/.alire/bin:$PATH"
+  if alr -n install gnatprove=16.1.0; then
+    export PATH="$HOME/.alire/bin:$PATH"
+  else
+    echo "alr could not fetch gnatprove; downloading the release asset" >&2
+    install_gnatprove_archive
+  fi
 fi
 gnatprove -P ada_ai_amplifier.gpr -j0
 mkdir -p proof
