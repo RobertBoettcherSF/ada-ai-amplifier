@@ -19,7 +19,7 @@ rm -rf obj/wasm && mkdir -p obj/wasm
 cd obj/wasm
 for F in ../../src/*.adb; do
   case $(basename "$F") in
-    hello.adb|tensors_test.adb|mlp_test.adb|attention_test.adb|recurse_test.adb|recurse_cli.adb|traces_test.adb|traces_cli.adb|audit_test.adb|audit_cli.adb) continue ;;
+    hello.adb|tensors_test.adb|mlp_test.adb|attention_test.adb|recurse_test.adb|recurse_cli.adb|traces_test.adb|traces_cli.adb|audit_test.adb|audit_cli.adb|reward_test.adb|reward_cli.adb) continue ;;
   esac
   # -gnatw.X: this runtime forbids exception propagation, and the
   # compiler warns that a check would call Last_Chance_Handler. The
@@ -96,6 +96,17 @@ ar x "$T/lib/rts-native/adalib/libgnat.a" s-memcop.o s-memmov.o s-memset.o
   --export=aa_au_stat_len --export=aa_au_stat_byte \
   --export=aa_au_full_len --export=aa_au_full_byte \
   --export=aa_au_clean_len --export=aa_au_clean_byte \
+  --export=aa_rw_run --export=aa_rw_count --export=aa_rw_cols \
+  --export=aa_rw_col_len --export=aa_rw_col_byte --export=aa_rw_mark \
+  --export=aa_rw_tally_len --export=aa_rw_tally_byte \
+  --export=aa_rw_stat_len --export=aa_rw_stat_byte \
+  --export=aa_rw_steps \
+  --export=aa_rw_flawed_proxy --export=aa_rw_flawed_real \
+  --export=aa_rw_flawed_holds \
+  --export=aa_rw_real_proxy --export=aa_rw_real_score \
+  --export=aa_rw_real_holds \
+  --export=aa_rw_flawed_end_len --export=aa_rw_flawed_end_byte \
+  --export=aa_rw_real_end_len --export=aa_rw_real_end_byte \
   -z stack-size=2097152 --initial-memory=16777216 \
   -o ai_amplifier.wasm *.o
 cd ../..

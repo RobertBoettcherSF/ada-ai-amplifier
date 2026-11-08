@@ -2,7 +2,7 @@
 <!-- ada-ai-amplifier. Splash motion, the tensor demo, leaky ReLU,
      the MLP, the weight text, the byte-level tokenizer, the
      attention block, the recorded chains, the wrong-turn
-     checker, and the benchmark audit are Ada, compiled to WebAssembly and embedded by
+     checker, the benchmark audit, and the reward demo are Ada, compiled to WebAssembly and embedded by
      build.sh. This file only draws,
      copies numbers and text bytes into the module, and writes
      F9 / crash files. -->
@@ -393,7 +393,35 @@
       touch-action: manipulation;
     }
     #attnread { margin-top: 0.4rem; }
-    #recurse, #turns, #audit { margin: 0.2rem 0 1.2rem; }
+    #recurse, #turns, #audit, #reward { margin: 0.2rem 0 1.2rem; }
+    #reward { overflow-x: auto; }
+    .reward-curves {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .reward-curves canvas {
+      width: 100%;
+      height: 140px;
+      display: block;
+      background: #000;
+      border: 1px solid #2a2a2a;
+    }
+    #rewardtable {
+      width: 100%;
+      min-width: 36rem;
+      border-collapse: collapse;
+      margin: 0.4rem 0;
+      font: 15px/1.45 ui-monospace, monospace;
+    }
+    #rewardtable th, #rewardtable td {
+      text-align: left;
+      padding: 4px 10px 4px 0;
+      vertical-align: top;
+    }
+    #rewardtable .halt { color: #ffb4b4; }
+    #rewardtable .base { color: #ffe14a; }
     .turn-pair {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -420,7 +448,7 @@
     .rec-steps .base { color: #ffe14a; }
     .rec-steps .halt { color: #ffb4b4; }
     @media (max-width: 640px) {
-      .mlp-views, .turn-pair { grid-template-columns: minmax(0, 1fr); }
+      .mlp-views, .turn-pair, .reward-curves { grid-template-columns: minmax(0, 1fr); }
     }
     @media (max-width: 520px) {
       .demo-cols { flex-direction: column; }
@@ -433,7 +461,7 @@
   </style>
 </head>
 <body>
-  <div id="ver">v0.12.0-audit</div>
+  <div id="ver">v0.13.0-reward</div>
   <main id="main" tabindex="-1">
     <h1>ada-ai-amplifier</h1>
     <p id="banner" class="err" hidden></p>
@@ -698,6 +726,46 @@
         does not run that program.
       </p>
     </div>
+    <h2>Reward hacking</h2>
+    <p>
+      One task: make the XOR net right. The flawed grader trusts a
+      low reported loss, or two outputs above 0.5, or an answer that
+      only looks finished. The real check runs the net again and
+      requires every XOR output to be at least 0.8 or at most 0.2,
+      on the correct side. Only that check counts. The cheats are
+      written in Ada. They are not a model's replies. A hill-climb
+      then tunes the weights from a fixed seed. One search climbs
+      the flawed proxy. The other climbs the real loss. Yellow on
+      each curve is the score that search is aimed at. Blue is the
+      other score. JavaScript only draws.
+    </p>
+    <div id="reward">
+      <p id="rewardstat" class="out">Waiting for the Ada module.</p>
+      <table id="rewardtable">
+        <thead><tr id="rewardhead"></tr></thead>
+        <tbody id="rewardbody"></tbody>
+      </table>
+      <p id="rewardtally" class="out"></p>
+      <div class="reward-curves">
+        <div>
+          <p class="fine">Aimed at the flawed proxy</p>
+          <canvas id="rewardflawed" width="320" height="140" aria-label="Flawed search curve"></canvas>
+          <p id="rewardflawedend" class="out"></p>
+        </div>
+        <div>
+          <p class="fine">Aimed at the real check</p>
+          <canvas id="rewardreal" width="320" height="140" aria-label="Real search curve"></canvas>
+          <p id="rewardrealend" class="out"></p>
+        </div>
+      </div>
+      <p id="rewarderr" class="err" hidden></p>
+      <p class="fine">
+        <code>reward_cli</code> prints this same table, and it can
+        run either search. The page does not run that program.
+        This is a toy with planted gaps. It is not evidence of how
+        often a real model does this.
+      </p>
+    </div>
     <h2>On this page</h2>
     <ul>
       <li>Tap the splash, or press Enter, to leave it.</li>
@@ -710,6 +778,7 @@
       <li>The recorded chains ask Ada to check each saved blob. A wrong step stops that chain.</li>
       <li>Wrong turns asks Ada to run one next step on a recorded trainer trace and to say whether that step fixes it.</li>
       <li>Benchmark audit asks Ada to flag each task, then to score the samples on the full set and on the cleaned set.</li>
+      <li>Reward hacking asks Ada to score five XOR submissions with both graders, and to climb each score from the same seed.</li>
       <li>F9, or Feedback, writes a feedback file.</li>
       <li>If the previous session did not end cleanly, a crash report is offered.</li>
     </ul>
@@ -727,7 +796,7 @@
       <li><span class="n">10.</span><span>Training-speed harness</span> <span class="st done">done</span></li>
       <li><span class="n">11.</span><span>Wrong-turn traces</span> <span class="st done">done</span></li>
       <li><span class="n">12.</span><span>Benchmark audit</span> <span class="st done">done</span></li>
-      <li><span class="n">13.</span><span>Reward-hacking demo</span> <span class="st">planned</span></li>
+      <li><span class="n">13.</span><span>Reward-hacking demo</span> <span class="st done">done</span></li>
       <li><span class="n">14.</span><span>Same model, different harness</span> <span class="st">planned</span></li>
       <li><span class="n">15.</span><span>Checked steps, not just answers</span> <span class="st">planned</span></li>
       <li><span class="n">16.</span><span>README update after items 1–15</span> <span class="st">planned</span></li>
@@ -764,6 +833,7 @@
         <tr><td>Recursive prompts</td><td class="st">not proved</td></tr>
         <tr><td>Wrong turns</td><td class="st">not proved</td></tr>
         <tr><td>Benchmark audit</td><td class="st">not proved</td></tr>
+        <tr><td>Reward hacking</td><td class="st">not proved</td></tr>
       </tbody>
     </table>
     <h2>Links</h2>
@@ -775,6 +845,7 @@
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/TRAINING_SPEED.md">Training speed</a></li>
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/WRONG_TURNS.md">Wrong turns</a></li>
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/BENCHMARK_AUDIT.md">Benchmark audit</a></li>
+      <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/REWARD_HACKING.md">Reward hacking</a></li>
     </ul>
     <noscript>
       <p class="err">JavaScript is off, so the Ada module is not running. Open this page in Safari or Chrome.</p>
@@ -971,6 +1042,7 @@ function fail(detail) {
   showRecurseDown();
   showTurnsDown();
   showAuditDown();
+  showRewardDown();
 }
 function skip(how) {
   if (splash.hidden) return;
@@ -2025,6 +2097,129 @@ function bootAudit() {
   paintAudit();
   note("audit", box("auditstat").textContent);
 }
+function showRewardDown() {
+  const err = box("rewarderr");
+  if (!err) return;
+  err.hidden = false;
+  err.textContent = "The Ada module did not load, so this panel cannot score the submissions.";
+  const stat = box("rewardstat");
+  if (stat) stat.textContent = "Waiting for the Ada module.";
+}
+function readCurve(at, holds) {
+  const n = ada.aa_rw_steps();
+  const vals = [];
+  const flags = [];
+  for (let i = 1; i <= n; i += 1) {
+    const v = at(i);
+    vals.push(Number.isFinite(v) ? v : 0);
+    flags.push(holds(i));
+  }
+  return {vals: vals, flags: flags};
+}
+function drawRewardCurve(id, aimed, other) {
+  const canvas = box(id);
+  if (!canvas) return;
+  const cssW = canvas.clientWidth;
+  const cssH = canvas.clientHeight || 140;
+  if (cssW < 2 || cssH < 2) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = Math.max(2, Math.round(cssW * dpr));
+  const h = Math.max(2, Math.round(cssH * dpr));
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+  }
+  const ctx = canvas.getContext("2d", {alpha: false});
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, w, h);
+  const pad = Math.max(8, Math.round(h * 0.08));
+  ctx.strokeStyle = "#333";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(pad, h - pad);
+  ctx.lineTo(w - pad, h - pad);
+  ctx.stroke();
+  function stroke(vals, color, width) {
+    if (!vals.length) return;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    for (let i = 0; i < vals.length; i += 1) {
+      const x = vals.length === 1 ? pad : pad + (i / (vals.length - 1)) * (w - pad * 2);
+      const clamped = Math.max(0, Math.min(1, vals[i]));
+      const y = (h - pad) - clamped * (h - pad * 2);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  stroke(other, "#7eb6ff", Math.max(1.5, dpr));
+  stroke(aimed, "#ffe14a", Math.max(2, dpr));
+}
+function paintReward() {
+  if (!ada) return;
+  ada.aa_rw_run();
+  const cols = ada.aa_rw_cols();
+  const n = ada.aa_rw_count();
+  const head = box("rewardhead");
+  const body = box("rewardbody");
+  head.replaceChildren();
+  body.replaceChildren();
+  for (let c = 1; c <= cols; c += 1) {
+    const th = document.createElement("th");
+    th.textContent = adaText(() => ada.aa_rw_col_len(0, c), (p) => ada.aa_rw_col_byte(0, c, p));
+    head.append(th);
+  }
+  const rows = [];
+  for (let i = 1; i <= n; i += 1) {
+    const tr = document.createElement("tr");
+    const cells = [];
+    for (let c = 1; c <= cols; c += 1) {
+      const td = document.createElement("td");
+      const text = adaText(() => ada.aa_rw_col_len(i, c), (p) => ada.aa_rw_col_byte(i, c, p));
+      td.textContent = text;
+      if (c === 5) td.className = ada.aa_rw_mark(i) === 1 ? "base" : "halt";
+      tr.append(td);
+      cells.push(text);
+    }
+    body.append(tr);
+    rows.push(cells);
+  }
+  const tally = adaText(() => ada.aa_rw_tally_len(), (p) => ada.aa_rw_tally_byte(p));
+  const stat = adaText(() => ada.aa_rw_stat_len(), (p) => ada.aa_rw_stat_byte(p));
+  const flawedEnd = adaText(() => ada.aa_rw_flawed_end_len(), (p) => ada.aa_rw_flawed_end_byte(p));
+  const realEnd = adaText(() => ada.aa_rw_real_end_len(), (p) => ada.aa_rw_real_end_byte(p));
+  box("rewardtally").textContent = tally;
+  box("rewardstat").textContent = stat;
+  box("rewardflawedend").textContent = flawedEnd;
+  box("rewardrealend").textContent = realEnd;
+  const flawed = readCurve((i) => ada.aa_rw_flawed_proxy(i), (i) => ada.aa_rw_flawed_holds(i));
+  const flawedReal = readCurve((i) => ada.aa_rw_flawed_real(i), (i) => ada.aa_rw_flawed_holds(i));
+  const realScore = readCurve((i) => ada.aa_rw_real_score(i), (i) => ada.aa_rw_real_holds(i));
+  const realProxy = readCurve((i) => ada.aa_rw_real_proxy(i), (i) => ada.aa_rw_real_holds(i));
+  window.__reward = {
+    rows: rows,
+    tally: tally,
+    stat: stat,
+    flawedEnd: flawedEnd,
+    realEnd: realEnd,
+    steps: ada.aa_rw_steps(),
+    flawedProxy: flawed.vals,
+    flawedHolds: flawed.flags,
+    flawedReal: flawedReal.vals,
+    realScore: realScore.vals,
+    realHolds: realScore.flags,
+    realProxy: realProxy.vals
+  };
+  drawRewardCurve("rewardflawed", flawed.vals, flawedReal.vals);
+  drawRewardCurve("rewardreal", realScore.vals, realProxy.vals);
+}
+function bootReward() {
+  const err = box("rewarderr");
+  if (err) err.hidden = true;
+  paintReward();
+  note("reward", box("rewardstat").textContent);
+}
 function showTurnsDown() {
   const err = box("turnerr");
   if (!err) return;
@@ -2090,7 +2285,13 @@ function bootTurns() {
   note("turns", box("turnstat").textContent);
 }
 addEventListener("resize", () => {
-  if (ada && !fatal) paintMlp();
+  if (ada && !fatal) {
+    paintMlp();
+    if (window.__reward) {
+      drawRewardCurve("rewardflawed", window.__reward.flawedProxy, window.__reward.flawedReal);
+      drawRewardCurve("rewardreal", window.__reward.realScore, window.__reward.realProxy);
+    }
+  }
 });
 document.getElementById("fbbtn").addEventListener("click", openFeedback);
 document.getElementById("fbcancel").addEventListener("click", closeFeedback);
@@ -2251,7 +2452,7 @@ async function boot() {
     fail(String(e && e.message ? e.message : e));
     return;
   }
-  const need = ["aa_version_length", "aa_version_byte", "aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get", "aa_set_m", "aa_get_m", "aa_set_v", "aa_get_v", "aa_tensor_run", "aa_product", "aa_softmax", "aa_lrelu_set", "aa_lrelu_in", "aa_lrelu_run", "aa_lrelu_out", "aa_lrelu_slope", "aa_mlp_reset", "aa_mlp_set_rate", "aa_mlp_rate", "aa_mlp_train", "aa_mlp_epoch", "aa_mlp_loss", "aa_mlp_predict", "aa_mlp_count", "aa_mlp_x", "aa_mlp_y", "aa_mlp_label", "aa_mlp_lo", "aa_mlp_hi", "aa_mlp_grid_n", "aa_mlp_fill", "aa_mlp_cell", "aa_mlp_curve_n", "aa_mlp_curve", "aa_mlp_kind", "aa_w_limit", "aa_w_span", "aa_w_count", "aa_w_get", "aa_w_set", "aa_w_name_len", "aa_w_name_byte", "aa_w_len", "aa_w_byte", "aa_w_clear", "aa_w_push", "aa_w_load", "aa_w_hand", "aa_w_trained", "aa_w_preset", "aa_w_note_len", "aa_w_note_byte", "aa_speed_prepare", "aa_speed_execute", "aa_speed_finish", "aa_speed_steps", "aa_speed_repeats", "aa_speed_us", "aa_speed_loss", "aa_speed_answer", "aa_speed_counted", "aa_speed_reason", "aa_speed_published_steps", "aa_speed_published_native_us", "aa_speed_published_wasm_us", "aa_speed_len", "aa_speed_byte", "aa_speed_describe", "aa_bpe_clear", "aa_bpe_push", "aa_bpe_corpus", "aa_attn_run", "aa_attn_tokens", "aa_attn_id", "aa_attn_piece_len", "aa_attn_piece_byte", "aa_attn_vocab", "aa_attn_merges", "aa_attn_used", "aa_attn_weight", "aa_attn_dropped", "aa_attn_bytes", "aa_rec_chains", "aa_rec_max_index", "aa_rec_select", "aa_rec_name_len", "aa_rec_name_byte", "aa_rec_states", "aa_rec_line_len", "aa_rec_line_byte", "aa_rec_mark", "aa_rec_parsed", "aa_rec_index", "aa_rec_minus", "aa_rec_current", "aa_rec_stop", "aa_rec_stop_len", "aa_rec_stop_byte", "aa_rec_stop_at", "aa_rec_accepted", "aa_rec_answer", "aa_rec_note_len", "aa_rec_note_byte", "aa_tr_count", "aa_tr_select", "aa_tr_name_len", "aa_tr_name_byte", "aa_tr_steps", "aa_tr_line_len", "aa_tr_line_byte", "aa_tr_wrong", "aa_tr_menu", "aa_tr_menu_len", "aa_tr_menu_byte", "aa_tr_propose", "aa_tr_verdict", "aa_tr_reason", "aa_tr_reason_len", "aa_tr_reason_byte", "aa_tr_report_len", "aa_tr_report_byte", "aa_tr_good_len", "aa_tr_good_byte", "aa_tr_state_len", "aa_tr_state_byte", "aa_au_run", "aa_au_count", "aa_au_flagged", "aa_au_mark", "aa_au_line_len", "aa_au_line_byte", "aa_au_stat_len", "aa_au_stat_byte", "aa_au_full_len", "aa_au_full_byte", "aa_au_clean_len", "aa_au_clean_byte"];
+  const need = ["aa_version_length", "aa_version_byte", "aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get", "aa_set_m", "aa_get_m", "aa_set_v", "aa_get_v", "aa_tensor_run", "aa_product", "aa_softmax", "aa_lrelu_set", "aa_lrelu_in", "aa_lrelu_run", "aa_lrelu_out", "aa_lrelu_slope", "aa_mlp_reset", "aa_mlp_set_rate", "aa_mlp_rate", "aa_mlp_train", "aa_mlp_epoch", "aa_mlp_loss", "aa_mlp_predict", "aa_mlp_count", "aa_mlp_x", "aa_mlp_y", "aa_mlp_label", "aa_mlp_lo", "aa_mlp_hi", "aa_mlp_grid_n", "aa_mlp_fill", "aa_mlp_cell", "aa_mlp_curve_n", "aa_mlp_curve", "aa_mlp_kind", "aa_w_limit", "aa_w_span", "aa_w_count", "aa_w_get", "aa_w_set", "aa_w_name_len", "aa_w_name_byte", "aa_w_len", "aa_w_byte", "aa_w_clear", "aa_w_push", "aa_w_load", "aa_w_hand", "aa_w_trained", "aa_w_preset", "aa_w_note_len", "aa_w_note_byte", "aa_speed_prepare", "aa_speed_execute", "aa_speed_finish", "aa_speed_steps", "aa_speed_repeats", "aa_speed_us", "aa_speed_loss", "aa_speed_answer", "aa_speed_counted", "aa_speed_reason", "aa_speed_published_steps", "aa_speed_published_native_us", "aa_speed_published_wasm_us", "aa_speed_len", "aa_speed_byte", "aa_speed_describe", "aa_bpe_clear", "aa_bpe_push", "aa_bpe_corpus", "aa_attn_run", "aa_attn_tokens", "aa_attn_id", "aa_attn_piece_len", "aa_attn_piece_byte", "aa_attn_vocab", "aa_attn_merges", "aa_attn_used", "aa_attn_weight", "aa_attn_dropped", "aa_attn_bytes", "aa_rec_chains", "aa_rec_max_index", "aa_rec_select", "aa_rec_name_len", "aa_rec_name_byte", "aa_rec_states", "aa_rec_line_len", "aa_rec_line_byte", "aa_rec_mark", "aa_rec_parsed", "aa_rec_index", "aa_rec_minus", "aa_rec_current", "aa_rec_stop", "aa_rec_stop_len", "aa_rec_stop_byte", "aa_rec_stop_at", "aa_rec_accepted", "aa_rec_answer", "aa_rec_note_len", "aa_rec_note_byte", "aa_tr_count", "aa_tr_select", "aa_tr_name_len", "aa_tr_name_byte", "aa_tr_steps", "aa_tr_line_len", "aa_tr_line_byte", "aa_tr_wrong", "aa_tr_menu", "aa_tr_menu_len", "aa_tr_menu_byte", "aa_tr_propose", "aa_tr_verdict", "aa_tr_reason", "aa_tr_reason_len", "aa_tr_reason_byte", "aa_tr_report_len", "aa_tr_report_byte", "aa_tr_good_len", "aa_tr_good_byte", "aa_tr_state_len", "aa_tr_state_byte", "aa_au_run", "aa_au_count", "aa_au_flagged", "aa_au_mark", "aa_au_line_len", "aa_au_line_byte", "aa_au_stat_len", "aa_au_stat_byte", "aa_au_full_len", "aa_au_full_byte", "aa_au_clean_len", "aa_au_clean_byte", "aa_rw_run", "aa_rw_count", "aa_rw_cols", "aa_rw_col_len", "aa_rw_col_byte", "aa_rw_mark", "aa_rw_tally_len", "aa_rw_tally_byte", "aa_rw_stat_len", "aa_rw_stat_byte", "aa_rw_steps", "aa_rw_flawed_proxy", "aa_rw_flawed_real", "aa_rw_flawed_holds", "aa_rw_real_proxy", "aa_rw_real_score", "aa_rw_real_holds", "aa_rw_flawed_end_len", "aa_rw_flawed_end_byte", "aa_rw_real_end_len", "aa_rw_real_end_byte"];
   for (let i = 0; i < need.length; i += 1) {
     if (typeof ada[need[i]] !== "function") {
       ada = null;
@@ -2285,6 +2486,7 @@ async function boot() {
   bootRecurse();
   bootTurns();
   bootAudit();
+  bootReward();
   note("wasm loaded", stamp);
   hint.textContent = "Tap or Enter";
   started = true;

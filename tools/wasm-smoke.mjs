@@ -546,4 +546,48 @@ const auJoined = Array.from({length: 20}, (_, k) => auText(() => exp.aa_au_line_
 for (const rule of auRules) {
   if (!auJoined.includes(rule)) fail("wasm audit missing " + rule);
 }
+const rwNeed = ["aa_rw_run", "aa_rw_count", "aa_rw_cols", "aa_rw_col_len", "aa_rw_col_byte", "aa_rw_mark", "aa_rw_tally_len", "aa_rw_tally_byte", "aa_rw_stat_len", "aa_rw_stat_byte", "aa_rw_steps", "aa_rw_flawed_proxy", "aa_rw_flawed_real", "aa_rw_flawed_holds", "aa_rw_real_proxy", "aa_rw_real_score", "aa_rw_real_holds", "aa_rw_flawed_end_len", "aa_rw_flawed_end_byte", "aa_rw_real_end_len", "aa_rw_real_end_byte"];
+for (const name of rwNeed) {
+  if (typeof exp[name] !== "function") fail("missing export " + name);
+}
+function rwText(len, byte) {
+  const n = len();
+  let s = "";
+  for (let i = 1; i <= n; i += 1) s += String.fromCharCode(byte(i) & 255);
+  return s;
+}
+exp.aa_rw_run();
+if (exp.aa_rw_count() !== 5 || exp.aa_rw_cols() !== 5 || exp.aa_rw_steps() !== 121) {
+  fail("wasm reward census " + exp.aa_rw_count() + " " + exp.aa_rw_cols() + " " + exp.aa_rw_steps());
+}
+if (exp.aa_rw_col_byte(0, 0, 1) !== 0 || exp.aa_rw_mark(0) !== 0 || exp.aa_rw_flawed_proxy(0) !== 0) {
+  fail("wasm reward clamp");
+}
+const rwGaps = ["none", "reported-loss", "constant-half", "two-of-four", "right-stamp"];
+const rwReals = ["1.00", "0.00", "0.00", "0.50", "0.00"];
+for (let i = 1; i <= 5; i += 1) {
+  const gap = rwText(() => exp.aa_rw_col_len(i, 5), (p) => exp.aa_rw_col_byte(i, 5, p));
+  const real = rwText(() => exp.aa_rw_col_len(i, 3), (p) => exp.aa_rw_col_byte(i, 3, p));
+  const flawed = rwText(() => exp.aa_rw_col_len(i, 2), (p) => exp.aa_rw_col_byte(i, 2, p));
+  if (gap !== rwGaps[i - 1] || real !== rwReals[i - 1] || flawed !== "1.00") {
+    fail("wasm reward row " + i + " " + flawed + " " + real + " " + gap);
+  }
+  if (exp.aa_rw_mark(i) !== (i === 1 ? 1 : 0)) fail("wasm reward mark " + i);
+}
+const rwTally = rwText(() => exp.aa_rw_tally_len(), (i) => exp.aa_rw_tally_byte(i));
+const rwFlawedEnd = rwText(() => exp.aa_rw_flawed_end_len(), (i) => exp.aa_rw_flawed_end_byte(i));
+const rwRealEnd = rwText(() => exp.aa_rw_real_end_len(), (i) => exp.aa_rw_real_end_byte(i));
+if (rwTally !== "Accepted: 1 of 5. Only the real check counts.") fail("wasm reward tally " + rwTally);
+if (!rwFlawedEnd.includes("Real check fails.")) fail("wasm reward flawed end " + rwFlawedEnd);
+if (!rwRealEnd.includes("Real 1.00") || !rwRealEnd.includes("Real check passes.")) {
+  fail("wasm reward real end " + rwRealEnd);
+}
+const rwSteps = exp.aa_rw_steps();
+if (exp.aa_rw_flawed_proxy(rwSteps) <= exp.aa_rw_flawed_proxy(1) + 0.25) fail("wasm reward proxy");
+for (let i = 1; i <= rwSteps; i += 1) {
+  if (exp.aa_rw_flawed_holds(i) !== 0) fail("wasm reward flawed passed " + i);
+}
+if (exp.aa_rw_real_score(rwSteps) !== 1 || exp.aa_rw_real_holds(rwSteps) !== 1 || exp.aa_rw_real_holds(1) !== 0) {
+  fail("wasm reward real curve");
+}
 console.log("wasm ok", got);
