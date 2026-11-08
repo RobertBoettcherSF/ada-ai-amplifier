@@ -2,6 +2,7 @@
 // splash graph is the one the page draws. No imports: the module is
 // linked --no-entry, without the exception runtime.
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 
 const root = new URL("..", import.meta.url);
 const expected = readFileSync(new URL("version.txt", root), "utf8").trim();
@@ -656,4 +657,29 @@ if (exp.aa_st_which() !== 2) fail("wasm steps select clamp");
 exp.aa_st_select(11);
 if (exp.aa_st_bad() !== 0 || exp.aa_st_which() !== 11) fail("wasm steps sum");
 if (exp.aa_st_row_len(0) !== 0 || exp.aa_st_name_byte(1, 0) !== 0) fail("wasm steps clamp");
+const lkNeed = ["aa_lk_count", "aa_lk_item", "aa_lk_name_len", "aa_lk_name_byte", "aa_lk_text_len", "aa_lk_text_byte", "aa_lk_fp_len", "aa_lk_fp_byte", "aa_lk_status_len", "aa_lk_status_byte", "aa_lk_stat_len", "aa_lk_stat_byte"];
+for (const name of lkNeed) {
+  if (typeof exp[name] !== "function") fail("missing export " + name);
+}
+if (exp.aa_lk_count() !== 15) fail("wasm locked count " + exp.aa_lk_count());
+if (exp.aa_lk_item(0) !== 0 || exp.aa_lk_name_byte(1, 0) !== 0 || exp.aa_lk_text_byte(16, 1) !== 0) {
+  fail("wasm locked clamp");
+}
+for (let i = 1; i <= 15; i += 1) {
+  const status = rwText(() => exp.aa_lk_status_len(i), (p) => exp.aa_lk_status_byte(i, p));
+  const fp = rwText(() => exp.aa_lk_fp_len(i), (p) => exp.aa_lk_fp_byte(i, p));
+  const text = rwText(() => exp.aa_lk_text_len(i), (p) => exp.aa_lk_text_byte(i, p));
+  if (status !== "pass") fail("wasm locked status " + i + " " + status);
+  if (!/^[0-9a-f]{64}$/.test(fp)) fail("wasm locked fp " + i + " " + fp);
+  const file = "specs/item_" + String(i).padStart(2, "0") + ".adb";
+  const digest = createHash("sha256").update(readFileSync(new URL(file, root))).digest("hex");
+  if (fp !== digest) fail("wasm locked fp mismatch " + file);
+  if (!text.includes("item " + String(i).padStart(2, "0") + " pass")) {
+    fail("wasm locked text " + i);
+  }
+}
+const lkStat = rwText(() => exp.aa_lk_stat_len(), (p) => exp.aa_lk_stat_byte(p));
+if (!lkStat.includes("15 of 15 statements passed") || !lkStat.includes("cannot tell whether a spec is the right one")) {
+  fail("wasm locked stat " + lkStat);
+}
 console.log("wasm ok", got);

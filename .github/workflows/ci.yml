@@ -23,6 +23,15 @@ jobs:
       - name: Guide quotes
         run: python3 tools/check-howto-quote.py
 
+      - name: Locked statements
+        env:
+          CHECK_LOCKED_EVENT: ${{ github.event_name }}
+          CHECK_LOCKED_BASE: ${{ github.event.pull_request.base.sha }}
+          CHECK_LOCKED_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          python3 tools/check-locked.py
+          ./tools/check-locked-selftest.sh
+
       - name: Native hello
         run: |
           alr -n build
@@ -40,6 +49,7 @@ jobs:
           ./bin/harness_cli
           ./bin/steps_test
           ./bin/steps_cli
+          ./tools/run-specs.sh
 
       # Level 2, on the SPARK units only. prove.sh installs FSF
       # gnatprove 16.1.0 if the runner does not already have it.

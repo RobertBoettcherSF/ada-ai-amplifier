@@ -142,7 +142,7 @@ try {
   assert(!items[13].includes("planned"), items[13]);
   assert(items[14].includes("Checked steps, not just answers") && items[14].includes("done"), items[14]);
   assert(!items[14].includes("planned"), items[14]);
-  assert(items[15].includes("Locked statements") && items[15].includes("next"), items[15]);
+  assert(items[15].includes("Locked statements") && items[15].includes("done"), items[15]);
   assert(items[15].includes("formal-math") && items[15].includes("Apache-2.0"), items[15]);
   assert(!items[15].includes("README update"), items[15]);
   assert(items[16].includes("independent checker") && items[16].includes("planned"), items[16]);
@@ -153,11 +153,11 @@ try {
   assert(items[18].includes("openai/math") && items[18].includes("Apache-2.0"), items[18]);
   assert(items[19].includes("README update after items 1–19") && items[19].includes("last"), items[19]);
   const status16 = await page.$eval("#backlog li:nth-child(16) .st", (el) => el.textContent.trim());
-  assert(status16 === "next", status16);
+  assert(status16 === "done", status16);
   const status20 = await page.$eval("#backlog li:nth-child(20) .st", (el) => el.textContent.trim());
   assert(status20 === "last", status20);
   const proof = await page.$$eval("#proof tbody tr", (els) => els.map((el) => el.innerText.replace(/\s+/g, " ").trim()));
-  assert(proof.length === 22, "proof rows " + proof.length);
+  assert(proof.length === 23, "proof rows " + proof.length);
   const statusOf = (name) => {
     const row = proof.find((r) => r.slice(0, name.length) === name && (r.length === name.length || r[name.length] === " "));
     return row ? row.slice(name.length).trim() : "";
@@ -184,6 +184,7 @@ try {
   assert(statusOf("Reward hacking") === "not proved", "reward proof " + statusOf("Reward hacking"));
   assert(statusOf("Harness comparison") === "not proved", "harness proof " + statusOf("Harness comparison"));
   assert(statusOf("Checked steps") === "not proved", "steps proof " + statusOf("Checked steps"));
+  assert(statusOf("Locked statements") === "not proved", "locked proof " + statusOf("Locked statements"));
   const hrefs = await page.$$eval("#links a", (els) => els.map((a) => a.href));
   assert(hrefs.some((h) => h === "https://github.com/RobertBoettcherSF/ada-ai-amplifier"), "repo link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/HOWTO.md")), "howto link " + hrefs);
@@ -195,6 +196,7 @@ try {
   assert(hrefs.some((h) => h.includes("/docs/REWARD_HACKING.md")), "reward link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/HARNESS.md")), "harness link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/CHECKED_STEPS.md")), "steps link " + hrefs);
+  assert(hrefs.some((h) => h.includes("/docs/LOCKED_STATEMENTS.md")), "locked link " + hrefs);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
   assert(overflow, "desktop main overflows");
   const numbered = await page.$$eval("#backlog .n", (els) => els.map((el) => el.textContent.trim()));
@@ -576,6 +578,18 @@ try {
   assert(guessLine.includes("answer 0") && guessLine.includes("guessed-first"), guessLine);
   const stepsErr = await page.$eval("#stepserr", (el) => el.hidden);
   assert(stepsErr, "steps error visible");
+  const lockedStat = await page.$eval("#lockedstat", (el) => el.textContent);
+  assert(lockedStat.includes("15 of 15 statements passed"), lockedStat);
+  assert(lockedStat.includes("cannot tell whether a spec is the right one"), lockedStat);
+  const lockedRows = await page.evaluate(() => window.__locked);
+  assert(lockedRows.length === 15, "locked rows " + lockedRows.length);
+  assert(lockedRows.every((row) => row.status === "pass" && /^[0-9a-f]{64}$/.test(row.fp)), "locked row");
+  assert(lockedRows[2].text.includes("14.0") && lockedRows[2].item === 3, lockedRows[2].name);
+  assert(lockedRows[0].text.includes("118"), lockedRows[0].text.slice(0, 80));
+  const lockedErr = await page.$eval("#lockederr", (el) => el.hidden);
+  assert(lockedErr, "locked error visible");
+  await page.evaluate(() => document.getElementById("locked").scrollIntoView({ block: "center" }));
+  await page.screenshot({ path: resolve(shotDir, "locked.png") });
   await page.evaluate(() => document.getElementById("steps").scrollIntoView({ block: "center" }));
   await page.screenshot({ path: resolve(shotDir, "steps.png") });
   await page.screenshot({ path: resolve(shotDir, "harness.png") });
@@ -761,6 +775,7 @@ try {
   assert(await badPage.$eval("#rewarderr", (el) => !el.hidden && el.textContent.includes("cannot score")), "reward down");
   assert(await badPage.$eval("#harnesserr", (el) => !el.hidden && el.textContent.includes("cannot run the harnesses")), "harness down");
   assert(await badPage.$eval("#stepserr", (el) => !el.hidden && el.textContent.includes("cannot check the steps")), "steps down");
+  assert(await badPage.$eval("#lockederr", (el) => !el.hidden && el.textContent.includes("cannot show the locked statements")), "locked down");
   assert(badErrors.length === 0, "nowasm errors " + badErrors);
 
   const html = readFileSync(resolve(root, "site/index.html"), "utf8");
