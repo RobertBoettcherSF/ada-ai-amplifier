@@ -12,7 +12,7 @@ is
 begin
    if Ada.Command_Line.Argument_Count = 0 then
       AI_Amplifier.Status.Load
-        ("proof/gnatprove.out",
+        ("proof",
          "obj/gen/tests.out",
          "obj/gen/specs.out",
          "obj/gen/recheck-report.txt",

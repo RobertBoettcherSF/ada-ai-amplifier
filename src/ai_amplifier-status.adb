@@ -6,10 +6,11 @@ package body AI_Amplifier.Status
   with SPARK_Mode => Off
 is
 
-   Max_Units : constant := 80;
+   Max_Units : constant := 16;
    Name_Max  : constant := 48;
    Line_Max  : constant := 400;
    Ev_Max    : constant := 800;
+   Item_Last : constant := 17;
 
    type Name_Text is record
       Text : String (1 .. Name_Max) := (others => ' ');
@@ -42,17 +43,27 @@ is
       Last : Natural := 0;
    end record;
 
-   Units  : array (1 .. Max_Units) of Unit_Rec;
-   NUnits : Natural := 0;
+   type Unit_List is array (1 .. Max_Units) of Unit_Rec;
+
+   type Proof_Rec is record
+      Present  : Boolean := False;
+      Total    : Natural := 0;
+      Flow     : Natural := 0;
+      Provers  : Natural := 0;
+      Unproved : Natural := 0;
+      Seen     : Boolean := False;
+      Bad      : Boolean := False;
+      Units    : Unit_List;
+      NUnits   : Natural := 0;
+   end record;
+
+   Proofs : array (1 .. Item_Last) of Proof_Rec;
    Tests  : array (Test_Id) of Test_Rec;
    Passed : array (1 .. 17) of Boolean := (others => False);
    Asserts : array (1 .. 17) of Natural := (others => 0);
    Pair_A : array (1 .. 3) of Natural := (others => 0);
    Pair_T : array (1 .. 3) of Natural := (others => 0);
    Pair_On : array (1 .. 3) of Boolean := (others => False);
-   Sum_Total, Sum_Flow, Sum_Provers : Natural := 0;
-   Sum_Unproved : Natural := 0;
-   Sum_Seen : Boolean := False;
    Files_Ok : Boolean := False;
    Why      : Ev;
 
@@ -135,32 +146,40 @@ is
      (Item.Last = S'Length
       and then Item.Text (1 .. Item.Last) = S);
 
-   function Find (Nam : String) return Natural is
+   function Find (Item : Positive; Nam : String) return Natural is
    begin
-      for I in 1 .. NUnits loop
-         if Name_Is (Units (I).Nam, Nam) then
+      for I in 1 .. Proofs (Item).NUnits loop
+         if Name_Is (Proofs (Item).Units (I).Nam, Nam) then
             return I;
          end if;
       end loop;
       return 0;
    end Find;
 
-   function Unit_Proved (Nam : String) return Boolean is
-      I : constant Natural := Find (Nam);
+   function Unit_Proved (Item : Positive; Nam : String) return Boolean is
+      I : constant Natural := Find (Item, Nam);
    begin
       if I = 0 then
          return False;
       end if;
-      return Units (I).Saw_Proof
-        and then not Units (I).Saw_Bad
-        and then Units (I).Analyzed > 0
-        and then Units (I).Analyzed = Units (I).Total;
+      return Proofs (Item).Units (I).Saw_Proof
+        and then not Proofs (Item).Units (I).Saw_Bad
+        and then Proofs (Item).Units (I).Analyzed > 0
+        and then Proofs (Item).Units (I).Analyzed =
+          Proofs (Item).Units (I).Total
+        and then Proofs (Item).Units (I).Checks > 0;
    end Unit_Proved;
 
-   procedure Add_Unit
-     (E : in out Ev; Nam : String; With_Checks : Boolean)
-   is
-      I : constant Natural := Find (Nam);
+   function Own_Proof (Item : Positive; Nam : String) return Boolean is
+     (Proofs (Item).Present
+      and then Proofs (Item).Seen
+      and then Proofs (Item).Unproved = 0
+      and then Proofs (Item).Total > 0
+      and then not Proofs (Item).Bad
+      and then Unit_Proved (Item, Nam));
+
+   procedure Add_Unit (E : in out Ev; Item : Positive; Nam : String) is
+      I : constant Natural := Find (Item, Nam);
    begin
       Add (E, Nam);
       Add (E, " ");
@@ -168,13 +187,11 @@ is
          Add (E, "missing");
          return;
       end if;
-      Add_Nat (E, Units (I).Analyzed);
+      Add_Nat (E, Proofs (Item).Units (I).Analyzed);
       Add (E, "/");
-      Add_Nat (E, Units (I).Total);
-      if With_Checks then
-         Add (E, " checks ");
-         Add_Nat (E, Units (I).Checks);
-      end if;
+      Add_Nat (E, Proofs (Item).Units (I).Total);
+      Add (E, " checks ");
+      Add_Nat (E, Proofs (Item).Units (I).Checks);
    end Add_Unit;
 
    procedure Read_Line
@@ -277,7 +294,7 @@ is
       Checks := Checks + Nth_Int (Line (Rest .. Line'Last), 1);
    end Parse_Proved;
 
-   procedure Read_Prove (Path : String) is
+   procedure Read_Prove (Item : Positive; Path : String) is
       File : Ada.Text_IO.File_Type;
       Buf  : String (1 .. Line_Max);
       Last : Natural;
@@ -285,6 +302,7 @@ is
       LLast : Natural;
       Cur  : Natural := 0;
    begin
+      Proofs (Item).Present := True;
       Ada.Text_IO.Open (File, Ada.Text_IO.In_File, Path);
       while not Ada.Text_IO.End_Of_File (File) loop
          Read_Line (File, Buf, Last);
@@ -300,15 +318,15 @@ is
             elsif Starts (Line (1 .. LLast), "Total")
               and then Int_Count (Line (1 .. LLast)) >= 4
             then
-               Sum_Total := Nth_Int (Line (1 .. LLast), 1);
-               Sum_Flow := Nth_Int (Line (1 .. LLast), 2);
-               Sum_Provers := Nth_Int (Line (1 .. LLast), 4);
+               Proofs (Item).Total := Nth_Int (Line (1 .. LLast), 1);
+               Proofs (Item).Flow := Nth_Int (Line (1 .. LLast), 2);
+               Proofs (Item).Provers := Nth_Int (Line (1 .. LLast), 4);
                if Int_Count (Line (1 .. LLast)) >= 6 then
-                  Sum_Unproved := Nth_Int (Line (1 .. LLast), 6);
+                  Proofs (Item).Unproved := Nth_Int (Line (1 .. LLast), 6);
                else
-                  Sum_Unproved := 0;
+                  Proofs (Item).Unproved := 0;
                end if;
-               Sum_Seen := True;
+               Proofs (Item).Seen := True;
             elsif LLast > 8
               and then Starts (Line (1 .. LLast), "in unit ")
             then
@@ -318,17 +336,19 @@ is
                     Ada.Strings.Fixed.Index (Rest, ",");
                   NLast : Natural := 0;
                begin
-                  if Comma > Rest'First and then NUnits < Max_Units then
+                  if Comma > Rest'First
+                    and then Proofs (Item).NUnits < Max_Units
+                  then
                      NLast := Natural'Min
                        (Comma - Rest'First, Name_Max);
-                     NUnits := NUnits + 1;
-                     Cur := NUnits;
-                     Units (Cur).Used := True;
+                     Proofs (Item).NUnits := Proofs (Item).NUnits + 1;
+                     Cur := Proofs (Item).NUnits;
+                     Proofs (Item).Units (Cur).Used := True;
                      Set_Name
-                       (Units (Cur).Nam,
+                       (Proofs (Item).Units (Cur).Nam,
                         Rest (Rest'First .. Rest'First + NLast - 1));
-                     Units (Cur).Analyzed := Nth_Int (Rest, 1);
-                     Units (Cur).Total := Nth_Int (Rest, 2);
+                     Proofs (Item).Units (Cur).Analyzed := Nth_Int (Rest, 1);
+                     Proofs (Item).Units (Cur).Total := Nth_Int (Rest, 2);
                   else
                      Cur := 0;
                   end if;
@@ -337,14 +357,15 @@ is
                if Ada.Strings.Fixed.Index
                  (Line (1 .. LLast), "and proved (") > 0
                then
-                  Units (Cur).Saw_Proof := True;
+                  Proofs (Item).Units (Cur).Saw_Proof := True;
                   Parse_Proved
-                    (Line (1 .. LLast), Units (Cur).Checks);
+                    (Line (1 .. LLast), Proofs (Item).Units (Cur).Checks);
                end if;
                if Ada.Strings.Fixed.Index
                  (Line (1 .. LLast), "unproved") > 0
                then
-                  Units (Cur).Saw_Bad := True;
+                  Proofs (Item).Units (Cur).Saw_Bad := True;
+                  Proofs (Item).Bad := True;
                end if;
             end if;
          end;
@@ -545,20 +566,26 @@ is
       Ada.Text_IO.Close (File);
    end Count_Asserts;
 
-   function Proof_Clean return Boolean is
-     (Sum_Seen and then Sum_Unproved = 0 and then Sum_Total > 0);
-
-   procedure Add_Summary (E : in out Ev) is
+   procedure Add_Run_Head (E : in out Ev; Item : Positive) is
    begin
-      Add (E, "summary ");
-      Add_Nat (E, Sum_Total);
+      Add (E, "gnatprove proof/item_");
+      Add (E, Two (Item));
+      Add (E, ".out summary ");
+      Add_Nat (E, Proofs (Item).Total);
       Add (E, " flow ");
-      Add_Nat (E, Sum_Flow);
+      Add_Nat (E, Proofs (Item).Flow);
       Add (E, " provers ");
-      Add_Nat (E, Sum_Provers);
+      Add_Nat (E, Proofs (Item).Provers);
       Add (E, " unproved ");
-      Add_Nat (E, Sum_Unproved);
-   end Add_Summary;
+      Add_Nat (E, Proofs (Item).Unproved);
+      Add (E, "; unit ");
+   end Add_Run_Head;
+
+   procedure Add_Why (E : in out Ev; Reason : String) is
+   begin
+      Add (E, "; not proved: ");
+      Add (E, Reason);
+   end Add_Why;
 
    function Run_Ok (Id : Test_Id) return Boolean is
      (Tests (Id).OK
@@ -629,31 +656,23 @@ is
    end Add_Agree;
 
    function Locked_Specs_Ok return Boolean is
-      N : Natural := 0;
    begin
-      for I in 1 .. 15 loop
+      for I in 1 .. Item_Last loop
          if not Spec_Ok (I) then
             return False;
          end if;
-         N := N + 1;
       end loop;
-      if not Spec_Ok (17) then
-         return False;
-      end if;
-      return N = 15;
+      return True;
    end Locked_Specs_Ok;
 
    function Locked_Spec_Count return Natural is
       N : Natural := 0;
    begin
-      for I in 1 .. 15 loop
+      for I in 1 .. Item_Last loop
          if Passed (I) then
             N := N + 1;
          end if;
       end loop;
-      if Passed (17) then
-         N := N + 1;
-      end if;
       return N;
    end Locked_Spec_Count;
 
@@ -667,67 +686,46 @@ is
       end if;
       case Number is
          when 1 =>
-            if Proof_Clean
-              and then Unit_Proved ("ai_amplifier")
-              and then Unit_Proved ("ai_amplifier-version")
+            if Own_Proof (1, "ai_amplifier-version")
+              and then Spec_Ok (1)
+              and then Tests (T_Version).OK
             then
                K := Proved;
-               Add (E, "gnatprove ");
-               Add_Unit (E, "ai_amplifier", True);
-               Add (E, ", ");
-               Add_Unit (E, "ai_amplifier-version", True);
+               Add_Run_Head (E, 1);
+               Add_Unit (E, 1, "ai_amplifier-version");
                Add (E, "; ");
                Add_Spec (E, 1);
-               if Tests (T_Version).OK then
-                  Add (E, "; check-version ok");
-               else
-                  Add (E, "; check-version did not pass");
-               end if;
+               Add (E, "; check-version ok");
             else
-               Add (E, "would take gnatprove proving");
-               Add (E, " ai_amplifier and ai_amplifier-version");
-               Add (E, " with unproved 0");
+               Add (E, "would take proof/item_01.out proving");
+               Add (E, " ai_amplifier-version with checks above 0");
+               Add (E, " and unproved 0");
             end if;
          when 3 =>
-            if Proof_Clean
-              and then Unit_Proved ("ai_amplifier-tensors")
-            then
+            if Own_Proof (3, "ai_amplifier-tensors") and then Spec_Ok (3) then
                K := Proved;
-               Add (E, "gnatprove ");
-               Add_Unit (E, "ai_amplifier-tensors", True);
-               Add (E, "; ");
-               Add_Summary (E);
-               Add (E, "; not proved ");
-               Add_Unit (E, "ai_amplifier-tensors-demo", False);
-               Add (E, ", ");
-               Add_Unit (E, "ai_amplifier-tensors-leaky_demo", False);
-               Add (E, "; ");
+               Add_Run_Head (E, 3);
+               Add_Unit (E, 3, "ai_amplifier-tensors");
+               Add (E, "; not in this run:");
+               Add (E, " ai_amplifier-tensors-demo,");
+               Add (E, " ai_amplifier-tensors-leaky_demo; ");
                Add_Spec (E, 3);
             else
-               Add (E, "would take gnatprove proving");
-               Add (E, " ai_amplifier-tensors with unproved 0");
+               Add (E, "would take proof/item_03.out proving");
+               Add (E, " ai_amplifier-tensors with checks above 0");
+               Add (E, " and unproved 0");
             end if;
          when 7 =>
-            if Proof_Clean
-              and then Unit_Proved ("ai_amplifier")
-              and then Unit_Proved ("ai_amplifier-tensors")
-              and then Unit_Proved ("ai_amplifier-version")
-            then
+            if Own_Proof (7, "ai_amplifier-tensors") and then Spec_Ok (7) then
                K := Proved;
-               Add (E, "gnatprove ");
-               Add_Summary (E);
-               Add (E, "; units ");
-               Add_Unit (E, "ai_amplifier", True);
-               Add (E, ", ");
-               Add_Unit (E, "ai_amplifier-tensors", True);
-               Add (E, ", ");
-               Add_Unit (E, "ai_amplifier-version", True);
+               Add_Run_Head (E, 7);
+               Add_Unit (E, 7, "ai_amplifier-tensors");
                Add (E, "; ");
                Add_Spec (E, 7);
             else
-               Add (E, "would take a gnatprove summary");
-               Add (E, " with unproved 0 on the root,");
-               Add (E, " the version unit, and the tensors");
+               Add (E, "would take proof/item_07.out proving");
+               Add (E, " ai_amplifier-tensors with checks above 0");
+               Add (E, " and unproved 0");
             end if;
          when 2 =>
             if Spec_Ok (2) then
@@ -735,6 +733,8 @@ is
                Add (E, "item_02 cases ");
                Add_Nat (E, Asserts (2));
                Add (E, " spec pass");
+               Add_Why (E, "the splash is a drawing");
+               Add (E, " and is not a proof target");
             else
                Add (E, "would take item_02 printing");
                Add (E, " item 02 pass");
@@ -745,6 +745,8 @@ is
                Add_Run (E, "mlp_test", T_Mlp);
                Add (E, " ");
                Add_Spec (E, 4);
+               Add_Why (E, "gradient descent on float weights");
+               Add (E, " is not a proof target");
             else
                Add (E, "would take mlp_test printing mlp ok");
                Add (E, " and a positive case count,");
@@ -756,6 +758,8 @@ is
                Add_Run (E, "attention_test", T_Attention);
                Add (E, " ");
                Add_Spec (E, 5);
+               Add_Why (E, "the tokenizer and the attention block");
+               Add (E, " are not a proof target");
             else
                Add (E, "would take attention_test printing");
                Add (E, " attention ok and a positive case count,");
@@ -768,6 +772,8 @@ is
                Add_Nat (E, Asserts (6));
                Add (E, " spec pass; ");
                Add_Run (E, "tensors_test", T_Tensors);
+               Add_Why (E, "the how-to is a document");
+               Add (E, " and the leaky demo is not analyzed");
             else
                Add (E, "would take spec item_06 pass");
                Add (E, " and tensors_test printing tensors ok");
@@ -778,17 +784,33 @@ is
                Add_Run (E, "mlp_test", T_Mlp);
                Add (E, " ");
                Add_Spec (E, 8);
+               Add_Why (E, "weight-file checks run with the program");
+               Add (E, " and are not proved");
             else
                Add (E, "would take mlp_test printing mlp ok");
                Add (E, " and spec item_08 pass");
             end if;
          when 9 =>
-            if Run_Ok (T_Recurse) and then Spec_Ok (9) then
+            if Own_Proof (9, "ai_amplifier-chain_rule")
+              and then Run_Ok (T_Recurse)
+              and then Spec_Ok (9)
+            then
+               K := Proved;
+               Add_Run_Head (E, 9);
+               Add_Unit (E, 9, "ai_amplifier-chain_rule");
+               Add (E, "; ");
+               Add_Run (E, "recurse_test", T_Recurse);
+               Add (E, " ");
+               Add_Spec (E, 9);
+               Add_Ask (E, 9);
+            elsif Run_Ok (T_Recurse) and then Spec_Ok (9) then
                K := Tested;
                Add_Run (E, "recurse_test", T_Recurse);
                Add (E, " ");
                Add_Spec (E, 9);
                Add_Ask (E, 9);
+               Add_Why (E, "the step rule proof file");
+               Add (E, " is missing or unproved");
             else
                Add (E, "would take recurse_test printing");
                Add (E, " recurse ok and spec item_09 pass.");
@@ -800,28 +822,56 @@ is
                Add_Run (E, "mlp_test", T_Mlp);
                Add (E, " ");
                Add_Spec (E, 10);
+               Add_Why (E, "a measured training time is not a proof");
             else
                Add (E, "would take mlp_test printing mlp ok");
                Add (E, " and spec item_10 pass");
             end if;
          when 11 =>
-            if Run_Ok (T_Traces) and then Spec_Ok (11) then
+            if Own_Proof (11, "ai_amplifier-trace_rule")
+              and then Run_Ok (T_Traces)
+              and then Spec_Ok (11)
+            then
+               K := Proved;
+               Add_Run_Head (E, 11);
+               Add_Unit (E, 11, "ai_amplifier-trace_rule");
+               Add (E, "; ");
+               Add_Run (E, "traces_test", T_Traces);
+               Add (E, " ");
+               Add_Spec (E, 11);
+               Add_Ask (E, 11);
+            elsif Run_Ok (T_Traces) and then Spec_Ok (11) then
                K := Tested;
                Add_Run (E, "traces_test", T_Traces);
                Add (E, " ");
                Add_Spec (E, 11);
                Add_Ask (E, 11);
+               Add_Why (E, "the verdict rule proof file");
+               Add (E, " is missing or unproved");
             else
                Add (E, "would take traces_test printing");
                Add (E, " traces ok and spec item_11 pass.");
                Add (E, " A live model still needs a key");
             end if;
          when 12 =>
-            if Run_Ok (T_Audit) and then Spec_Ok (12) then
+            if Own_Proof (12, "ai_amplifier-audit_rule")
+              and then Run_Ok (T_Audit)
+              and then Spec_Ok (12)
+            then
+               K := Proved;
+               Add_Run_Head (E, 12);
+               Add_Unit (E, 12, "ai_amplifier-audit_rule");
+               Add (E, "; ");
+               Add_Run (E, "audit_test", T_Audit);
+               Add (E, " ");
+               Add_Spec (E, 12);
+            elsif Run_Ok (T_Audit) and then Spec_Ok (12) then
                K := Tested;
                Add_Run (E, "audit_test", T_Audit);
                Add (E, " ");
                Add_Spec (E, 12);
+               Add_Why (E, "the score rule proof file");
+               Add (E, " is missing or unproved");
             else
                Add (E, "would take audit_test printing audit ok");
                Add (E, " and spec item_12 pass");
@@ -832,6 +882,8 @@ is
                Add_Run (E, "reward_test", T_Reward);
                Add (E, " ");
                Add_Spec (E, 13);
+               Add_Why (E, "the two graders score float nets");
+               Add (E, " and are not proved");
             else
                Add (E, "would take reward_test printing reward ok");
                Add (E, " and spec item_13 pass");
@@ -843,6 +895,7 @@ is
                Add (E, " ");
                Add_Spec (E, 14);
                Add_Ask (E, 14);
+               Add_Why (E, "the harness schedule is not a proof target");
             else
                Add (E, "would take harness_test printing");
                Add (E, " harness ok and spec item_14 pass.");
@@ -854,20 +907,28 @@ is
                Add_Run (E, "steps_test", T_Steps);
                Add (E, " ");
                Add_Spec (E, 15);
+               Add_Why (E, "a step grade recomputes values");
+               Add (E, " and is not a proof");
             else
                Add (E, "would take steps_test printing steps ok");
                Add (E, " and spec item_15 pass");
             end if;
          when 16 =>
-            if Tests (T_Locked).OK and then Locked_Specs_Ok then
+            if Tests (T_Locked).OK
+              and then Locked_Specs_Ok
+              and then Spec_Ok (16)
+            then
                K := Tested;
                Add (E, "check-locked cases ");
                Add_Nat (E, Locked_Spec_Count);
-               Add (E, " spec pass; no item_16.adb");
+               Add (E, " ");
+               Add_Spec (E, 16);
+               Add_Why (E, "a fingerprint detects an edit");
+               Add (E, " and does not prove the spec");
             else
                Add (E, "would take check-locked printing");
                Add (E, " locked ok, and specs item_01");
-               Add (E, " through item_15 and item_17 passing");
+               Add (E, " through item_17 passing");
             end if;
          when 17 =>
             if Tests (T_Recheck).OK and then Agree_Ok and then Spec_Ok (17)
@@ -876,6 +937,8 @@ is
                Add_Agree (E);
                Add (E, " ");
                Add_Spec (E, 17);
+               Add_Why
+                 (E, "agreement of two checkers is not a proof of either");
             else
                Add (E, "would take recheck_test printing");
                Add (E, " recheck ok, the three pairs agreeing,");
@@ -888,19 +951,13 @@ is
 
    procedure Reset is
    begin
-      NUnits := 0;
-      Units := (others => <>);
+      Proofs := (others => <>);
       Tests := (others => <>);
       Passed := (others => False);
       Asserts := (others => 0);
       Pair_A := (others => 0);
       Pair_T := (others => 0);
       Pair_On := (others => False);
-      Sum_Total := 0;
-      Sum_Flow := 0;
-      Sum_Provers := 0;
-      Sum_Unproved := 0;
-      Sum_Seen := False;
       Files_Ok := False;
       Clear (Why);
    end Reset;
@@ -909,7 +966,7 @@ is
      (Ada.Directories.Exists (Path));
 
    procedure Load
-     (Prove_Path   : String;
+     (Prove_Dir    : String;
       Tests_Path   : String;
       Specs_Path   : String;
       Recheck_Path : String;
@@ -917,9 +974,9 @@ is
    is
    begin
       Reset;
-      if not Open_Ok (Prove_Path) then
+      if not Ada.Directories.Exists (Prove_Dir) then
          Add (Why, "would take ");
-         Add (Why, Prove_Path);
+         Add (Why, Prove_Dir);
          return;
       end if;
       if not Open_Ok (Tests_Path) then
@@ -942,14 +999,21 @@ is
          Add (Why, Spec_Dir);
          return;
       end if;
-      Read_Prove (Prove_Path);
+      for N in 1 .. Item_Last loop
+         declare
+            Path : constant String :=
+              Prove_Dir & "/item_" & Two (N) & ".out";
+         begin
+            if Open_Ok (Path) then
+               Read_Prove (N, Path);
+            end if;
+         end;
+      end loop;
       Read_Tests (Tests_Path);
       Read_Specs (Specs_Path);
       Read_Recheck (Recheck_Path);
-      for N in 1 .. 17 loop
-         if N /= 16 then
-            Count_Asserts (Spec_Dir, N);
-         end if;
+      for N in 1 .. Item_Last loop
+         Count_Asserts (Spec_Dir, N);
       end loop;
       Files_Ok := True;
    end Load;

@@ -1,3 +1,5 @@
+with AI_Amplifier.Trace_Rule;
+
 package body AI_Amplifier.Traces
   with SPARK_Mode => Off
 is
@@ -265,11 +267,11 @@ is
       end loop;
    end Measure;
 
-   function Solved (Item : Picture) return Boolean is
-     (Item.Weights_OK
-      and then Item.Loss_Finite
-      and then Item.XOR_OK
-      and then Item.Loss < Loss_Max);
+   function To_Facts (Item : Picture) return Trace_Rule.Facts is
+     (Weights_OK  => Item.Weights_OK,
+      Loss_Finite => Item.Loss_Finite,
+      XOR_OK      => Item.XOR_OK,
+      Loss        => Item.Loss);
 
    procedure Decide
      (Before  : Picture;
@@ -277,52 +279,32 @@ is
       Verdict : out Verdict_Kind;
       Reason  : out Reason_Kind)
    is
+      V : Trace_Rule.Verdict_Kind;
+      R : Trace_Rule.Reason_Kind;
    begin
-      if not After.Weights_OK then
-         if Before.Weights_OK then
-            Verdict := Makes_It_Worse;
-         else
+      Trace_Rule.Decide (To_Facts (Before), To_Facts (After), V, R);
+      case V is
+         when Trace_Rule.Fixes_It =>
+            Verdict := Fixes_It;
+         when Trace_Rule.No_Better =>
             Verdict := No_Better;
-         end if;
-         Reason := Weights_Invalid;
-         return;
-      end if;
-      if not After.Loss_Finite then
-         Verdict := Makes_It_Worse;
-         Reason := Loss_Rose;
-         return;
-      end if;
-      if Solved (After) and then not Solved (Before) then
-         Verdict := Fixes_It;
-         Reason := XOR_Returned;
-         return;
-      end if;
-      if Before.XOR_OK and then not After.XOR_OK then
-         Verdict := Makes_It_Worse;
-         Reason := XOR_Left;
-         return;
-      end if;
-      if Before.Loss_Finite
-        and then After.Loss > Before.Loss + Loss_Epsilon
-      then
-         Verdict := Makes_It_Worse;
-         Reason := Loss_Rose;
-         return;
-      end if;
-      if not Solved (After) then
-         Verdict := No_Better;
-         if not After.XOR_OK
-           and then Before.Loss_Finite
-           and then After.Loss + Loss_Epsilon < Before.Loss
-         then
+         when Trace_Rule.Makes_It_Worse =>
+            Verdict := Makes_It_Worse;
+      end case;
+      case R is
+         when Trace_Rule.XOR_Returned =>
+            Reason := XOR_Returned;
+         when Trace_Rule.XOR_Still_Missed =>
             Reason := XOR_Still_Missed;
-         else
+         when Trace_Rule.XOR_Left =>
+            Reason := XOR_Left;
+         when Trace_Rule.Loss_Rose =>
+            Reason := Loss_Rose;
+         when Trace_Rule.Loss_Did_Not_Fall =>
             Reason := Loss_Did_Not_Fall;
-         end if;
-         return;
-      end if;
-      Verdict := No_Better;
-      Reason := Loss_Did_Not_Fall;
+         when Trace_Rule.Weights_Invalid =>
+            Reason := Weights_Invalid;
+      end case;
    end Decide;
 
    procedure Judge_Pair

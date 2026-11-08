@@ -37,7 +37,7 @@ if [ "$logs_only" -eq 0 ]; then
   set +e
   (
     set -e
-    for n in 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 17; do
+    for n in 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17; do
       ./bin/item_"$n"
     done
   ) > obj/gen/specs.out
@@ -49,7 +49,10 @@ if [ "$logs_only" -eq 0 ]; then
     exit "$code"
   fi
 fi
-for need in obj/gen/tests.out obj/gen/specs.out obj/gen/recheck-report.txt proof/gnatprove.out; do
+for need in obj/gen/tests.out obj/gen/specs.out obj/gen/recheck-report.txt \
+  proof/item_01.out proof/item_03.out proof/item_07.out \
+  proof/item_09.out proof/item_11.out proof/item_12.out
+do
   if [ ! -f "$need" ]; then
     echo "missing $need" >&2
     exit 1
@@ -57,5 +60,6 @@ for need in obj/gen/tests.out obj/gen/specs.out obj/gen/recheck-report.txt proof
 done
 ./bin/status_cli > obj/gen/STATUS.out
 diff -u STATUS obj/gen/STATUS.out
+python3 tools/check-proof-runs.py
 ./tools/check-status-selftest.sh
 echo "status ok"

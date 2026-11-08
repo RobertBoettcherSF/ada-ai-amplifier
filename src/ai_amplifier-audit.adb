@@ -1,3 +1,4 @@
+with AI_Amplifier.Audit_Rule;
 with AI_Amplifier.MLP;
 with AI_Amplifier.Recurse;
 
@@ -1008,13 +1009,11 @@ is
    begin
       Hits := 0;
       Total := 0;
+      Accepted :=
+        Audit_Rule.Score_Accepted
+          (Bank.Examined, Drop_Flagged, Flagged (Bank));
       if not Bank.Examined then
-         Accepted := False;
          return;
-      end if;
-      Accepted := True;
-      if not Drop_Flagged and then Flagged (Bank) > 0 then
-         Accepted := False;
       end if;
       for I in 1 .. Bank.Count loop
          if not (Drop_Flagged and then Bank.Slot (I).Flag_Count > 0) then

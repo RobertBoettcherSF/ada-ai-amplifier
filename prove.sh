@@ -1,9 +1,9 @@
 #!/bin/sh
-# Prove the SPARK units: the empty root, AI_Amplifier.Version, and
-# AI_Amplifier.Tensors. Every other unit is SPARK_Mode => Off and is
-# not a proof target. The project file passes --level=2,
-# --timeout=120, and --report=all. Level 2 selects the provers.
-# The timeout is long enough for the CI runner.
+# Prove one SPARK unit per item that has a proof. Each run writes
+# proof/item_NN.out. A proved label may name only that file.
+# The project file passes --level=2, --timeout=120, --report=all,
+# and --checks-as-errors=on. Units with SPARK_Mode => Off are not
+# targets. The timeout is long enough for the CI runner.
 set -e
 cd "$(dirname "$0")"
 
@@ -67,9 +67,31 @@ if ! command -v gnatprove >/dev/null 2>&1; then
     install_gnatprove_archive
   fi
 fi
-gnatprove -P ada_ai_amplifier.gpr -j0
+
 mkdir -p proof
-out=$(find obj -path '*/gnatprove/gnatprove.out' -print | head -1)
-cp "$out" proof/gnatprove.out
+rm -f proof/gnatprove.out
+
+prove_one() {
+  dest=$1
+  unit=$2
+  echo "Proving $unit -> $dest"
+  # A leftover session would mix another item's units into this
+  # summary. Each item starts from an empty proof directory.
+  rm -rf obj/development/gnatprove
+  gnatprove -P ada_ai_amplifier.gpr -j0 "$unit"
+  out=$(find obj -path '*/gnatprove/gnatprove.out' -print | head -1)
+  if [ -z "$out" ] || [ ! -f "$out" ]; then
+    echo "no gnatprove.out for $unit" >&2
+    exit 1
+  fi
+  cp "$out" "$dest"
+}
+
+prove_one proof/item_01.out ai_amplifier-version.adb
+prove_one proof/item_03.out ai_amplifier-tensors.adb
+prove_one proof/item_07.out ai_amplifier-tensors.adb
+prove_one proof/item_09.out ai_amplifier-chain_rule.adb
+prove_one proof/item_11.out ai_amplifier-trace_rule.adb
+prove_one proof/item_12.out ai_amplifier-audit_rule.adb
 gnatprove --version | head -1 > proof/version.txt
-echo "Wrote proof/gnatprove.out"
+echo "Wrote per-item proof logs"
