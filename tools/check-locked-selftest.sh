@@ -6,6 +6,9 @@
 set -e
 cd "$(dirname "$0")/.."
 root=$(pwd)
+# The CI job exports the pull-request body and base. Those belong to
+# the real checkout. A throwaway copy is not that checkout.
+unset CHECK_LOCKED_EVENT CHECK_LOCKED_BASE CHECK_LOCKED_BODY
 tmp=$(mktemp -d)
 cleanup() { rm -rf "$tmp"; }
 trap cleanup EXIT
