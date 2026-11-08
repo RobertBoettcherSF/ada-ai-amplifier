@@ -22,13 +22,63 @@ retry() {
   done
 }
 
+# The github.com release page has been returning 504. The asset
+# API still serves the same file.
+github_asset() {
+  case $1 in
+    https://github.com/*/releases/download/*/*) ;;
+    *) return 1 ;;
+  esac
+  rest=${1#https://github.com/}
+  owner=${rest%%/*}
+  rest=${rest#*/}
+  repo=${rest%%/*}
+  rest=${rest#*/releases/download/}
+  tag=${rest%%/*}
+  name=${rest#*/}
+  meta=$(mktemp)
+  if ! curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 \
+      -o "$meta" \
+      "https://api.github.com/repos/$owner/$repo/releases/tags/$tag"; then
+    rm -f "$meta"
+    return 1
+  fi
+  found=$(python3 -c '
+import json, sys
+data = json.load(open(sys.argv[1], encoding="utf-8"))
+name = sys.argv[2]
+for item in data.get("assets", []):
+    if item["name"] == name:
+        print(item["url"])
+        raise SystemExit(0)
+raise SystemExit(1)
+' "$meta" "$name" || true)
+  rm -f "$meta"
+  if [ -z "$found" ]; then
+    return 1
+  fi
+  printf '%s\n' "$found"
+}
+
 fetch_rpm() {
   url=$1
   dest=$(mktemp)
   echo "Downloading $url"
-  if ! retry curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 -o "$dest" "$url"; then
+  if ! curl -fsSL --retry 2 --retry-all-errors --retry-delay 3 -o "$dest" "$url"; then
     rm -f "$dest"
-    return 1
+    dest=$(mktemp)
+    asset=$(github_asset "$url" || true)
+    if [ -z "$asset" ]; then
+      rm -f "$dest"
+      return 1
+    fi
+    echo "Release page failed; using the asset API" >&2
+    if ! retry curl -fL --retry 5 --retry-all-errors --retry-delay 5 \
+        -H "Accept: application/octet-stream" \
+        -o "$dest" "$asset"; then
+      rm -f "$dest"
+      return 1
+    fi
   fi
   rpm2cpio "$dest" | cpio -idm --quiet
   rm -f "$dest"
