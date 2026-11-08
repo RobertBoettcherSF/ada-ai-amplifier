@@ -693,11 +693,11 @@ if (!item18.includes("item 18 pass") || item18fp !== item18hash) fail("wasm lock
 if (!lkStat.includes("19 of 19 statements passed") || !lkStat.includes("cannot tell whether a spec is the right one")) {
   fail("wasm locked stat " + lkStat);
 }
-const item19 = rwText(() => exp.aa_lk_text_len(18), (p) => exp.aa_lk_text_byte(18, p));
-const item19fp = rwText(() => exp.aa_lk_fp_len(18), (p) => exp.aa_lk_fp_byte(18, p));
+const item19 = rwText(() => exp.aa_lk_text_len(19), (p) => exp.aa_lk_text_byte(19, p));
+const item19fp = rwText(() => exp.aa_lk_fp_len(19), (p) => exp.aa_lk_fp_byte(19, p));
 const item19hash = createHash("sha256").update(readFileSync(new URL("specs/item_19.adb", root))).digest("hex");
 if (!item19.includes("item 19 pass") || item19fp !== item19hash) fail("wasm locked item 19");
-if (exp.aa_lk_item(18) !== 19) fail("wasm locked item number 19 " + exp.aa_lk_item(18));
+if (exp.aa_lk_item(19) !== 19) fail("wasm locked item number 19 " + exp.aa_lk_item(19));
 const suNeed = ["aa_su_run", "aa_su_count", "aa_su_select", "aa_su_which", "aa_su_name_len", "aa_su_name_byte", "aa_su_flag_len", "aa_su_flag_byte", "aa_su_sent_count", "aa_su_sent_len", "aa_su_sent_byte", "aa_su_sent_mark", "aa_su_step_count", "aa_su_step_len", "aa_su_step_byte", "aa_su_step_mark", "aa_su_stat_len", "aa_su_stat_byte"];
 for (const name of suNeed) {
   if (typeof exp[name] !== "function") fail("missing export " + name);
