@@ -6,7 +6,7 @@ title: ""
 
 ## Stamp
 
-The yellow badge, bottom right. Example: `v0.14.0-harness`.
+The yellow badge, bottom right. Example: `v0.15.0-steps`.
 
 ## What you expected
 

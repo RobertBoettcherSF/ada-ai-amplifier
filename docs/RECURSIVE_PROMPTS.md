@@ -2,9 +2,9 @@
 
 The idea, and what this repository actually shows.
 
-Visible stamp: **v0.14.0-harness**
+Visible stamp: **v0.15.0-steps**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.14.0-harness
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.15.0-steps
 
 ## The idea
 

@@ -9,9 +9,9 @@ Data Dependencies                 2           2                                 
 Flow Dependencies                 .           .                                                 .           .          .
 Initialization                    8           8                                                 .           .          .
 Non-Aliasing                      .           .                                                 .           .          .
-Run-time Checks                 225           .    225 (CVC5 28%, Trivial 2%, Z3 68%, altergo 3%)           .          .
-Assertions                      106           .    106 (CVC5 29%, Trivial 6%, Z3 62%, altergo 4%)           .          .
-Functional Contracts             47           .                 47 (CVC5 34%, Z3 65%, altergo 1%)           .          .
+Run-time Checks                 225           .    225 (CVC5 39%, Trivial 2%, Z3 58%, altergo 2%)           .          .
+Assertions                      106           .    106 (CVC5 37%, Trivial 6%, Z3 54%, altergo 3%)           .          .
+Functional Contracts             47           .                 47 (CVC5 41%, Z3 58%, altergo 1%)           .          .
 LSP Verification                  .           .                                                 .           .          .
 Termination                      31          31                                                 .           .          .
 Concurrency                       .           .                                                 .           .          .
@@ -25,22 +25,22 @@ max steps used for successful proof: 24233
 Most difficult proved checks
 ============================
 
-ai_amplifier-tensors.adb:84:33: loop invariant after first iteration proved in max 6 seconds
-ai_amplifier-tensors.adb:542:13: loop invariant after first iteration proved in max 6 seconds
-ai_amplifier-tensors.adb:410:52: fp_overflow check proved in max 5 seconds
+ai_amplifier-tensors.adb:84:33: loop invariant after first iteration proved in max 5 seconds
+ai_amplifier-tensors.adb:410:52: fp_overflow check proved in max 4 seconds
+ai_amplifier-tensors.adb:542:13: loop invariant after first iteration proved in max 4 seconds
 ai_amplifier-tensors.adb:326:16: loop invariant after first iteration proved in max 3 seconds
-ai_amplifier-tensors.adb:408:13: loop invariant after first iteration proved in max 2 seconds
 ai_amplifier-tensors.adb:300:13: loop invariant after first iteration proved in max 2 seconds
+ai_amplifier-tensors.adb:408:13: loop invariant after first iteration proved in max 2 seconds
 ai_amplifier-tensors.adb:528:13: loop invariant after first iteration proved in max 2 seconds
-ai_amplifier-tensors.adb:65:19: postcondition proved in max 2 seconds
+ai_amplifier-tensors.adb:65:19: postcondition proved in max 1 seconds
 ai_amplifier-tensors.adb:50:19: postcondition proved in max 1 seconds
-ai_amplifier-tensors.adb:456:13: loop invariant after first iteration proved in max 1 seconds
+ai_amplifier-tensors.adb:83:33: loop invariant after first iteration proved in max 1 seconds
 
 ========================
 Detailed analysis report
 ========================
 
-Analyzed 37 units
+Analyzed 42 units
 in unit ai_amplifier, 1 subprograms and packages out of 1 analyzed
   AI_Amplifier at ai_amplifier.ads:2 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
 in unit ai_amplifier-attention, 0 subprograms and packages out of 0 analyzed
@@ -59,6 +59,9 @@ in unit ai_amplifier-recurse-demo, 0 subprograms and packages out of 0 analyzed
 in unit ai_amplifier-reward, 0 subprograms and packages out of 0 analyzed
 in unit ai_amplifier-reward-demo, 0 subprograms and packages out of 0 analyzed
 in unit ai_amplifier-splash, 0 subprograms and packages out of 0 analyzed
+in unit ai_amplifier-steps, 0 subprograms and packages out of 0 analyzed
+in unit ai_amplifier-steps-demo, 0 subprograms and packages out of 0 analyzed
+in unit ai_amplifier-steps-manifest, 0 subprograms and packages out of 0 analyzed
 in unit ai_amplifier-tensors, 30 subprograms and packages out of 30 analyzed
   AI_Amplifier.Tensors at ai_amplifier-tensors.ads:48 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (8 checks)
   AI_Amplifier.Tensors.Acc_Step at ai_amplifier-tensors.adb:60 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (7 checks)
@@ -109,6 +112,8 @@ in unit recurse_cli, 0 subprograms and packages out of 0 analyzed
 in unit recurse_test, 0 subprograms and packages out of 0 analyzed
 in unit reward_cli, 0 subprograms and packages out of 0 analyzed
 in unit reward_test, 0 subprograms and packages out of 0 analyzed
+in unit steps_cli, 0 subprograms and packages out of 0 analyzed
+in unit steps_test, 0 subprograms and packages out of 0 analyzed
 in unit tensors_test, 0 subprograms and packages out of 0 analyzed
 in unit traces_cli, 0 subprograms and packages out of 0 analyzed
 in unit traces_test, 0 subprograms and packages out of 0 analyzed
