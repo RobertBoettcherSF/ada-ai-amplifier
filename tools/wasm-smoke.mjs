@@ -590,4 +590,42 @@ for (let i = 1; i <= rwSteps; i += 1) {
 if (exp.aa_rw_real_score(rwSteps) !== 1 || exp.aa_rw_real_holds(rwSteps) !== 1 || exp.aa_rw_real_holds(1) !== 0) {
   fail("wasm reward real curve");
 }
+const hnNeed = ["aa_hn_run", "aa_hn_harnesses", "aa_hn_tasks", "aa_hn_cols", "aa_hn_cell_len", "aa_hn_cell_byte", "aa_hn_task_len", "aa_hn_task_byte", "aa_hn_select", "aa_hn_logs", "aa_hn_log_len", "aa_hn_log_byte", "aa_hn_solved", "aa_hn_result_len", "aa_hn_result_byte", "aa_hn_stat_len", "aa_hn_stat_byte"];
+for (const name of hnNeed) {
+  if (typeof exp[name] !== "function") fail("missing export " + name);
+}
+if (exp.aa_hn_harnesses() !== 0 || exp.aa_hn_cell_byte(1, 1, 1) !== 0) fail("wasm harness before run");
+exp.aa_hn_run();
+if (exp.aa_hn_harnesses() !== 4 || exp.aa_hn_tasks() !== 8 || exp.aa_hn_cols() !== 4) {
+  fail("wasm harness census");
+}
+const hnRate = ["1 of 8", "2 of 8", "8 of 8", "5 of 8"];
+const hnSteps = ["8", "10", "25", "18"];
+const hnWrong = ["7", "6", "0", "0"];
+for (let r = 1; r <= 4; r += 1) {
+  const rate = rwText(() => exp.aa_hn_cell_len(r, 2), (i) => exp.aa_hn_cell_byte(r, 2, i));
+  const steps = rwText(() => exp.aa_hn_cell_len(r, 3), (i) => exp.aa_hn_cell_byte(r, 3, i));
+  const wrong = rwText(() => exp.aa_hn_cell_len(r, 4), (i) => exp.aa_hn_cell_byte(r, 4, i));
+  if (rate !== hnRate[r - 1] || steps !== hnSteps[r - 1] || wrong !== hnWrong[r - 1]) {
+    fail("wasm harness row " + r + " " + rate + " " + steps + " " + wrong);
+  }
+}
+if (exp.aa_hn_cell_len(0, 0) !== 0 || exp.aa_hn_cell_byte(1, 1, 0) !== 0) fail("wasm harness clamp");
+const hnStat = rwText(() => exp.aa_hn_stat_len(), (i) => exp.aa_hn_stat_byte(i));
+if (!hnStat.includes("20261104")) fail("wasm harness stat " + hnStat);
+if (exp.aa_hn_solved(1) !== 0 || exp.aa_hn_solved(3) !== 1) fail("wasm harness showcase");
+let sawGarble = false;
+for (let i = 1; i <= exp.aa_hn_logs(1); i += 1) {
+  const line = rwText(() => exp.aa_hn_log_len(1, i), (p) => exp.aa_hn_log_byte(1, i, p));
+  if (line.includes("index two") && line.includes("accepted")) sawGarble = true;
+}
+if (!sawGarble) fail("wasm harness one-shot");
+for (let i = 1; i <= exp.aa_hn_logs(3); i += 1) {
+  const line = rwText(() => exp.aa_hn_log_len(3, i), (p) => exp.aa_hn_log_byte(3, i, p));
+  if (line.includes("  accepted  bad-") || line.includes("  accepted  not-toward-base")) {
+    fail("wasm harness checked kept " + line);
+  }
+}
+exp.aa_hn_select(0);
+if (exp.aa_hn_solved(3) !== 1) fail("wasm harness select");
 console.log("wasm ok", got);

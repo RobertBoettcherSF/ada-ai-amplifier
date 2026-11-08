@@ -19,7 +19,8 @@ GitHub Pages from `main`, not with a secret gist.
 
 Items 1 through 13 are done. Item 11 is the wrong-turn traces and
 the Ada checker. Item 12 is the benchmark audit. Item 13 is
-the reward-hacking demo. Items 14 through 16 are planned and
+the reward-hacking demo. Item 14 is the same solver under
+four harnesses. Items 15 and 16 are planned and
 not started. CI runs `./prove.sh` (GNATprove level 2, timeout 120 seconds). If a change touches
 a proved unit, `./prove.sh` must still pass and `proof/gnatprove.out`
 is part of that change. Do not regenerate it as a side effect of a
@@ -36,7 +37,7 @@ These four are the same text:
 
 | Place | Text |
 |---|---|
-| `AI_Amplifier.Version.Version_Text` | `v0.13.0-reward` on this tree |
+| `AI_Amplifier.Version.Version_Text` | `v0.14.0-harness` on this tree |
 | `web/template.html`, the `#ver` badge | the same, so it shows with JavaScript off |
 | `version.txt` | the same, one line |
 | `alire.toml` `version` | the same without the leading `v` |
@@ -47,7 +48,7 @@ Bump the stamp when the page, or the Ada a visitor runs, would differ.
 Do not reuse a stamp. Pages deploys from `main` only, so the bump lands
 with the change that deploys. The link you send is
 
-`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.13.0-reward`
+`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.14.0-harness`
 
 with `?v=` set to the stamp without the leading `v`. Before you say
 that stamp is live, fetch the page and `version.txt` and see the text
@@ -80,7 +81,7 @@ seen.
 
 1. **Was it already there?** Splash, tensor demo, leaky ReLU, training,
    the weight workbench, the training-speed panel, tokens and
-   attention, the recorded chains, the wrong-turn panel, the benchmark audit, the reward table, F9, the crash report, the badge,
+   attention, the recorded chains, the wrong-turn panel, the benchmark audit, the reward table, the harness table, F9, the crash report, the badge,
    the How-To link.
 2. **Is it still there?** `node tools/page-smoke.mjs` walks those, on a
    desktop viewport and a phone-sized viewport.

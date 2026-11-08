@@ -36,6 +36,8 @@ jobs:
           ./bin/audit_cli
           ./bin/reward_test
           ./bin/reward_cli
+          ./bin/harness_test
+          ./bin/harness_cli
 
       # Level 2, on the SPARK units only. prove.sh installs FSF
       # gnatprove 16.1.0 if the runner does not already have it.

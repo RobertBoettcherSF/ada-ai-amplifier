@@ -138,13 +138,14 @@ try {
   assert(!items[11].includes("planned"), items[11]);
   assert(items[12].includes("Reward-hacking demo") && items[12].includes("done"), items[12]);
   assert(!items[12].includes("planned"), items[12]);
-  assert(items[13].includes("Same model, different harness") && items[13].includes("planned"), items[13]);
+  assert(items[13].includes("Same model, different harness") && items[13].includes("done"), items[13]);
+  assert(!items[13].includes("planned"), items[13]);
   assert(items[14].includes("Checked steps, not just answers") && items[14].includes("planned"), items[14]);
   assert(items[15].includes("README update after items 1–15") && items[15].includes("planned"), items[15]);
   const status16 = await page.$eval("#backlog li:nth-child(16) .st", (el) => el.textContent.trim());
   assert(status16 === "planned", status16);
   const proof = await page.$$eval("#proof tbody tr", (els) => els.map((el) => el.innerText.replace(/\s+/g, " ").trim()));
-  assert(proof.length === 20, "proof rows " + proof.length);
+  assert(proof.length === 21, "proof rows " + proof.length);
   const statusOf = (name) => {
     const row = proof.find((r) => r.slice(0, name.length) === name && (r.length === name.length || r[name.length] === " "));
     return row ? row.slice(name.length).trim() : "";
@@ -169,6 +170,7 @@ try {
   assert(statusOf("Wrong turns") === "not proved", "turns proof " + statusOf("Wrong turns"));
   assert(statusOf("Benchmark audit") === "not proved", "audit proof " + statusOf("Benchmark audit"));
   assert(statusOf("Reward hacking") === "not proved", "reward proof " + statusOf("Reward hacking"));
+  assert(statusOf("Harness comparison") === "not proved", "harness proof " + statusOf("Harness comparison"));
   const hrefs = await page.$$eval("#links a", (els) => els.map((a) => a.href));
   assert(hrefs.some((h) => h === "https://github.com/RobertBoettcherSF/ada-ai-amplifier"), "repo link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/HOWTO.md")), "howto link " + hrefs);
@@ -178,6 +180,7 @@ try {
   assert(hrefs.some((h) => h.includes("/docs/WRONG_TURNS.md")), "turns link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/BENCHMARK_AUDIT.md")), "audit link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/REWARD_HACKING.md")), "reward link " + hrefs);
+  assert(hrefs.some((h) => h.includes("/docs/HARNESS.md")), "harness link " + hrefs);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
   assert(overflow, "desktop main overflows");
   const numbered = await page.$$eval("#backlog .n", (els) => els.map((el) => el.textContent.trim()));
@@ -513,6 +516,32 @@ try {
   const rewardErr = await page.$eval("#rewarderr", (el) => el.hidden);
   assert(rewardErr, "reward error visible");
   await page.screenshot({ path: resolve(shotDir, "reward.png") });
+  await page.evaluate(() => document.getElementById("harness").scrollIntoView({ block: "center" }));
+  const harnessStat = await page.$eval("#harnessstat", (el) => el.textContent);
+  assert(harnessStat.includes("20261104") && harnessStat.includes("8 tasks"), harnessStat);
+  const harnessRows = await page.$$eval("#harnesstable tbody tr", (els) => els.map((el) => el.textContent.replace(/\s+/g, " ").trim()));
+  assert(harnessRows.length === 4, "harness rows " + harnessRows.length);
+  assert(harnessRows[0].includes("one-shot") && harnessRows[0].includes("1 of 8") && harnessRows[0].includes("7"), harnessRows[0]);
+  assert(harnessRows[1].includes("retry") && harnessRows[1].includes("2 of 8") && harnessRows[1].includes("6"), harnessRows[1]);
+  assert(harnessRows[2].includes("checked") && harnessRows[2].includes("8 of 8") && harnessRows[2].includes("0"), harnessRows[2]);
+  assert(harnessRows[3].includes("budgeted") && harnessRows[3].includes("5 of 8") && harnessRows[3].includes("0"), harnessRows[3]);
+  const harnessTask = await page.$eval("#harnesstask", (el) => el.options[el.selectedIndex].textContent);
+  assert(harnessTask === "fib-3", harnessTask);
+  const harnessWalk = await page.evaluate(() => window.__harnessWalk);
+  assert(harnessWalk.length === 4, "walk " + harnessWalk.length);
+  assert(harnessWalk[0].lines.some((line) => line.includes("index two") && line.includes("accepted")), "one-shot walk");
+  assert(harnessWalk[1].result.includes("solved") && harnessWalk[1].lines.some((line) => line.includes("rejected")), "retry walk");
+  assert(harnessWalk[2].solved === 1 && harnessWalk[2].lines.some((line) => line.includes("rejected") && line.includes("bad-parse")), "checked walk");
+  assert(harnessWalk[2].lines.every((line) => !line.includes("  accepted  bad-") && !line.includes("  accepted  not-toward-base")), "checked kept a bad step");
+  assert(harnessWalk[3].result.includes("not solved") && harnessWalk[3].solved === 0, "budget walk " + harnessWalk[3].result);
+  await page.select("#harnesstask", "1");
+  await page.waitForFunction(() => window.__harnessWalk && window.__harnessWalk[0].solved === 1);
+  const fib1 = await page.evaluate(() => window.__harnessWalk.map((item) => item.result).join(" | "));
+  assert(fib1.includes("solved") && !fib1.includes("not solved"), fib1);
+  await page.select("#harnesstask", "2");
+  const harnessErr = await page.$eval("#harnesserr", (el) => el.hidden);
+  assert(harnessErr, "harness error visible");
+  await page.screenshot({ path: resolve(shotDir, "harness.png") });
   const speedH = await page.$eval("#speed-base", (el) => el.getBoundingClientRect().height);
   assert(speedH >= 44, "speed height " + speedH);
   const speedBlurb = await page.$eval("#speedstat", (el) => el.textContent);
@@ -614,6 +643,11 @@ try {
   assert(phoneReward.includes("two-of-four"), "phone reward gap");
   const phoneRewardEnd = await phonePage.$eval("#rewardrealend", (el) => el.textContent);
   assert(phoneRewardEnd.includes("passes"), "phone reward end " + phoneRewardEnd);
+  await phonePage.evaluate(() => document.getElementById("harness").scrollIntoView({ block: "center" }));
+  const phoneHarness = await phonePage.$eval("#harnesstable", (el) => el.textContent);
+  assert(phoneHarness.includes("one-shot") && phoneHarness.includes("8 of 8"), "phone harness " + phoneHarness);
+  const phoneHarnessTask = await phonePage.$eval("#harnesstask", (el) => el.getBoundingClientRect().height);
+  assert(phoneHarnessTask >= 44, "phone harness select " + phoneHarnessTask);
   const phoneAuditFull = await phonePage.$eval("#auditfull", (el) => el.textContent);
   assert(phoneAuditFull.includes("Not accepted"), phoneAuditFull);
   const phoneTurnH = await phonePage.$eval("#turn-go-5", (el) => el.getBoundingClientRect().height);
@@ -688,6 +722,7 @@ try {
   assert(await badPage.$eval("#turnerr", (el) => !el.hidden && el.textContent.includes("cannot check a next step")), "turns down");
   assert(await badPage.$eval("#auditerr", (el) => !el.hidden && el.textContent.includes("cannot audit")), "audit down");
   assert(await badPage.$eval("#rewarderr", (el) => !el.hidden && el.textContent.includes("cannot score")), "reward down");
+  assert(await badPage.$eval("#harnesserr", (el) => !el.hidden && el.textContent.includes("cannot run the harnesses")), "harness down");
   assert(badErrors.length === 0, "nowasm errors " + badErrors);
 
   const html = readFileSync(resolve(root, "site/index.html"), "utf8");
