@@ -6,14 +6,14 @@ the feedback and crash files.
 The splash on the live page is a small picture of a network: Ada moves
 the points, and the page plots them.
 
-Visible stamp: **v0.15.0-steps**
+Visible stamp: **v0.15.1-backlog**
 
 The same text is `AI_Amplifier.Version.Version_Text`, the yellow badge in
 `web/template.html`, `version.txt`, and the line printed by `bin/hello`.
-The Alire crate version is `0.15.0-steps` (the stamp without the leading
+The Alire crate version is `0.15.1-backlog` (the stamp without the leading
 `v`, because Alire versions are semver).
 
-**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.15.0-steps
+**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.15.1-backlog
 
 **Guide:** [docs/HOWTO.md](docs/HOWTO.md). The page links there. It is the install path, a walkthrough that adds leaky ReLU, and the code tour.
 
@@ -78,8 +78,12 @@ step matches a value this code recomputes. Eleven answers pass.
 Four solutions pass the steps.
 [docs/CHECKED_STEPS.md](docs/CHECKED_STEPS.md) is that account.
 Ada can check these steps because each one is recomputed from
-our own code. Most real reasoning is not like that. Item 16,
-the README update, is planned and not started.
+our own code. Most real reasoning is not like that. Items 16
+through 19 are planned and not started. Item 16 is locked
+statements. Item 17 is a second, independent checker. Item 18
+is a checking status on every item. Item 19 is a reasoning
+summary set against the checked steps. Item 20, the README
+update, is last, after items 1–19.
 
 ## Why plain Ada
 
@@ -216,7 +220,7 @@ alr -n build
 on). Expected line:
 
 ```text
-ada-ai-amplifier v0.15.0-steps
+ada-ai-amplifier v0.15.1-backlog
 ```
 
 Then:
@@ -1006,13 +1010,17 @@ fail exits 1. The page does not run this program.
 13. **Reward-hacking demo — done.** Two graders on the XOR task, four written cheats, and a hill-climb that can raise the flawed score while the real check still fails. [docs/REWARD_HACKING.md](docs/REWARD_HACKING.md). This is not a copy of the write-ups linked there, and it is not evidence about real models.
 14. **Same model, different harness — done.** One fixed solver, four harnesses, the same eight tasks and the same seed. [docs/HARNESS.md](docs/HARNESS.md). This is not a copy of the write-ups linked there, and the score gap is not a measurement of a real model.
 15. **Checked steps, not just answers — done.** Twelve solutions, an answer-only grade and a step grade, and the panel on the page. [docs/CHECKED_STEPS.md](docs/CHECKED_STEPS.md). This is not a copy of the papers linked there. Ada can check these steps because each one is recomputed from our own code. Most real reasoning is not like that.
-16. **README update after items 1–15 — planned.** Next. Not this change. Not started.
+16. **Locked statements — planned.** Next. Not started. Each item gets a fixed spec file. The AI may not edit that file. CI fails if the file's fingerprint changes, or if `pragma Assume` or `pragma Annotate` appear. The idea is the Challenge/Solution split and the comparator in [formal-math](https://github.com/anthropics/formal-math) (Apache-2.0). This is an independent reimplementation. Nothing from that repository is copied.
+17. **Second, independent checker — planned.** Not started. A second Ada checker, written separately, re-checks the verdicts of items 11, 12, and 15. CI fails if the two checkers disagree. The idea is the independent kernel check in [formal-math](https://github.com/anthropics/formal-math) (Apache-2.0). This is an independent reimplementation. Nothing from that repository is copied.
+18. **Checking status on every item — planned.** Not started. The page and this README label items 1–15 proved, tested, or unchecked, and they use the real numbers. The idea is results at different stages of verification in [openai/math](https://github.com/openai/math) (Apache-2.0). This is an independent reimplementation. Nothing from that repository is copied.
+19. **Reasoning summary vs checked steps — planned.** Not started. A short written summary of one item-15 solution. Each claim links to the step that backs it. A claim with no step is flagged. The idea is the reasoning summaries in [openai/math](https://github.com/openai/math) (Apache-2.0). This is an independent reimplementation. Nothing from that repository is copied.
+20. **README update after items 1–19 — planned.** Last, after items 1–19. Not this change. Not started.
 
-Items landed one at a time. Item 15 is the last one done. Item 16 is next.
+Items landed one at a time. Item 15 is the last one done. Item 16 is next. Item 20 is last.
 
 ## Honesty
 
-1. The splash arithmetic is plain Ada. It is not proved. `SPARK_Mode` is off on that unit so it is not presented as a proof target. The contracts on `AI_Amplifier.Version` are the ones from the skeleton. The stamp text in that unit is `v0.15.0-steps`.
+1. The splash arithmetic is plain Ada. It is not proved. `SPARK_Mode` is off on that unit so it is not presented as a proof target. The contracts on `AI_Amplifier.Version` are the ones from the skeleton. The stamp text in that unit is `v0.15.1-backlog`.
 2. The tensor kernels are SPARK, at the levels in the proof status table. Silver is absence of run-time error (and, where the table says so, a range). Gold is the component rule. `Leaky_ReLU` is Gold. Its slope on the page is `0.01`. The `Pre` and `Post` are still checked when the program runs. The proof does not replace that check. Sigmoid, tanh, and softmax do not claim to match the real functions.
 3. CI builds the native program, runs `bin/tensors_test`, `bin/mlp_test`, `bin/attention_test`, `bin/recurse_test`, `bin/traces_test`, `bin/audit_test`, `bin/reward_test`, `bin/harness_test`, and `bin/steps_test`, runs `./prove.sh` (GNATprove level 2, unproved checks are errors), builds the wasm module and the page, then runs the headless smoke. The committed `proof/gnatprove.out` is that level 2 run. It proves the root, the version unit, and the tensors. It does not prove the splash, the network, the tokenizer, the attention block, the chain checker, the speed harness, the wrong-turn checker, the benchmark auditor, the reward demo, the harness comparison, or the step checker.
 4. The wasm module's lack of imports is what this build emits, and `tools/wasm-smoke.mjs` checks it. The tensor body does reference a failed-check path. `tools/wasm-checks.c` defines `__gnat_last_chance_handler` and `system__assertions__raise_assert_failure` as traps, so that path links without an import. On the native runtime the same check raises. `-gnatp` is not used. `-gnatw.X` is the same switch as the native Alire profile: this runtime forbids exception propagation, and the compiler's reminder of that is turned off.

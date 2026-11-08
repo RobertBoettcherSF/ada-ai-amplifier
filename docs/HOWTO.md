@@ -4,9 +4,9 @@ A walkthrough for someone new to this repository, and possibly new to
 Ada. The logic lives in Ada. JavaScript only draws. The live page is one
 HTML file with that Ada compiled to WebAssembly inside it.
 
-Visible stamp: **v0.15.0-steps**
+Visible stamp: **v0.15.1-backlog**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.15.0-steps
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.15.1-backlog
 
 The yellow badge, `version.txt`, and `AI_Amplifier.Version.Version_Text`
 are that same text. The query on the link is the cache bust (the stamp
@@ -106,7 +106,7 @@ mean something:
 | `alr -n toolchain --select …` | Puts GNAT 16.1.0 and gprbuild 26.0.1 on the Alire toolchain |
 | `./tools/get-toolchain.sh` | Downloads AdaWebPack 24 into `toolchain/` (gitignored). Later runs see the compiler and return |
 | `alr -n build` | Native build. Warnings and checks are on, including `-gnata`, so `Pre` and `Post` run |
-| `./bin/hello` | Prints `ada-ai-amplifier v0.15.0-steps` |
+| `./bin/hello` | Prints `ada-ai-amplifier v0.15.1-backlog` |
 | `./tools/check-version.sh` | That line, `version.txt`, and the badge in `web/template.html` must be the same stamp |
 | `./bin/tensors_test` | Prints `tensors ok` |
 | `./bin/mlp_test` | Prints `mlp ok` |
@@ -128,7 +128,7 @@ mean something:
 | `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, the speed panel, tokens, recorded chains, wrong turns, the benchmark audit, the reward table, the harness table, the checked-steps table, F9, crash report, a failed module |
 
 Then open `site/index.html` in a browser yourself. The badge reads
-`v0.15.0-steps`. Leaky ReLU shows slope `0.01` and the output
+`v0.15.1-backlog`. Leaky ReLU shows slope `0.01` and the output
 `-0.02`, `0`, `3`. Compute still shows the product `14`, `14`, `17`.
 
 The file, which CI runs as `./tools/howto-steps.sh`:
@@ -333,9 +333,27 @@ new badge.
 **Plan, then Go, then one item.** Post a numbered plan for one change.
 Wait for Go. Build that item. Report, and stop. Items 1 through 15 are
 done. Item 14 is the same solver under four harnesses. Item 15 is
-the checked-steps demo. Item 16, the README update, is planned
-and not started. Do not start it in a change that is still
-about item 15.
+the checked-steps demo. Items 16 through 19 are planned and not
+started. Item 16 is next: locked statements, a fixed spec file the
+AI may not edit, and a CI gate that fails if its fingerprint changes
+or if `pragma Assume` or `pragma Annotate` appear. Item 17 is a
+second Ada checker, written separately, for the verdicts of items
+11, 12, and 15. CI fails if the two checkers disagree. Item 18
+labels items 1–15 proved, tested, or unchecked, with real numbers,
+on the page and in the README. Item 19 is a short written summary
+of one item-15 solution. Each claim links to the step that backs
+it, and a claim with no step is flagged. Item 20, the README
+update, is last, after items 1–19, and is not started. The ideas
+for items 16 and 17 are the Challenge/Solution split, the
+comparator, and the independent kernel check in
+[formal-math](https://github.com/anthropics/formal-math)
+(Apache-2.0). The ideas for items 18 and 19 are results at
+different stages of verification, and reasoning summaries, in
+[openai/math](https://github.com/openai/math) (Apache-2.0).
+Both are ideas only. The work, when it is built, is an
+independent reimplementation. Nothing from either repository
+is copied. Do not start item 16 in a change that only updates
+this list.
 
 **Honesty.** Say what is checked at run time and what a prover has
 seen. On the tensor kernels, Silver means no run-time error and Gold
@@ -420,4 +438,4 @@ tests too. `docs/WEIGHT_SPACE.md` is that account.
 `docs/CHECKED_STEPS.md` is the account of the two grades.
 `AI_Amplifier.Version` is SPARK,
 with the contracts from the skeleton. The stamp there is
-`v0.15.0-steps`.
+`v0.15.1-backlog`.

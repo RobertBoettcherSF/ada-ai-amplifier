@@ -17,11 +17,21 @@ GitHub Pages from `main`, not with a secret gist.
 4. Report what landed, what the checks did, and what is still open.
 5. Stop. Do not start the next item in the same change.
 
-Items 1 through 13 are done. Item 11 is the wrong-turn traces and
+Items 1 through 15 are done. Item 11 is the wrong-turn traces and
 the Ada checker. Item 12 is the benchmark audit. Item 13 is
 the reward-hacking demo. Item 14 is the same solver under
 four harnesses. Item 15 is the checked-steps demo.
-Item 16, the README update, is planned and not started. CI runs `./prove.sh` (GNATprove level 2, timeout 120 seconds). If a change touches
+Items 16 through 19 are planned and not started. Item 16 is
+next: locked statements. Item 17 is a second, independent
+checker. Item 18 is a checking status on items 1–15. Item 19
+is a reasoning summary set against the checked steps. Item 20,
+the README update, is last, after items 1–19. The ideas for
+16 and 17 come from
+[formal-math](https://github.com/anthropics/formal-math)
+(Apache-2.0). The ideas for 18 and 19 come from
+[openai/math](https://github.com/openai/math) (Apache-2.0).
+Both are ideas only, for an independent reimplementation.
+Nothing from either repository is copied. CI runs `./prove.sh` (GNATprove level 2, timeout 120 seconds). If a change touches
 a proved unit, `./prove.sh` must still pass and `proof/gnatprove.out`
 is part of that change. Do not regenerate it as a side effect of a
 change that does not touch a proved unit. There is no `pragma Annotate`
@@ -37,7 +47,7 @@ These four are the same text:
 
 | Place | Text |
 |---|---|
-| `AI_Amplifier.Version.Version_Text` | `v0.15.0-steps` on this tree |
+| `AI_Amplifier.Version.Version_Text` | `v0.15.1-backlog` on this tree |
 | `web/template.html`, the `#ver` badge | the same, so it shows with JavaScript off |
 | `version.txt` | the same, one line |
 | `alire.toml` `version` | the same without the leading `v` |
@@ -48,7 +58,7 @@ Bump the stamp when the page, or the Ada a visitor runs, would differ.
 Do not reuse a stamp. Pages deploys from `main` only, so the bump lands
 with the change that deploys. The link you send is
 
-`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.15.0-steps`
+`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.15.1-backlog`
 
 with `?v=` set to the stamp without the leading `v`. Before you say
 that stamp is live, fetch the page and `version.txt` and see the text
