@@ -5,9 +5,9 @@ and the list of steps that were actually taken. Ada checks
 each step on its own, then compares the summary with those
 steps.
 
-Visible stamp: **v0.19.0-summary**
+Visible stamp: **v0.19.1-proofs**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.19.0-summary
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.19.1-proofs
 
 ## The idea, and the licence
 
@@ -80,17 +80,18 @@ run that program.
 
 ## What is proved
 
-`AI_Amplifier.Summary_Rules` is SPARK. `proof/summary_rules.out`
-is a level 2 run of that unit alone: 22 checks, unproved 0.
-The proved assertion says an omitted flag points at a
-checked-wrong step, and the other flags point at a sentence.
-That is not a proof that every future summary will be flagged
-the same way, and it is not a proof of the eight summaries or
-of the step checker they call.
+`AI_Amplifier.Summary_Rules` is SPARK. `proof/item_19.out`
+is a level 2 run of that unit alone: summary 22, 15 checks
+on the unit, unproved 0. `proof/summary_rules.out` is the
+same bytes. The proved assertion says an omitted flag points
+at a checked-wrong step, and the other flags point at a
+sentence. That is not a proof that every future summary will
+be flagged the same way, and it is not a proof of the eight
+summaries or of the step checker they call.
 
-The 419 checks on the root, the version unit, and the tensors
-are a different run. This item is not part of that total.
-`AI_Amplifier.Summary` and its demo are plain Ada. There is
-no `pragma Annotate` and no `pragma Assume`.
+The tensor runs are separate. This item is not part of those
+totals. `AI_Amplifier.Summary` and its demo are plain Ada.
+There is no `pragma Annotate` and no `pragma Assume`.
 
-The label in `STATUS` is tested. Tested is not proved.
+The `STATUS` row is proved for the flag-rule unit. It says the
+summary package is not in that run.

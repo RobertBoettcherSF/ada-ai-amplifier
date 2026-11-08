@@ -661,13 +661,14 @@ const lkNeed = ["aa_lk_count", "aa_lk_item", "aa_lk_name_len", "aa_lk_name_byte"
 for (const name of lkNeed) {
   if (typeof exp[name] !== "function") fail("missing export " + name);
 }
-if (exp.aa_lk_count() !== 18) fail("wasm locked count " + exp.aa_lk_count());
-if (exp.aa_lk_item(0) !== 0 || exp.aa_lk_name_byte(1, 0) !== 0 || exp.aa_lk_text_byte(19, 1) !== 0) {
+if (exp.aa_lk_count() !== 19) fail("wasm locked count " + exp.aa_lk_count());
+if (exp.aa_lk_item(0) !== 0 || exp.aa_lk_name_byte(1, 0) !== 0 || exp.aa_lk_text_byte(20, 1) !== 0) {
   fail("wasm locked clamp");
 }
-if (exp.aa_lk_item(16) !== 17) fail("wasm locked item 17 " + exp.aa_lk_item(16));
-if (exp.aa_lk_item(17) !== 18) fail("wasm locked item 18 " + exp.aa_lk_item(17));
-for (let i = 1; i <= 15; i += 1) {
+if (exp.aa_lk_item(16) !== 16) fail("wasm locked item 16 " + exp.aa_lk_item(16));
+if (exp.aa_lk_item(17) !== 17) fail("wasm locked item 17 " + exp.aa_lk_item(17));
+if (exp.aa_lk_item(18) !== 18) fail("wasm locked item 18 " + exp.aa_lk_item(18));
+for (let i = 1; i <= 19; i += 1) {
   const status = rwText(() => exp.aa_lk_status_len(i), (p) => exp.aa_lk_status_byte(i, p));
   const fp = rwText(() => exp.aa_lk_fp_len(i), (p) => exp.aa_lk_fp_byte(i, p));
   const text = rwText(() => exp.aa_lk_text_len(i), (p) => exp.aa_lk_text_byte(i, p));
@@ -681,22 +682,22 @@ for (let i = 1; i <= 15; i += 1) {
   }
 }
 const lkStat = rwText(() => exp.aa_lk_stat_len(), (p) => exp.aa_lk_stat_byte(p));
-const item17 = rwText(() => exp.aa_lk_text_len(16), (p) => exp.aa_lk_text_byte(16, p));
-const item17fp = rwText(() => exp.aa_lk_fp_len(16), (p) => exp.aa_lk_fp_byte(16, p));
+const item17 = rwText(() => exp.aa_lk_text_len(17), (p) => exp.aa_lk_text_byte(17, p));
+const item17fp = rwText(() => exp.aa_lk_fp_len(17), (p) => exp.aa_lk_fp_byte(17, p));
 const item17hash = createHash("sha256").update(readFileSync(new URL("specs/item_17.adb", root))).digest("hex");
 if (!item17.includes("item 17 pass") || item17fp !== item17hash) fail("wasm locked item 17");
-const item18 = rwText(() => exp.aa_lk_text_len(17), (p) => exp.aa_lk_text_byte(17, p));
-const item18fp = rwText(() => exp.aa_lk_fp_len(17), (p) => exp.aa_lk_fp_byte(17, p));
+const item18 = rwText(() => exp.aa_lk_text_len(18), (p) => exp.aa_lk_text_byte(18, p));
+const item18fp = rwText(() => exp.aa_lk_fp_len(18), (p) => exp.aa_lk_fp_byte(18, p));
 const item18hash = createHash("sha256").update(readFileSync(new URL("specs/item_18.adb", root))).digest("hex");
 if (!item18.includes("item 18 pass") || item18fp !== item18hash) fail("wasm locked item 18");
-if (!lkStat.includes("18 of 18 statements passed") || !lkStat.includes("cannot tell whether a spec is the right one")) {
+if (!lkStat.includes("19 of 19 statements passed") || !lkStat.includes("cannot tell whether a spec is the right one")) {
   fail("wasm locked stat " + lkStat);
 }
-const item19 = rwText(() => exp.aa_lk_text_len(18), (p) => exp.aa_lk_text_byte(18, p));
-const item19fp = rwText(() => exp.aa_lk_fp_len(18), (p) => exp.aa_lk_fp_byte(18, p));
+const item19 = rwText(() => exp.aa_lk_text_len(19), (p) => exp.aa_lk_text_byte(19, p));
+const item19fp = rwText(() => exp.aa_lk_fp_len(19), (p) => exp.aa_lk_fp_byte(19, p));
 const item19hash = createHash("sha256").update(readFileSync(new URL("specs/item_19.adb", root))).digest("hex");
 if (!item19.includes("item 19 pass") || item19fp !== item19hash) fail("wasm locked item 19");
-if (exp.aa_lk_item(18) !== 19) fail("wasm locked item number 19 " + exp.aa_lk_item(18));
+if (exp.aa_lk_item(19) !== 19) fail("wasm locked item number 19 " + exp.aa_lk_item(19));
 const suNeed = ["aa_su_run", "aa_su_count", "aa_su_select", "aa_su_which", "aa_su_name_len", "aa_su_name_byte", "aa_su_flag_len", "aa_su_flag_byte", "aa_su_sent_count", "aa_su_sent_len", "aa_su_sent_byte", "aa_su_sent_mark", "aa_su_step_count", "aa_su_step_len", "aa_su_step_byte", "aa_su_step_mark", "aa_su_stat_len", "aa_su_stat_byte"];
 for (const name of suNeed) {
   if (typeof exp[name] !== "function") fail("missing export " + name);

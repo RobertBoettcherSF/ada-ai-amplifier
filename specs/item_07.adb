@@ -1,7 +1,7 @@
 --  Item 7. The bounds the tensor proof uses, and the
 --  component rules tensors_test checks for Add, Scale,
 --  ReLU, and Transpose. This file does not run GNATprove.
---  The 419 proved checks stay in proof/gnatprove.out.
+--  The tensor proof for this item is proof/item_07.out.
 with Ada.Text_IO;
 with AI_Amplifier.Tensors;
 

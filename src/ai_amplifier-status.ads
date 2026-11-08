@@ -3,11 +3,13 @@
 --  its own row. It is not one of those seventeen.
 --
 --  Plain Ada (SPARK_Mode off). Nothing here is proved. The
---  label is computed from the build logs: the GNATprove
---  summary, the test programs' output, the locked specs,
---  and the item-17 agreement counts. A returned string
---  uses the secondary stack. This unit is not linked into
---  the wasm module. That link has no secondary stack.
+--  label is computed from the build logs: one GNATprove
+--  report per item, the test programs' output, the locked
+--  specs, and the item-17 agreement counts. Proved is
+--  printed only when that item's own report exists and its
+--  summary unproved count is 0. A returned string uses the
+--  secondary stack. This unit is not linked into the wasm
+--  module. That link has no secondary stack.
 --  docs/CHECKING_STATUS.md is the account of what a label
 --  does not show.
 package AI_Amplifier.Status
@@ -20,8 +22,9 @@ is
 
    --  Paths are relative to the repository root, which is
    --  the working directory of the tests and of item_18.
+   --  Prove_Dir holds item_NN.out, one gnatprove run per item.
    procedure Load
-     (Prove_Path   : String;
+     (Prove_Dir    : String;
       Tests_Path   : String;
       Specs_Path   : String;
       Recheck_Path : String;

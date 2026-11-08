@@ -4,9 +4,9 @@ A walkthrough for someone new to this repository, and possibly new to
 Ada. The logic lives in Ada. JavaScript only draws. The live page is one
 HTML file with that Ada compiled to WebAssembly inside it.
 
-Visible stamp: **v0.19.0-summary**
+Visible stamp: **v0.19.1-proofs**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.18.0-status
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.19.1-proofs
 
 The yellow badge, `version.txt`, and `AI_Amplifier.Version.Version_Text`
 are that same text. The query on the link is the cache bust (the stamp
@@ -106,7 +106,7 @@ mean something:
 | `alr -n toolchain --select …` | Puts GNAT 16.1.0 and gprbuild 26.0.1 on the Alire toolchain |
 | `./tools/get-toolchain.sh` | Downloads AdaWebPack 24 into `toolchain/` (gitignored). Later runs see the compiler and return |
 | `alr -n build` | Native build. Warnings and checks are on, including `-gnata`, so `Pre` and `Post` run |
-| `./bin/hello` | Prints `ada-ai-amplifier v0.19.0-summary` |
+| `./bin/hello` | Prints `ada-ai-amplifier v0.19.1-proofs` |
 | `./tools/check-version.sh` | That line, `version.txt`, and the badge in `web/template.html` must be the same stamp |
 | `./bin/tensors_test` | Prints `tensors ok` |
 | `./bin/mlp_test` | Prints `mlp ok` |
@@ -131,7 +131,7 @@ mean something:
 | `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, the speed panel, tokens, recorded chains, wrong turns, the benchmark audit, the reward table, the harness table, the checked-steps table, the locked statements, the second checker, the checking-status table, F9, crash report, a failed module |
 
 Then open `site/index.html` in a browser yourself. The badge reads
-`v0.19.0-summary`. Leaky ReLU shows slope `0.01` and the output
+`v0.19.1-proofs`. Leaky ReLU shows slope `0.01` and the output
 `-0.02`, `0`, `3`. Compute still shows the product `14`, `14`, `17`.
 
 The file, which CI runs as `./tools/howto-steps.sh`:
@@ -370,9 +370,10 @@ still about item 19.
 seen. On the tensor kernels, Silver means no run-time error and Gold
 means the component rule. Sigmoid, tanh, and softmax are Silver: the
 result lies in range, and the series is not the real function. The
-splash, the MLP, the tokenizer, attention, the chain checker,
-the wrong-turn checker, the benchmark auditor, the reward demo,
-the harness comparison, the step checker, and the second checker are not proved. `Pre`
+splash, the MLP, the tokenizer, attention, the reward demo,
+the harness comparison, the step checker, and the second checker are not proved.
+The Fibonacci step rule, the next-step verdict, and the audit score
+gate are proved in their own runs. The parsers and the live callers are not. `Pre`
 and `Post` are still ordinary Ada contracts, checked when the program
 runs. `Float` results are approximate; the tests name the tolerance.
 The spirals are not solved. The attention weights are a seed.
@@ -396,7 +397,7 @@ tells you which build the note is about.
 `./prove.sh` runs GNATprove at level 2, timeout 120 seconds. CI job `native, wasm, page`
 does that. The how-to steps above do not. An unproved check
 fails the run. There is no `pragma Annotate` and no `pragma Assume`.
-The log is `proof/gnatprove.out`. The same table is on the live page.
+The logs are `proof/item_NN.out`, one run per proved item. The same table is on the live page.
 
 | Kernel | Level |
 |---|---|
@@ -416,16 +417,16 @@ The log is `proof/gnatprove.out`. The same table is on the live page.
 | Training speed | not proved |
 | Tokenizer | not proved |
 | Attention | not proved |
-| Recursive prompts | not proved |
-| Wrong turns | not proved |
-| Benchmark audit | not proved |
+| Recursive prompts | rule proved |
+| Wrong turns | rule proved |
+| Benchmark audit | rule proved |
 | Reward hacking | not proved |
 | Harness comparison | not proved |
 | Checked steps | not proved |
 | Locked statements | not proved |
 | Second checker | not proved |
 | Checking status | not proved |
-| Reasoning summary | not proved |
+| Reasoning summary | rule proved |
 
 Silver on dot and the two products means no run-time error, and the
 numeric result lies in `[-Acc_Bound, Acc_Bound]`. It does not mean the
@@ -459,4 +460,4 @@ proof of 22 checks. That proof is not the 419, and it does not
 cover the summaries or the step checker. The item is tested.
 `AI_Amplifier.Version` is SPARK,
 with the contracts from the skeleton. The stamp there is
-`v0.19.0-summary`.
+`v0.19.1-proofs`.

@@ -1,0 +1,39 @@
+=========================
+Summary of SPARK analysis
+=========================
+
+--------------------------------------------------------------------------------
+SPARK Analysis results        Total       Flow    Provers   Justified   Unproved
+--------------------------------------------------------------------------------
+Data Dependencies                 .          .          .           .          .
+Flow Dependencies                 .          .          .           .          .
+Initialization                    .          .          .           .          .
+Non-Aliasing                      .          .          .           .          .
+Run-time Checks                   .          .          .           .          .
+Assertions                        .          .          .           .          .
+Functional Contracts              1          .     1 (Z3)           .          .
+LSP Verification                  .          .          .           .          .
+Termination                       1          1          .           .          .
+Concurrency                       .          .          .           .          .
+--------------------------------------------------------------------------------
+Total                             2    1 (50%)    1 (50%)           .          .
+
+
+max steps used for successful proof: 1
+
+============================
+Most difficult proved checks
+============================
+
+No check found with max time greater than 1 second
+
+========================
+Detailed analysis report
+========================
+
+Analyzed 2 units
+in unit ai_amplifier, 1 subprograms and packages out of 1 analyzed
+  AI_Amplifier at ai_amplifier.ads:2 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
+in unit ai_amplifier-audit_rule, 2 subprograms and packages out of 2 analyzed
+  AI_Amplifier.Audit_Rule at ai_amplifier-audit_rule.ads:6 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
+  AI_Amplifier.Audit_Rule.Score_Accepted at ai_amplifier-audit_rule.ads:10 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (1 checks)

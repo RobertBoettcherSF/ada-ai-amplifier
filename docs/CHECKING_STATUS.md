@@ -3,9 +3,9 @@
 Items 1 through 17, each with one label. The label is computed
 from this build. The page and the README copy that text.
 
-Visible stamp: **v0.19.0-summary**
+Visible stamp: **v0.19.1-proofs**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.18.0-status
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.19.1-proofs
 
 ## The idea, and the licence
 
@@ -22,13 +22,13 @@ own items.
 
 | Label | When the program prints it |
 |---|---|
-| proved | GNATprove analyzed that item's units, every analyzed subprogram was proved, and the summary's unproved column is 0 |
-| tested | That did not happen, and the item's test program passed with a positive case count, and its locked spec passed |
+| proved | That item's own `proof/item_NN.out` exists, its summary unproved count is 0, and the named unit's proved checks are above 0 |
+| tested | That did not happen, and the item's test program passed with a positive case count, and its locked spec passed. The row says why it is not a proof |
 | unchecked | Neither of those. The evidence says what it would take |
 
 A tested label is not a proof. A proved label is only the units
-named in that row. The summary is `proved 3 of 17, tested 14,
-unchecked 0`.
+named in that row, from that row's own run. The summary is
+`proved 6 of 17, tested 11, unchecked 0`.
 
 ## What the numbers are
 
@@ -36,7 +36,7 @@ unchecked 0`.
 
 | Input | What it contributes |
 |---|---|
-| `proof/gnatprove.out` | The summary total, the flow count, the prover count, and each unit's analyzed fraction and proved checks |
+| `proof/item_NN.out` | That item's own GNATprove run: the summary total, the flow count, the prover count, the unproved count, and the named unit's proved checks |
 | `obj/gen/tests.out` | `tensors ok`, `mlp ok`, and the other program lines, plus `cases <program> <count>` |
 | `obj/gen/specs.out` | `item NN pass` for items 1–15 and 17 |
 | `obj/gen/recheck-report.txt` | The three agreement pairs from item 17 |
@@ -48,28 +48,32 @@ this run. It is not a count of source lines. Items 4, 8, and
 counts the asserts in `item_06` and also requires `tensors_test`,
 because the leaky ReLU checks live in that program. Item 11's
 `traces_test` records the four traces. The locked spec's asserts
-are a separate number in the same row. Item 16 has no
-`item_16.adb`. Its cases are the sixteen specs for items 1–15
-and 17, and `check-locked` has to print `locked ok`.
+are a separate number in the same row. Item 16's cases are
+the seventeen specs for items 1–17, and `check-locked` has to
+print `locked ok`. `specs/item_16.adb` is that item's spec.
 
-The detail lines under `ai_amplifier-tensors` sum to 378 proved
-checks. The summary total is 419, which is those 378 plus 41
-flow checks. Both numbers are read from the log. They are one
-run. Items 3 and 7 both name that run. Item 1's units are
-proved with 0 checks in the detail lines. The 419 are not the
-stamp.
+Each proved row names its own file. Item 1's run is
+`proof/item_01.out`: summary 18, and
+`ai_amplifier-version` has 14 proved checks. Items 3 and 7
+each run `ai_amplifier-tensors` alone. Both summaries are 414,
+of which the tensor detail lines sum to 378 and the flow
+column is 36. The counts match because the unit is the same.
+They are not one shared run, and they do not include the
+version unit. Item 9's step rule is summary 6, with 3 proved
+checks. Item 11's verdict rule is summary 15, with 11 proved
+checks. Item 12's score gate is summary 2, with 1 proved
+check. A unit whose detail lines sum to 0 checks is not proved.
 
-The page wrappers `ai_amplifier-tensors-demo` and
-`ai_amplifier-tensors-leaky_demo` are 0 of 0 analyzed. Item 3's
-row says they are not proved. The proved label is the kernels.
+The page wrappers are not in item 3's run. The row says so.
+The proved label is the tensor unit.
 
 ## What stays unchecked
 
-Items 9, 11, and 14 are tested for the recorded checks and the
-stand-in caller. Each row also says the live `--ask` mode is
-unchecked. That mode needs a key, a URL, and a model name.
-CI does not call a live model. A tested label does not cover
-that command.
+Items 9 and 11 are proved for the step rule and the verdict
+rule. Item 14 is tested. Each of those rows says the live
+`--ask` mode is unchecked. That mode needs a key, a URL, and
+a model name. CI does not call a live model. A proved or
+tested label does not cover that command.
 
 | Item | Command | What it would take |
 |---|---|---|
@@ -86,8 +90,10 @@ There is no unchecked item among 1–17 on this tree. The summary's
 runs `status_cli`. The stdout has to match `STATUS` byte for
 byte. A throwaway copy of the test log with `mlp ok` removed
 has to label items 4, 8, and 10 unchecked, and it has to leave
-item 3 proved. `specs/item_18.adb` locks the seventeen labels,
-the summary, the 419 checks, and the three agreement pairs.
+item 3 proved. Removing `proof/item_03.out`, or appending
+`unproved` to `proof/item_07.out`, has to drop that proved
+label. `specs/item_18.adb` locks the seventeen labels, the
+summary, and the three agreement pairs.
 
 `build.sh` embeds `obj/gen/STATUS.out` in the page and writes
 `site/STATUS.txt`. JavaScript copies the lines into the table.
@@ -96,36 +102,35 @@ panel says so.
 
 ## This build
 
-proved 3 of 17, tested 14, unchecked 0.
+proved 6 of 17, tested 11, unchecked 0.
 
 | Item | Label | Evidence |
 |---|---|---|
-| 1 Repo skeleton | proved | gnatprove ai_amplifier 1/1 checks 0, ai_amplifier-version 3/3 checks 0; spec item_01 pass asserts 5; check-version ok |
-| 2 Splash and live page | tested | item_02 cases 9 spec pass |
-| 3 Core tensor and maths | proved | gnatprove ai_amplifier-tensors 30/30 checks 378; summary 419 flow 41 provers 378 unproved 0; not proved ai_amplifier-tensors-demo 0/0, ai_amplifier-tensors-leaky_demo 0/0; spec item_03 pass asserts 15 |
-| 4 Tiny trainable MLP | tested | mlp_test cases 185 spec item_04 pass asserts 19 |
-| 5 Tokenizer and attention | tested | attention_test cases 48 spec item_05 pass asserts 20 |
-| 6 How-To and leaky ReLU | tested | item_06 cases 17 spec pass; tensors_test cases 67 |
-| 7 SPARK proofs of the kernels | proved | gnatprove summary 419 flow 41 provers 378 unproved 0; units ai_amplifier 1/1 checks 0, ai_amplifier-tensors 30/30 checks 378, ai_amplifier-version 3/3 checks 0; spec item_07 pass asserts 24 |
-| 8 Weight-space programming | tested | mlp_test cases 185 spec item_08 pass asserts 27 |
-| 9 Recursive prompts | tested | recurse_test cases 37 spec item_09 pass asserts 15; live-ask unchecked: recurse_cli --ask needs RECURSE_LLM_URL, RECURSE_LLM_KEY, and RECURSE_LLM_MODEL; CI does not call a live model |
-| 10 Training-speed harness | tested | mlp_test cases 185 spec item_10 pass asserts 18 |
-| 11 Wrong-turn traces | tested | traces_test cases 4 spec item_11 pass asserts 22; live-ask unchecked: traces_cli --ask needs TRACES_LLM_URL, TRACES_LLM_KEY, and TRACES_LLM_MODEL; CI does not call a live model |
-| 12 Benchmark audit | tested | audit_test cases 13 spec item_12 pass asserts 11 |
-| 13 Reward hacking | tested | reward_test cases 9 spec item_13 pass asserts 43 |
-| 14 Harness comparison | tested | harness_test cases 406 spec item_14 pass asserts 19; live-ask unchecked: harness_cli --ask needs HARNESS_LLM_URL, HARNESS_LLM_KEY, and HARNESS_LLM_MODEL; CI does not call a live model |
-| 15 Checked steps | tested | steps_test cases 16 spec item_15 pass asserts 10 |
-| 16 Locked statements | tested | check-locked cases 16 spec pass; no item_16.adb |
-| 17 Second checker | tested | recheck_test agree 44 of 44, 22 of 22, 12 of 12 spec item_17 pass asserts 18 |
-| 19 Reasoning summary | tested | summary_test cases 36 spec item_19 pass asserts 22 |
-
+| 1 Repo skeleton | proved | gnatprove proof/item_01.out summary 18 flow 4 provers 14 unproved 0; unit ai_amplifier-version 3/3 checks 14; spec item_01 pass asserts 5; check-version ok |
+| 2 Splash and live page | tested | item_02 cases 9 spec pass; not proved: the splash is a drawing and is not a proof target |
+| 3 Core tensor and maths | proved | gnatprove proof/item_03.out summary 414 flow 36 provers 378 unproved 0; unit ai_amplifier-tensors 30/30 checks 378; not in this run: ai_amplifier-tensors-demo, ai_amplifier-tensors-leaky_demo; spec item_03 pass asserts 15 |
+| 4 Tiny trainable MLP | tested | mlp_test cases 185 spec item_04 pass asserts 19; not proved: gradient descent on float weights is not a proof target |
+| 5 Tokenizer and attention | tested | attention_test cases 48 spec item_05 pass asserts 20; not proved: the tokenizer and the attention block are not a proof target |
+| 6 How-To and leaky ReLU | tested | item_06 cases 17 spec pass; tensors_test cases 67; not proved: the how-to is a document and the leaky demo is not analyzed |
+| 7 SPARK proofs of the kernels | proved | gnatprove proof/item_07.out summary 414 flow 36 provers 378 unproved 0; unit ai_amplifier-tensors 30/30 checks 378; spec item_07 pass asserts 24 |
+| 8 Weight-space programming | tested | mlp_test cases 185 spec item_08 pass asserts 27; not proved: weight-file checks run with the program and are not proved |
+| 9 Recursive prompts | proved | gnatprove proof/item_09.out summary 6 flow 3 provers 3 unproved 0; unit ai_amplifier-chain_rule 3/3 checks 3; recurse_test cases 37 spec item_09 pass asserts 15; live-ask unchecked: recurse_cli --ask needs RECURSE_LLM_URL, RECURSE_LLM_KEY, and RECURSE_LLM_MODEL; CI does not call a live model |
+| 10 Training-speed harness | tested | mlp_test cases 185 spec item_10 pass asserts 18; not proved: a measured training time is not a proof |
+| 11 Wrong-turn traces | proved | gnatprove proof/item_11.out summary 15 flow 4 provers 11 unproved 0; unit ai_amplifier-trace_rule 4/4 checks 11; traces_test cases 4 spec item_11 pass asserts 22; live-ask unchecked: traces_cli --ask needs TRACES_LLM_URL, TRACES_LLM_KEY, and TRACES_LLM_MODEL; CI does not call a live model |
+| 12 Benchmark audit | proved | gnatprove proof/item_12.out summary 2 flow 1 provers 1 unproved 0; unit ai_amplifier-audit_rule 2/2 checks 1; audit_test cases 13 spec item_12 pass asserts 11 |
+| 13 Reward hacking | tested | reward_test cases 9 spec item_13 pass asserts 43; not proved: the two graders score float nets and are not proved |
+| 14 Harness comparison | tested | harness_test cases 406 spec item_14 pass asserts 19; live-ask unchecked: harness_cli --ask needs HARNESS_LLM_URL, HARNESS_LLM_KEY, and HARNESS_LLM_MODEL; CI does not call a live model; not proved: the harness schedule is not a proof target |
+| 15 Checked steps | tested | steps_test cases 16 spec item_15 pass asserts 10; not proved: a step grade recomputes values and is not a proof |
+| 16 Locked statements | tested | check-locked cases 17 spec item_16 pass asserts 14; not proved: a fingerprint detects an edit and does not prove the spec |
+| 17 Second checker | tested | recheck_test agree 44 of 44, 22 of 22, 12 of 12 spec item_17 pass asserts 18; not proved: agreement of two checkers is not a proof of either |
+| 19 Reasoning summary | proved | gnatprove proof/item_19.out summary 22 flow 7 provers 15 unproved 0; unit ai_amplifier-summary_rules 6/6 checks 15; summary_test cases 36 spec item_19 pass asserts 22; not in this run: ai_amplifier-summary |
 ## What is proved
 
 Nothing in this item is proved. `AI_Amplifier.Status` is plain
-Ada. `SPARK_Mode` is off. There is no new proof. GNATprove
-level 2 still proves 419 checks on the root, the version unit,
-and the tensors. This change does not add an Assume pragma or
-an Annotate pragma.
+Ada. `SPARK_Mode` is off. It does not decide a label from a
+shared project total. Each proved item has its own log.
+This change does not add an Assume pragma or an Annotate
+pragma.
 
 The labels describe only the checks this repository runs. They
 do not describe anyone else's proof, and they do not describe a
@@ -133,8 +138,7 @@ live model. A fingerprint, an agreement, and a passing test are
 still tests.
 
 Item 19 is a row after those seventeen. It is not inside the
-summary `proved 3 of 17, tested 14, unchecked 0`. Its label is
-tested when `summary_test` passes and `item_19` passes. The
-flag rules are a separate proof of 22 checks in
-`proof/summary_rules.out`. That proof does not cover the
-summaries or the step checker, so the row is not proved.
+summary `proved 6 of 17, tested 11, unchecked 0`. The row is
+proved for `ai_amplifier-summary_rules`: `proof/item_19.out`
+is summary 22, 15 checks on that unit, unproved 0. The
+summaries and the step checker are not in that run.

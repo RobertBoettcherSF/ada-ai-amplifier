@@ -27,9 +27,10 @@ items 1–19, and is not started. The ideas for 16 and 17 come from
 [openai/math](https://github.com/openai/math) (Apache-2.0).
 Items 18 and 19 are independent reimplementations.
 Nothing from either repository is copied. CI runs `./prove.sh` (GNATprove level 2, timeout 120 seconds). If a change touches
-a proved unit, `./prove.sh` must still pass and `proof/gnatprove.out`
-is part of that change. Do not regenerate it as a side effect of a
-change that does not touch a proved unit. There is no `pragma Annotate`
+a proved unit, `./prove.sh` must still pass and that item's
+`proof/item_NN.out` is part of that change. Do not regenerate a
+proof log as a side effect of a change that does not touch a
+proved unit. There is no `pragma Annotate`
 and no `pragma Assume`.
 
 ## Visible stamp
@@ -42,7 +43,7 @@ These four are the same text:
 
 | Place | Text |
 |---|---|
-| `AI_Amplifier.Version.Version_Text` | `v0.19.0-summary` on this tree |
+| `AI_Amplifier.Version.Version_Text` | `v0.19.1-proofs` on this tree |
 | `web/template.html`, the `#ver` badge | the same, so it shows with JavaScript off |
 | `version.txt` | the same, one line |
 | `alire.toml` `version` | the same without the leading `v` |
@@ -53,7 +54,7 @@ Bump the stamp when the page, or the Ada a visitor runs, would differ.
 Do not reuse a stamp. Pages deploys from `main` only, so the bump lands
 with the change that deploys. The link you send is
 
-`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.18.0-status`
+`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.19.1-proofs`
 
 with `?v=` set to the stamp without the leading `v`. Before you say
 that stamp is live, fetch the page and `version.txt` and see the text
@@ -102,7 +103,7 @@ seen.
    `tools/howto-packages.sh` and `tools/howto-steps.sh`.
    `python3 tools/check-howto-quote.py` fails if a quote drifts.
 6. **If a proved unit changed,** `./prove.sh` passes and
-   `proof/gnatprove.out` matches that run. No `pragma Annotate`. No
+   the item's `proof/item_NN.out` matches that run. No `pragma Annotate`. No
    `pragma Assume`.
 
 ## F9

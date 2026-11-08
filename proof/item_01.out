@@ -1,0 +1,40 @@
+=========================
+Summary of SPARK analysis
+=========================
+
+-----------------------------------------------------------------------------------------------------------------------
+SPARK Analysis results        Total       Flow                                           Provers   Justified   Unproved
+-----------------------------------------------------------------------------------------------------------------------
+Data Dependencies                 2          2                                                 .           .          .
+Flow Dependencies                 .          .                                                 .           .          .
+Initialization                    .          .                                                 .           .          .
+Non-Aliasing                      .          .                                                 .           .          .
+Run-time Checks                   5          .                              5 (CVC5 14%, Z3 86%)           .          .
+Assertions                        6          .                                            6 (Z3)           .          .
+Functional Contracts              2          .    2 (CVC5 14%, Trivial 14%, Z3 57%, altergo 14%)           .          .
+LSP Verification                  .          .                                                 .           .          .
+Termination                       3          2                                            1 (Z3)           .          .
+Concurrency                       .          .                                                 .           .          .
+-----------------------------------------------------------------------------------------------------------------------
+Total                            18    4 (22%)                                          14 (78%)           .          .
+
+
+max steps used for successful proof: 49
+
+============================
+Most difficult proved checks
+============================
+
+No check found with max time greater than 1 second
+
+========================
+Detailed analysis report
+========================
+
+Analyzed 2 units
+in unit ai_amplifier, 1 subprograms and packages out of 1 analyzed
+  AI_Amplifier at ai_amplifier.ads:2 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
+in unit ai_amplifier-version, 3 subprograms and packages out of 3 analyzed
+  AI_Amplifier.Version at ai_amplifier-version.ads:3 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
+  AI_Amplifier.Version.Version_Byte at ai_amplifier-version.ads:19 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (13 checks)
+  AI_Amplifier.Version.Version_Length at ai_amplifier-version.ads:12 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (1 checks)

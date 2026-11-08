@@ -5,9 +5,9 @@ grader is `AI_Amplifier.Recheck`. It does not call
 `AI_Amplifier.Traces`, `AI_Amplifier.Audit`, or
 `AI_Amplifier.Steps`.
 
-Visible stamp: **v0.19.0-summary**
+Visible stamp: **v0.19.1-proofs**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.18.0-status
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.19.1-proofs
 
 ## The idea, and the licence
 
@@ -93,10 +93,9 @@ panel says so.
 ## What is proved
 
 Nothing in this item is proved. `AI_Amplifier.Recheck` is plain
-Ada. `SPARK_Mode` is off. There is no new proof. GNATprove
-level 2 still proves 419 checks on the root, the version unit,
-and the tensors. This change does not add an Assume pragma or
-an Annotate pragma.
+Ada. `SPARK_Mode` is off. Agreement is not a proof of either
+checker. This change does not add an Assume pragma or an
+Annotate pragma.
 
 Agreement makes a shared bug less likely. It does not prove
 either checker right. A mistake that both graders share still

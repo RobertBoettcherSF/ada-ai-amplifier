@@ -21,10 +21,10 @@ is
       6 => S.Tested,
       7 => S.Proved,
       8 => S.Tested,
-      9 => S.Tested,
+      9 => S.Proved,
       10 => S.Tested,
-      11 => S.Tested,
-      12 => S.Tested,
+      11 => S.Proved,
+      12 => S.Proved,
       13 => S.Tested,
       14 => S.Tested,
       15 => S.Tested,
@@ -38,7 +38,7 @@ is
    end Has;
 begin
    S.Load
-     ("proof/gnatprove.out",
+     ("proof",
       "obj/gen/tests.out",
       "obj/gen/specs.out",
       "obj/gen/recheck-report.txt",
@@ -48,22 +48,31 @@ begin
       pragma Assert (S.Item_Label (N) = Expected (N));
    end loop;
    pragma Assert
-     (S.Summary = "proved 3 of 17, tested 14, unchecked 0");
-   pragma Assert (Has (1, "checks 0"));
-   pragma Assert (Has (3, "419"));
+     (S.Summary = "proved 6 of 17, tested 11, unchecked 0");
+   pragma Assert (Has (1, "proof/item_01.out"));
+   pragma Assert (Has (1, "unproved 0"));
+   pragma Assert (Has (1, "ai_amplifier-version"));
+   pragma Assert (Has (3, "proof/item_03.out"));
    pragma Assert (Has (3, "unproved 0"));
-   pragma Assert (Has (3, "not proved"));
+   pragma Assert (Has (3, "not in this run"));
    pragma Assert (Has (4, "mlp_test"));
    pragma Assert (S.Item_Label (4) /= S.Proved);
-   pragma Assert (Has (7, "419"));
+   pragma Assert (Has (7, "proof/item_07.out"));
+   pragma Assert (Has (7, "ai_amplifier-tensors"));
    pragma Assert (Has (7, "unproved 0"));
    pragma Assert (Has (9, "live-ask unchecked"));
    pragma Assert (Has (9, "RECURSE_LLM_KEY"));
+   pragma Assert (Has (9, "ai_amplifier-chain_rule"));
    pragma Assert (Has (11, "live-ask unchecked"));
    pragma Assert (Has (11, "TRACES_LLM_KEY"));
    pragma Assert (Has (14, "live-ask unchecked"));
    pragma Assert (Has (14, "HARNESS_LLM_KEY"));
-   pragma Assert (Has (16, "no item_16.adb"));
+   pragma Assert (Has (16, "spec item_16"));
+   pragma Assert (Has (16, "not proved:"));
+   pragma Assert (S.Item_Label (19) = S.Proved);
+   pragma Assert (Has (19, "proof/item_19.out"));
+   pragma Assert (Has (19, "unproved 0"));
+   pragma Assert (Has (19, "ai_amplifier-summary_rules"));
    pragma Assert (Has (17, "44 of 44"));
    pragma Assert (Has (17, "22 of 22"));
    pragma Assert (Has (17, "12 of 12"));

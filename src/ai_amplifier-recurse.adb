@@ -1,3 +1,5 @@
+with AI_Amplifier.Chain_Rule;
+
 package body AI_Amplifier.Recurse
   with SPARK_Mode => Off
 is
@@ -346,32 +348,33 @@ is
       Proposed : State;
       Kind     : out Check_Name)
    is
-      Sum : Natural;
+      function To_Rule (Item : State) return Chain_Rule.State is
+        (Fib_Index  => Item.Fib_Index,
+         Minus_One  => Item.Minus_One,
+         Curr_Value => Item.Curr_Value);
    begin
-      if Previous.Fib_Index = 0 then
-         Kind := Past_Base;
-         return;
-      end if;
-      if Proposed.Fib_Index /= Previous.Fib_Index - 1 then
-         Kind := Not_Toward_Base;
-         return;
-      end if;
-      if Previous.Minus_One > Max_Value - Previous.Curr_Value then
-         Kind := Bad_Arithmetic;
-         return;
-      end if;
-      Sum := Previous.Minus_One + Previous.Curr_Value;
-      if Proposed.Minus_One /= Previous.Curr_Value
-        or else Proposed.Curr_Value /= Sum
+      --  The proved rule and this package share one bound.
+      pragma Assert (Max_Value = Chain_Rule.Max_Value);
+      if Previous.Minus_One > Chain_Rule.Max_Value
+        or else Previous.Curr_Value > Chain_Rule.Max_Value
+        or else Proposed.Minus_One > Chain_Rule.Max_Value
+        or else Proposed.Curr_Value > Chain_Rule.Max_Value
       then
          Kind := Bad_Arithmetic;
          return;
       end if;
-      if Proposed.Fib_Index = 0 then
-         Kind := Reached_Base;
-      else
-         Kind := Accepted;
-      end if;
+      case Chain_Rule.Classify (To_Rule (Previous), To_Rule (Proposed)) is
+         when Chain_Rule.Past_Base =>
+            Kind := Past_Base;
+         when Chain_Rule.Not_Toward_Base =>
+            Kind := Not_Toward_Base;
+         when Chain_Rule.Bad_Arithmetic =>
+            Kind := Bad_Arithmetic;
+         when Chain_Rule.Reached_Base =>
+            Kind := Reached_Base;
+         when Chain_Rule.Accepted =>
+            Kind := Accepted;
+      end case;
    end Check_Step;
 
    procedure Make_Opening

@@ -1,14 +1,14 @@
 # Locked statements
 
-Eighteen specs. Items 1 through 15, item 17, item 18, and item 19. Each spec is a small
+Nineteen specs. Items 1 through 19. Each spec is a small
 Ada program that calls this library and asserts numbers that
 item's tests already check. CI builds those programs and runs
 them. The page shows the source, the SHA-256, and whether this
 build passed.
 
-Visible stamp: **v0.19.0-summary**
+Visible stamp: **v0.19.1-proofs**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.18.0-status
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.19.1-proofs
 
 ## The idea, and the licence
 
@@ -25,8 +25,7 @@ statement is a change to a file whose fingerprint is recorded.
 ## What the fingerprint does
 
 `specs/LOCK` stores the SHA-256 of `item_01.adb` through
-`item_15.adb`, `item_17.adb`, `item_18.adb`, and `item_19.adb`. There is no `item_16.adb`:
-item 16 is this lock. CI hashes the files again. If a spec's bytes are
+`item_19.adb`, including `item_16.adb`. CI hashes the files again. If a spec's bytes are
 not the bytes in `specs/LOCK`, the job fails. That is the silent
 edit: a spec that moved, and a lock file that did not.
 
@@ -62,10 +61,8 @@ too. A lock update whose pull-request text does not name
 
 Nothing in this item is proved. `AI_Amplifier.Locked` is plain
 Ada. `SPARK_Mode` is off. The specs are plain Ada. They are
-tests. GNATprove level 2 still proves 419 checks on the root,
-the version unit, and the tensors. This change does not add a
-proof, and it does not add an Assume pragma or an Annotate
-pragma to those units.
+tests. A fingerprint is not a proof. This change does not add
+an Assume pragma or an Annotate pragma.
 
 The page reads a body that `tools/bake-locked.py` writes after
 the specs have run. JavaScript copies the spec text, the
