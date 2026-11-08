@@ -13,6 +13,7 @@ import argparse
 import hashlib
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -66,23 +67,60 @@ def compiler_repo() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
+def lock_match_fresh(home: Path, binary: Path) -> bool:
+    if not binary.is_file():
+        return False
+    built = binary.stat().st_mtime
+    names = (
+        "src/ai_amplifier.ads",
+        "src/ai_amplifier-lock_rule.ads",
+        "src/ai_amplifier-lock_rule.adb",
+        "src/lock_match.adb",
+        "lock_match.gpr",
+    )
+    for name in names:
+        path = home / name
+        if path.is_file() and path.stat().st_mtime > built:
+            return False
+    return True
+
+
+def build_lock_match(home: Path) -> str:
+    """gprbuild is not on PATH in every CI step. Alire's exec is."""
+    project = home / "lock_match.gpr"
+    attempts = []
+    if shutil.which("gprbuild"):
+        attempts.append(["gprbuild", "-P", str(project), "-p"])
+    if shutil.which("alr"):
+        attempts.append(
+            ["alr", "-n", "exec", "--", "gprbuild", "-P", "lock_match.gpr", "-p"]
+        )
+    notes = []
+    for cmd in attempts:
+        try:
+            ran = subprocess.run(
+                cmd, cwd=home, capture_output=True, text=True
+            )
+        except OSError as exc:
+            notes.append(str(exc))
+            continue
+        notes.append(ran.stdout + ran.stderr)
+        if ran.returncode == 0:
+            return ""
+    return "\n".join(notes)
+
+
 def lock_match_exe() -> Path:
-    """Build the native compare once. The throwaway --root is not this repo."""
+    """The compare lives in this repo, not in a throwaway --root."""
     global _LOCK_MATCH
     if _LOCK_MATCH is not None:
         return _LOCK_MATCH
     home = compiler_repo()
     binary = home / "bin" / "lock_match"
-    ran = subprocess.run(
-        ["gprbuild", "-P", str(home / "lock_match.gpr"), "-p"],
-        cwd=home,
-        capture_output=True,
-        text=True,
-    )
-    if ran.returncode != 0 or not binary.is_file():
-        raise SystemExit(
-            "could not build lock_match\n" + ran.stdout + ran.stderr
-        )
+    if not lock_match_fresh(home, binary):
+        note = build_lock_match(home)
+        if not binary.is_file():
+            raise SystemExit("could not build lock_match\n" + note)
     _LOCK_MATCH = binary
     return binary
 
