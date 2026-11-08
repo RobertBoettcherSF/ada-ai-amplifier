@@ -1,4 +1,4 @@
-# SHA-256 of specs/item_01.adb through specs/item_15.adb.
+# SHA-256 of each specs/item_*.adb file.
 # A spec change updates this file in the same pull request.
 # That pull request's description names specs/LOCK.
 item_01.adb 4227f4e6a85b9912d020eb583ed46712149883b0d4667622806b8d912da1bccd
@@ -17,3 +17,4 @@ item_13.adb 3f623a0bdcba55e9eefda18eb8ce91a9be3cf2535412dd6dcd7cc06340f1b8e2
 item_14.adb 134d7bdd6556f1fd6a017d1b79006d171777c52d356fdda2adfd0565292df831
 item_15.adb 69e9c86d5c7225c102c90e0dbc24edeae6162e4c612d9bec564531a910d75b25
 item_17.adb f94bbc5ba3b1339e7092536568481e51632f62f277ca0dc99b9a7874940a6b6f
+item_18.adb b56afdb2bbe750b2df87ff0ec63ce6ee6dacb80565e4ed9da64680e2ff0269b1

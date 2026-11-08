@@ -19,6 +19,12 @@ is
    package IO renames Ada.Text_IO;
 
    Failures : Natural := 0;
+   Cases    : Natural := 0;
+
+   procedure Mark is
+   begin
+      Cases := Cases + 1;
+   end Mark;
 
    procedure Fail (Message : String) is
    begin
@@ -39,6 +45,7 @@ is
 
    procedure Expect (Name, Got, Want : String) is
    begin
+      Mark;
       if Got /= Want then
          Fail (Name & " got [" & Got & "] want [" & Want & "]");
       end if;
@@ -69,6 +76,7 @@ is
       Answer : Natural)
    is
    begin
+      Mark;
       if Result.Stop /= Kind then
          Fail (Name & " stop");
       end if;
@@ -640,6 +648,7 @@ begin
    Check_Rules;
    Check_Cli;
    if Failures = 0 then
+      IO.Put_Line ("cases recurse_test" & Cases'Image);
       IO.Put_Line ("recurse ok");
    else
       IO.Put_Line ("recurse failed" & Natural'Image (Failures));

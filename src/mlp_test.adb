@@ -24,6 +24,12 @@ is
    use type M.Load_Status;
 
    Failures : Natural := 0;
+   Cases    : Natural := 0;
+
+   procedure Mark is
+   begin
+      Cases := Cases + 1;
+   end Mark;
 
    procedure Fail (Message : String) is
    begin
@@ -42,6 +48,7 @@ is
 
    procedure Expect (Name : String; Got, Want : Float) is
    begin
+      Mark;
       if not Near (Got, Want, 0.000_05) then
          Fail (Name & " got " & Float'Image (Got)
            & " want " & Float'Image (Want));
@@ -91,6 +98,7 @@ is
       Mag  : Float := Want;
       Tol  : Float;
    begin
+      Mark;
       if Diff < 0.0 then
          Diff := -Diff;
       end if;
@@ -171,6 +179,7 @@ is
 
    procedure Expect_Zero_Weights (Name : String; G : M.Gradient) is
    begin
+      Mark;
       for R in 1 .. M.Hidden loop
          for C in 1 .. M.Inputs loop
             if not Near (G.W1.Data (R, C), 0.0, 0.000_001) then
@@ -625,6 +634,7 @@ begin
       procedure Expect_Margin (Name : String; Model : M.Net) is
          Data : constant M.Sample_List := M.Make_Dataset (M.XOR_Points);
       begin
+         Mark;
          if not Margin (Model, Data) then
             Fail (Name & " does not separate XOR");
             for I in 1 .. Data.Count loop
@@ -1242,6 +1252,7 @@ begin
    end;
 
    if Failures = 0 then
+      Ada.Text_IO.Put_Line ("cases mlp_test" & Cases'Image);
       Ada.Text_IO.Put_Line ("mlp ok");
    else
       Ada.Text_IO.Put_Line ("mlp failed" & Natural'Image (Failures));

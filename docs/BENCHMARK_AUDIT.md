@@ -4,9 +4,9 @@ Twenty short tasks about code this repository already has, five of
 them broken on purpose, and an Ada auditor that runs before any
 score is accepted.
 
-Visible stamp: **v0.17.0-second**
+Visible stamp: **v0.18.0-status**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.17.0-second
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.18.0-status
 
 ## The idea, and the licences
 

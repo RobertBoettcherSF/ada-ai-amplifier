@@ -12,6 +12,12 @@ is
    package T renames AI_Amplifier.Tensors;
 
    Failures : Natural := 0;
+   Cases    : Natural := 0;
+
+   procedure Mark is
+   begin
+      Cases := Cases + 1;
+   end Mark;
 
    procedure Fail (Message : String) is
    begin
@@ -30,6 +36,7 @@ is
 
    procedure Expect (Name : String; Got, Want : Float) is
    begin
+      Mark;
       if not Near (Got, Want) then
          Fail (Name & " got " & Float'Image (Got)
            & " want " & Float'Image (Want));
@@ -38,6 +45,7 @@ is
 
    procedure Raised_Assertion (Name : String; Raised : Boolean) is
    begin
+      Mark;
       if not Raised then
          Fail (Name & " did not raise Assertion_Error");
       end if;
@@ -450,6 +458,7 @@ begin
    end;
 
    if Failures = 0 then
+      Ada.Text_IO.Put_Line ("cases tensors_test" & Cases'Image);
       Ada.Text_IO.Put_Line ("tensors ok");
    else
       Ada.Text_IO.Put_Line ("tensors failed" & Natural'Image (Failures));

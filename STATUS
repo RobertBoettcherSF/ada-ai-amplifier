@@ -1,0 +1,18 @@
+item 01 proved gnatprove ai_amplifier 1/1 checks 0, ai_amplifier-version 3/3 checks 0; spec item_01 pass asserts 5; check-version ok
+item 02 tested item_02 cases 9 spec pass
+item 03 proved gnatprove ai_amplifier-tensors 30/30 checks 378; summary 419 flow 41 provers 378 unproved 0; not proved ai_amplifier-tensors-demo 0/0, ai_amplifier-tensors-leaky_demo 0/0; spec item_03 pass asserts 15
+item 04 tested mlp_test cases 185 spec item_04 pass asserts 19
+item 05 tested attention_test cases 48 spec item_05 pass asserts 20
+item 06 tested item_06 cases 17 spec pass; tensors_test cases 67
+item 07 proved gnatprove summary 419 flow 41 provers 378 unproved 0; units ai_amplifier 1/1 checks 0, ai_amplifier-tensors 30/30 checks 378, ai_amplifier-version 3/3 checks 0; spec item_07 pass asserts 24
+item 08 tested mlp_test cases 185 spec item_08 pass asserts 27
+item 09 tested recurse_test cases 37 spec item_09 pass asserts 15; live-ask unchecked: recurse_cli --ask needs RECURSE_LLM_URL, RECURSE_LLM_KEY, and RECURSE_LLM_MODEL; CI does not call a live model
+item 10 tested mlp_test cases 185 spec item_10 pass asserts 18
+item 11 tested traces_test cases 4 spec item_11 pass asserts 22; live-ask unchecked: traces_cli --ask needs TRACES_LLM_URL, TRACES_LLM_KEY, and TRACES_LLM_MODEL; CI does not call a live model
+item 12 tested audit_test cases 13 spec item_12 pass asserts 11
+item 13 tested reward_test cases 9 spec item_13 pass asserts 43
+item 14 tested harness_test cases 406 spec item_14 pass asserts 19; live-ask unchecked: harness_cli --ask needs HARNESS_LLM_URL, HARNESS_LLM_KEY, and HARNESS_LLM_MODEL; CI does not call a live model
+item 15 tested steps_test cases 16 spec item_15 pass asserts 10
+item 16 tested check-locked cases 16 spec pass; no item_16.adb
+item 17 tested recheck_test agree 44 of 44, 22 of 22, 12 of 12 spec item_17 pass asserts 18
+summary proved 3 of 17, tested 14, unchecked 0

@@ -22,6 +22,12 @@ is
    use type S.Mark;
 
    Failures : Natural := 0;
+   Cases    : Natural := 0;
+
+   procedure Mark is
+   begin
+      Cases := Cases + 1;
+   end Mark;
 
    procedure Fail (Message : String) is
    begin
@@ -138,6 +144,7 @@ is
                Rule  : constant String := Word_At (Row, 4);
                Place : Natural;
             begin
+               Mark;
                S.Grade_Built_In (Line, Item);
                NLast := Item.Name_Last;
                if NLast > Name'Length then
@@ -200,6 +207,7 @@ is
       X     : T.Vector (2);
       Y     : Float;
    begin
+      Mark;
       S.Fib_Answer (0, Value, OK);
       if not OK or else Value /= 0 then
          Fail ("F(0)");
@@ -278,6 +286,7 @@ is
       Word : String (1 .. 32);
       Last : Natural;
    begin
+      Mark;
       S.Grade (Good, Item);
       if Item.Answer_Grade /= S.Pass or else Item.Step_Grade /= S.Pass then
          Fail ("user fib 3");
@@ -334,6 +343,7 @@ is
 
    procedure Check_Demo is
    begin
+      Mark;
       if D.Solution_Count /= 0 then
          Fail ("demo before run");
       end if;
@@ -445,6 +455,7 @@ is
       Last  : Natural;
       File  : IO.File_Type;
    begin
+      Mark;
       GNAT.OS_Lib.Spawn
         ("bin/steps_cli", Empty, Out_Path, OK, Raw, Err_To_Out => True);
       if not OK or else Exit_Of (Raw) /= 0 then
@@ -508,6 +519,7 @@ begin
    Check_Demo;
    Check_Cli;
    if Failures = 0 then
+      IO.Put_Line ("cases steps_test" & Cases'Image);
       IO.Put_Line ("steps ok");
    else
       IO.Put_Line ("steps FAIL" & Natural'Image (Failures));

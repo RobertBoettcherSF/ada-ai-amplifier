@@ -504,6 +504,22 @@
       white-space: pre-wrap;
     }
     #rechecktable .ok { color: #b6f0b6; }
+    #statustable {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.4rem 0;
+      font: 14px/1.4 ui-monospace, monospace;
+    }
+    #statustable th, #statustable td {
+      text-align: left;
+      vertical-align: top;
+      padding: 8px 10px 8px 0;
+      overflow-wrap: anywhere;
+    }
+    #statussrc { white-space: pre-wrap; }
+    #statustable .proved { color: #b6f0b6; }
+    #statustable .tested { color: #ffe14a; }
+    #statustable .unchecked { color: #ffb4a8; }
     #lockedtable pre {
       margin: 0.3rem 0 0;
       white-space: pre-wrap;
@@ -552,7 +568,7 @@
   </style>
 </head>
 <body>
-  <div id="ver">v0.17.0-second</div>
+  <div id="ver">v0.18.0-status</div>
   <main id="main" tabindex="-1">
     <h1>ada-ai-amplifier</h1>
     <p id="banner" class="err" hidden></p>
@@ -926,7 +942,7 @@
     </div>
     <h2>Locked statements</h2>
     <p>
-      Sixteen statements: items 1 through 15, and item 17. Each one is
+      Seventeen statements: items 1 through 15, item 17, and item 18. Each one is
       the plain Ada assertions in <code>specs/</code>. This build
       ran them. The fingerprint is the SHA-256 of that source.
       JavaScript only copies the words. A fingerprint stops a
@@ -977,6 +993,32 @@
         <a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/SECOND_CHECKER.md">What an agreement does not prove</a>.
       </p>
     </div>
+    <h2>Checking status</h2>
+    <p>
+      Items 1 through 17, each labelled from this build.
+      Proved means GNATprove proved that code. Tested means the
+      test program and the locked spec passed. Anything else is
+      unchecked. JavaScript only draws the lines.
+    </p>
+    <div id="status">
+      <p id="statusstat" class="out">Waiting for this build's report.</p>
+      <table id="statustable">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Label</th>
+            <th>Evidence</th>
+          </tr>
+        </thead>
+        <tbody id="statusbody"></tbody>
+      </table>
+      <pre id="statussrc">__STATUS_REPORT__</pre>
+      <p class="fine">
+        Tested is not proved. A label covers the checks named
+        in that row. A live model is not one of them.
+        <a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/CHECKING_STATUS.md">What a label does not show</a>.
+      </p>
+    </div>
     <h2>On this page</h2>
     <ul>
       <li>Tap the splash, or press Enter, to leave it.</li>
@@ -994,6 +1036,7 @@
       <li>Checked steps asks Ada to grade twelve solutions by the final answer and by every step, and to mark the first bad step.</li>
       <li>Locked statements shows each spec, its fingerprint, and whether that spec passed in this build.</li>
       <li>The second checker shows how many cases the two graders agreed on. The counts were written when this page was built.</li>
+      <li>Checking status shows proved, tested, or unchecked for items 1 through 17. The lines were written when this page was built.</li>
       <li>F9, or Feedback, writes a feedback file.</li>
       <li>If the previous session did not end cleanly, a crash report is offered.</li>
     </ul>
@@ -1016,7 +1059,7 @@
       <li><span class="n">15.</span><span>Checked steps, not just answers</span> <span class="st done">done</span></li>
       <li><span class="n">16.</span><span>Locked statements. Each finished item has a fixed spec. CI fails if its fingerprint changes without <code>specs/LOCK</code>, or if <code>pragma Assume</code> or <code>pragma Annotate</code> appear. Independent reimplementation of the statement/proof split in <a href="https://github.com/anthropics/formal-math">formal-math</a> (Apache-2.0).</span> <span class="st done">done</span></li>
       <li><span class="n">17.</span><span>Second, independent checker. A separately written Ada checker re-checks the verdicts of items 11, 12, and 15. CI fails on disagreement. Independent reimplementation of the independent kernel check in <a href="https://github.com/anthropics/formal-math">formal-math</a> (Apache-2.0).</span> <span class="st done">done</span></li>
-      <li><span class="n">18.</span><span>Checking status on every item. This page and the README label items 1–15 proved, tested, or unchecked, with real numbers. Idea only, an independent reimplementation of results at different stages of verification in <a href="https://github.com/openai/math">openai/math</a> (Apache-2.0).</span> <span class="st">planned</span></li>
+      <li><span class="n">18.</span><span>Checking status on every item. This page and the README label items 1–17 proved, tested, or unchecked, with the numbers from this build. Independent reimplementation of results at different stages of verification in <a href="https://github.com/openai/math">openai/math</a> (Apache-2.0).</span> <span class="st done">done</span></li>
       <li><span class="n">19.</span><span>Reasoning summary vs checked steps. A short written summary of an item-15 solution, each claim linked to the step that backs it, and unbacked claims flagged. Idea only, an independent reimplementation of the reasoning summaries in <a href="https://github.com/openai/math">openai/math</a> (Apache-2.0).</span> <span class="st">planned</span></li>
       <li><span class="n">20.</span><span>README update after items 1–19</span> <span class="st">last</span></li>
     </ol>
@@ -1057,6 +1100,7 @@
         <tr><td>Checked steps</td><td class="st">not proved</td></tr>
         <tr><td>Locked statements</td><td class="st">not proved</td></tr>
         <tr><td>Second checker</td><td class="st">not proved</td></tr>
+        <tr><td>Checking status</td><td class="st">not proved</td></tr>
       </tbody>
     </table>
     <h2>Links</h2>
@@ -1073,6 +1117,7 @@
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/CHECKED_STEPS.md">Checked steps</a></li>
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/LOCKED_STATEMENTS.md">Locked statements</a></li>
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/SECOND_CHECKER.md">Second checker</a></li>
+      <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/CHECKING_STATUS.md">Checking status</a></li>
     </ul>
     <noscript>
       <p class="err">JavaScript is off, so the Ada module is not running. Open this page in Safari or Chrome.</p>
@@ -2884,6 +2929,76 @@ function frame() {
 }
 setInterval(() => { fps = frames; frames = 0; }, 1000);
 
+function paintStatus() {
+  const src = document.getElementById("statussrc");
+  const body = document.getElementById("statusbody");
+  const stat = document.getElementById("statusstat");
+  if (!src || !body || !stat) return;
+  const text = src.textContent.replace(/^\n+|\n+$/g, "");
+  body.textContent = "";
+  const names = {
+    1: "Repo skeleton",
+    2: "Splash and live page",
+    3: "Core tensor and maths",
+    4: "Tiny trainable MLP",
+    5: "Tokenizer and attention",
+    6: "How-To and leaky ReLU",
+    7: "SPARK proofs",
+    8: "Weight-space programming",
+    9: "Recursive prompts",
+    10: "Training speed",
+    11: "Wrong turns",
+    12: "Benchmark audit",
+    13: "Reward hacking",
+    14: "Harness comparison",
+    15: "Checked steps",
+    16: "Locked statements",
+    17: "Second checker"
+  };
+  const rows = [];
+  let summary = "";
+  if (!text || text.indexOf("item ") !== 0) {
+    stat.textContent = "This build did not write the checking status.";
+    return;
+  }
+  text.split("\n").forEach((line) => {
+    const raw = line.trim();
+    if (raw.indexOf("summary ") === 0) {
+      summary = raw.slice("summary ".length);
+      return;
+    }
+    const parts = raw.split(" ");
+    if (parts[0] !== "item" || parts.length < 4) return;
+    const item = Number(parts[1]);
+    const label = parts[2];
+    const evidence = parts.slice(3).join(" ");
+    rows.push({item: item, label: label, evidence: evidence});
+  });
+  rows.forEach((row) => {
+    const tr = document.createElement("tr");
+    const item = document.createElement("td");
+    item.textContent = String(row.item) + (names[row.item] ? " " + names[row.item] : "");
+    const label = document.createElement("td");
+    label.textContent = row.label;
+    label.className = row.label;
+    const evidence = document.createElement("td");
+    evidence.textContent = row.evidence;
+    tr.append(item, label, evidence);
+    body.append(tr);
+  });
+  window.__status = {rows: rows, summary: summary};
+  const counts = {proved: 0, tested: 0, unchecked: 0};
+  rows.forEach((row) => {
+    if (Object.prototype.hasOwnProperty.call(counts, row.label)) counts[row.label] += 1;
+  });
+  const expect = "proved " + counts.proved + " of 17, tested " + counts.tested + ", unchecked " + counts.unchecked;
+  if (rows.length === 17 && summary === expect) {
+    stat.textContent = summary + ". Tested is not proved. The labels describe only the checks in this repository.";
+  } else {
+    stat.textContent = "This build's status report is incomplete.";
+  }
+  src.hidden = true;
+}
 function paintRecheck() {
   const src = document.getElementById("rechecksrc");
   const body = document.getElementById("recheckbody");
@@ -3000,6 +3115,7 @@ async function boot() {
 setTimeout(() => {
   if (!started && wasmerr.hidden) fail("It did not start within 8 seconds.");
 }, 8000);
+paintStatus();
 paintRecheck();
 boot().catch((e) => fail(String(e && e.message ? e.message : e)));
   </script>

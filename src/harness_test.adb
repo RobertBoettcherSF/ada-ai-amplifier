@@ -19,6 +19,12 @@ is
    package IO renames Ada.Text_IO;
 
    Failures : Natural := 0;
+   Cases    : Natural := 0;
+
+   procedure Mark is
+   begin
+      Cases := Cases + 1;
+   end Mark;
 
    procedure Fail (Message : String) is
    begin
@@ -72,6 +78,7 @@ is
       FLast : Natural;
       ALast : Natural;
    begin
+      Mark;
       for Which in H.Harness_Name loop
          H.Model_Propose
            (Index, Positive (Attempt), Note, Ask,
@@ -174,6 +181,7 @@ is
       Note : String (1 .. H.Max_Note);
       Last : Natural;
    begin
+      Mark;
       H.Checker_Accepts
         (Index, Fib, Minus, Curr, Text, OK, Note, Last);
       if OK then
@@ -190,6 +198,7 @@ is
       Note : String (1 .. H.Max_Note);
       Last : Natural;
    begin
+      Mark;
       H.Checker_Accepts
         (Index, 0, 0, 0, Text, OK, Note, Last);
       if not OK then
@@ -272,6 +281,7 @@ is
    is
       One : H.Run;
    begin
+      Mark;
       H.Run_One (Which, Index, One);
       if One.Solved /= Solved
         or else One.Steps /= Steps
@@ -578,6 +588,7 @@ begin
    Check_Demo;
    Check_Cli;
    if Failures = 0 then
+      IO.Put_Line ("cases harness_test" & Cases'Image);
       IO.Put_Line ("harness ok");
    else
       IO.Put_Line ("harness failed");

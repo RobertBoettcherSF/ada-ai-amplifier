@@ -6,14 +6,14 @@ the feedback and crash files.
 The splash on the live page is a small picture of a network: Ada moves
 the points, and the page plots them.
 
-Visible stamp: **v0.17.0-second**
+Visible stamp: **v0.18.0-status**
 
 The same text is `AI_Amplifier.Version.Version_Text`, the yellow badge in
 `web/template.html`, `version.txt`, and the line printed by `bin/hello`.
-The Alire crate version is `0.17.0-second` (the stamp without the leading
+The Alire crate version is `0.18.0-status` (the stamp without the leading
 `v`, because Alire versions are semver).
 
-**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.17.0-second
+**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.18.0-status
 
 **Guide:** [docs/HOWTO.md](docs/HOWTO.md). The page links there. It is the install path, a walkthrough that adds leaky ReLU, and the code tour.
 
@@ -88,10 +88,13 @@ verdicts of items 11, 12, and 15 a second time.
 [docs/SECOND_CHECKER.md](docs/SECOND_CHECKER.md) is that account.
 Agreement makes a shared bug less likely. It does not prove
 either checker right. Both were written in this project.
-Item 18 is a checking status on every item.
+Item 18 labels items 1–17 proved, tested, or unchecked.
+[docs/CHECKING_STATUS.md](docs/CHECKING_STATUS.md) is that
+account. Tested is not proved. The summary on this tree is
+proved 3 of 17, tested 14, unchecked 0.
 Item 19 is a reasoning summary set against the checked steps.
 Item 20, the README update, is last, after items 1–19. Those
-three are planned and not started.
+two are planned and not started.
 
 ## Why plain Ada
 
@@ -133,8 +136,9 @@ three are planned and not started.
 | Reward hacking | Ada scores five XOR submissions with a flawed grader and the real check, then draws two hill-climb curves |
 | Harness | One Ada solver, four harnesses, the same eight tasks. The page shows the score table and one task under each harness |
 | Checked steps | Twelve worked solutions. Ada shows an answer-only grade and a step grade. The first bad step is marked |
-| Locked statements | Sixteen specs, items 1–15 and item 17. Ada reports each fingerprint and whether that spec passed in this build |
+| Locked statements | Seventeen specs, items 1–15, item 17, and item 18. Ada reports each fingerprint and whether that spec passed in this build |
 | Second checker | 44 of 44 wrong-turn cases, 22 of 22 audit cases, and 12 of 12 checked-step cases agree. JavaScript copies the counts |
+| Checking status | Items 1–17, each proved, tested, or unchecked. The summary is proved 3 of 17, tested 14, unchecked 0. JavaScript copies the lines |
 | Feedback, or F9 | Asks for a short note, then writes `feedback-*.json` (version, browser, screen, the recent UI events, and the note). On a phone that can share files, it offers the share sheet |
 | Crash report | If the previous visit did not end cleanly, or the module traps, a panel offers `crash-report-*.json` |
 | Yellow badge | The stamp, on every screen, including when JavaScript is off |
@@ -191,7 +195,11 @@ omitted when printing.
 | `src/ai_amplifier-steps-demo.ads/.adb` | The page's table and the steps of the selected solution |
 | `src/ai_amplifier-steps-manifest.ads` | Planted flaws and the first bad step. The checker does not read it |
 | `docs/CHECKED_STEPS.md` | What those grades show, and what they do not claim |
-| `specs/item_01.adb` … `item_15.adb`, `item_17.adb` | One locked statement for items 1–15 and for item 17. Plain Ada assertions |
+| `specs/item_01.adb` … `item_15.adb`, `item_17.adb`, `item_18.adb` | One locked statement for items 1–15, item 17, and item 18. Plain Ada assertions |
+| `src/ai_amplifier-status.ads/.adb` | Computes proved, tested, or unchecked from the build logs. Plain Ada. Not linked into wasm |
+| `src/status_cli.adb` | Prints that report. CI fails if it differs from `STATUS` |
+| `STATUS` | The committed report. `tools/check-status.sh` recomputes it |
+| `docs/CHECKING_STATUS.md` | What a label does not show |
 | `src/ai_amplifier-recheck.ads/.adb` | The second checker. Its own XOR forward pass, Fibonacci, and parsers. It does not call the first checkers |
 | `src/recheck_test.adb` | Compares the two checkers case by case. Prints `recheck ok` |
 | `docs/SECOND_CHECKER.md` | What an agreement does not prove |
@@ -212,8 +220,9 @@ omitted when printing.
 | `build.sh` | AdaWebPack 24 to `obj/wasm/ai_amplifier.wasm`, smoke, then `site/index.html` |
 | `prove.sh` | GNATprove level 2 on the SPARK units. Writes `proof/`. CI runs it |
 | `tools/get-toolchain.sh` | Downloads the wasm compiler into `toolchain/` (gitignored) |
-| `tools/wasm-smoke.mjs` | Node: stamp, no wasm imports, splash numbers, product and softmax, leaky ReLU, XOR training, the weight text, BPE round trip, attention rows, the wrong-turn checker, the benchmark audit, the reward table and both searches, the harness table, the step grades, the locked statements |
-| `tools/page-smoke.mjs` | Headless Chrome: splash, the tensor panel, leaky ReLU, the training panel, the weight workbench, the speed panel, the token panel, the recorded chains, the wrong-turn panel, the benchmark audit, the reward table and curves, the harness table and one task's four walks, the checked-steps table, the locked statements, Enter, tap, F9, crash panel, failed module |
+| `tools/wasm-smoke.mjs` | Node: stamp, no wasm imports, splash numbers, product and softmax, leaky ReLU, XOR training, the weight text, BPE round trip, attention rows, the wrong-turn checker, the benchmark audit, the reward table and both searches, the harness table, the step grades, the locked statements, the second checker |
+| `tools/page-smoke.mjs` | Headless Chrome: splash, the tensor panel, leaky ReLU, the training panel, the weight workbench, the speed panel, the token panel, the recorded chains, the wrong-turn panel, the benchmark audit, the reward table and curves, the harness table and one task's four walks, the checked-steps table, the locked statements, the second checker, the checking-status table, Enter, tap, F9, crash panel, failed module |
+| `tools/check-status.sh` | Runs the tests, the specs, and `status_cli`. Fails if `STATUS` differs |
 | `tools/howto-steps.sh` | The commands in the How-To. CI job `how-to steps` runs this file |
 | `docs/HOWTO.md` | Newcomer guide |
 | `CONTRIBUTING.md` | Stamp, one item at a time, honesty, the pre-push list, F9 |
@@ -237,7 +246,7 @@ alr -n build
 on). Expected line:
 
 ```text
-ada-ai-amplifier v0.17.0-second
+ada-ai-amplifier v0.18.0-status
 ```
 
 Then:
@@ -256,6 +265,8 @@ Then:
 ./bin/harness_cli
 ./bin/steps_test
 ./bin/steps_cli
+./bin/recheck_test
+./tools/check-status.sh
 ```
 
 Expected lines:
@@ -270,6 +281,8 @@ audit ok
 reward ok
 harness ok
 steps ok
+recheck ok
+status ok
 ```
 
 `audit_cli` prints the twenty lines and the two score sentences.
@@ -343,6 +356,7 @@ in them.
 | Checked steps | not proved | Plain Ada. The planted flaws and the two grades are tests |
 | Locked statements | not proved | Plain Ada. The specs are tests of the numbers the earlier tests already check. The fingerprint is not a proof |
 | Second checker | not proved | Plain Ada. Agreement of the two graders is a test. It is not a proof that either grader is right |
+| Checking status | not proved | Plain Ada. The labels are computed from the logs. A tested label is not a proof |
 
 `Summand_Bound` is `1.0E18`. The float value of that literal is a
 little under `1.0E18`, and the real square of that float is a little
@@ -420,7 +434,9 @@ page exports, then compiles every `src/*.adb` except `hello.adb`,
 `audit_cli.adb`, `reward_test.adb`,
 `reward_cli.adb`, `harness_test.adb`,
 `harness_cli.adb`, `steps_test.adb`,
-`steps_cli.adb`, and `ai_amplifier-locked.adb`
+`steps_cli.adb`, `recheck_test.adb`,
+`ai_amplifier-recheck.adb`, `status_cli.adb`,
+`ai_amplifier-status.adb`, and `ai_amplifier-locked.adb`
 (Text_IO is not part of this runtime, and the locked body in
 `src/` is the placeholder). It compiles
 `obj/gen/ai_amplifier-locked.adb` instead, links `--no-entry`, and exports the
@@ -1018,7 +1034,7 @@ fail exits 1. The page does not run this program.
 ## Locked statements
 
 `specs/` holds one small Ada program for each finished item,
-`item_01.adb` through `item_15.adb`, and `item_17.adb`. Each one calls the library
+`item_01.adb` through `item_15.adb`, `item_17.adb`, and `item_18.adb`. Each one calls the library
 and asserts numbers that item's test already checks: the 3 by 3
 product `14`, `14`, `17`, the XOR bar at step 95, the corpus
 length 563, the four recorded chains, the audit lines `14 of 20`
@@ -1045,6 +1061,42 @@ whether a spec is the right one. These units are plain Ada.
 There is no new SPARK proof. GNATprove still proves 419 checks
 on the root, the version unit, and the tensors.
 
+## Checking status
+
+`STATUS` is the report `bin/status_cli` prints from the
+GNATprove summary, the test logs, the locked specs, and the
+item-17 agreement counts. CI fails if that text changes.
+The summary on this tree is **proved 3 of 17, tested 14,
+unchecked 0**.
+
+| Item | Label | Evidence |
+|---|---|---|
+| 1 Repo skeleton | proved | gnatprove ai_amplifier 1/1 checks 0, ai_amplifier-version 3/3 checks 0; spec item_01 pass asserts 5; check-version ok |
+| 2 Splash and live page | tested | item_02 cases 9 spec pass |
+| 3 Core tensor and maths | proved | gnatprove ai_amplifier-tensors 30/30 checks 378; summary 419 flow 41 provers 378 unproved 0; not proved ai_amplifier-tensors-demo 0/0, ai_amplifier-tensors-leaky_demo 0/0; spec item_03 pass asserts 15 |
+| 4 Tiny trainable MLP | tested | mlp_test cases 185 spec item_04 pass asserts 19 |
+| 5 Tokenizer and attention | tested | attention_test cases 48 spec item_05 pass asserts 20 |
+| 6 How-To and leaky ReLU | tested | item_06 cases 17 spec pass; tensors_test cases 67 |
+| 7 SPARK proofs of the kernels | proved | gnatprove summary 419 flow 41 provers 378 unproved 0; units ai_amplifier 1/1 checks 0, ai_amplifier-tensors 30/30 checks 378, ai_amplifier-version 3/3 checks 0; spec item_07 pass asserts 24 |
+| 8 Weight-space programming | tested | mlp_test cases 185 spec item_08 pass asserts 27 |
+| 9 Recursive prompts | tested | recurse_test cases 37 spec item_09 pass asserts 15; live-ask unchecked: recurse_cli --ask needs RECURSE_LLM_URL, RECURSE_LLM_KEY, and RECURSE_LLM_MODEL; CI does not call a live model |
+| 10 Training-speed harness | tested | mlp_test cases 185 spec item_10 pass asserts 18 |
+| 11 Wrong-turn traces | tested | traces_test cases 4 spec item_11 pass asserts 22; live-ask unchecked: traces_cli --ask needs TRACES_LLM_URL, TRACES_LLM_KEY, and TRACES_LLM_MODEL; CI does not call a live model |
+| 12 Benchmark audit | tested | audit_test cases 13 spec item_12 pass asserts 11 |
+| 13 Reward hacking | tested | reward_test cases 9 spec item_13 pass asserts 43 |
+| 14 Harness comparison | tested | harness_test cases 406 spec item_14 pass asserts 19; live-ask unchecked: harness_cli --ask needs HARNESS_LLM_URL, HARNESS_LLM_KEY, and HARNESS_LLM_MODEL; CI does not call a live model |
+| 15 Checked steps | tested | steps_test cases 16 spec item_15 pass asserts 10 |
+| 16 Locked statements | tested | check-locked cases 16 spec pass; no item_16.adb |
+| 17 Second checker | tested | recheck_test agree 44 of 44, 22 of 22, 12 of 12 spec item_17 pass asserts 18 |
+
+Tested is not proved. Items 9, 11, and 14 name a live `--ask`
+mode that CI does not run. That mode is unchecked even though
+the item's recorded checks are tested. The page reads the same
+file. JavaScript copies the cells.
+[docs/CHECKING_STATUS.md](docs/CHECKING_STATUS.md) is the longer
+account, including the licence note. Nothing from that
+repository was copied.
+
 ## Backlog
 
 1. **Repo skeleton — done.** Crate, stamp, native hello, wasm target, placeholder page.
@@ -1064,19 +1116,19 @@ on the root, the version unit, and the tensors.
 15. **Checked steps, not just answers — done.** Twelve solutions, an answer-only grade and a step grade, and the panel on the page. [docs/CHECKED_STEPS.md](docs/CHECKED_STEPS.md). This is not a copy of the papers linked there. Ada can check these steps because each one is recomputed from our own code. Most real reasoning is not like that.
 16. **Locked statements — done.** One Ada spec per item 1–15, `specs/LOCK`, and the panel. [docs/LOCKED_STATEMENTS.md](docs/LOCKED_STATEMENTS.md). A fingerprint stops a silent edit. It cannot tell whether a spec is the right one. The idea is the Challenge/Solution split in [formal-math](https://github.com/anthropics/formal-math) (Apache-2.0). This is an independent reimplementation. Nothing from that repository is copied.
 17. **Second, independent checker — done.** A second Ada checker re-grades the verdicts of items 11, 12, and 15. CI fails if the verdict, the reason, or the first bad step disagrees. [docs/SECOND_CHECKER.md](docs/SECOND_CHECKER.md). The idea is the independent kernel check in [formal-math](https://github.com/anthropics/formal-math) (Apache-2.0). This is an independent reimplementation. Nothing from that repository is copied. Agreement makes a shared bug less likely. It does not prove either checker right. Both were written in this project.
-18. **Checking status on every item — planned.** Not started. The page and this README label items 1–15 proved, tested, or unchecked, and they use the real numbers. The idea is results at different stages of verification in [openai/math](https://github.com/openai/math) (Apache-2.0). This is an independent reimplementation. Nothing from that repository is copied.
+18. **Checking status on every item — done.** `STATUS` labels items 1–17 proved, tested, or unchecked. The summary is proved 3 of 17, tested 14, unchecked 0. [docs/CHECKING_STATUS.md](docs/CHECKING_STATUS.md). The idea is labelling results by verification stage in [openai/math](https://github.com/openai/math) (Apache-2.0). This is an independent reimplementation. Nothing from that repository is copied. Tested is not proved.
 19. **Reasoning summary vs checked steps — planned.** Not started. A short written summary of one item-15 solution. Each claim links to the step that backs it. A claim with no step is flagged. The idea is the reasoning summaries in [openai/math](https://github.com/openai/math) (Apache-2.0). This is an independent reimplementation. Nothing from that repository is copied.
 20. **README update after items 1–19 — planned.** Last, after items 1–19. Not this change. Not started.
 
-Items landed one at a time. Item 17 is the last one done. Items 18 and 19 are planned. Item 20 is last.
+Items landed one at a time. Item 18 is the last one done. Item 19 is planned. Item 20 is last.
 
 ## Honesty
 
-1. The splash arithmetic is plain Ada. It is not proved. `SPARK_Mode` is off on that unit so it is not presented as a proof target. The contracts on `AI_Amplifier.Version` are the ones from the skeleton. The stamp text in that unit is `v0.17.0-second`.
+1. The splash arithmetic is plain Ada. It is not proved. `SPARK_Mode` is off on that unit so it is not presented as a proof target. The contracts on `AI_Amplifier.Version` are the ones from the skeleton. The stamp text in that unit is `v0.18.0-status`.
 2. The tensor kernels are SPARK, at the levels in the proof status table. Silver is absence of run-time error (and, where the table says so, a range). Gold is the component rule. `Leaky_ReLU` is Gold. Its slope on the page is `0.01`. The `Pre` and `Post` are still checked when the program runs. The proof does not replace that check. Sigmoid, tanh, and softmax do not claim to match the real functions.
-3. CI builds the native program, runs `bin/tensors_test`, `bin/mlp_test`, `bin/attention_test`, `bin/recurse_test`, `bin/traces_test`, `bin/audit_test`, `bin/reward_test`, `bin/harness_test`, and `bin/steps_test`, runs `bin/recheck_test`, runs the locked specs, runs `./prove.sh` (GNATprove level 2, unproved checks are errors), builds the wasm module and the page, then runs the headless smoke. The same job recomputes `specs/LOCK` and rejects an Assume pragma, an Annotate pragma, and a skipped test. The committed `proof/gnatprove.out` is that level 2 run. It proves the root, the version unit, and the tensors. It does not prove the splash, the network, the tokenizer, the attention block, the chain checker, the speed harness, the wrong-turn checker, the benchmark auditor, the reward demo, the harness comparison, the step checker, the second checker, or the locked specs.
+3. CI builds the native program, runs `bin/tensors_test`, `bin/mlp_test`, `bin/attention_test`, `bin/recurse_test`, `bin/traces_test`, `bin/audit_test`, `bin/reward_test`, `bin/harness_test`, and `bin/steps_test`, runs `bin/recheck_test`, runs the locked specs, runs `./prove.sh` (GNATprove level 2, unproved checks are errors), builds the wasm module and the page, then runs the headless smoke. The same job recomputes `specs/LOCK` and rejects an Assume pragma, an Annotate pragma, and a skipped test. The same job runs `./tools/check-status.sh` and fails if `STATUS` is not the report that program prints. The committed `proof/gnatprove.out` is that level 2 run. It proves the root, the version unit, and the tensors. It does not prove the splash, the network, the tokenizer, the attention block, the chain checker, the speed harness, the wrong-turn checker, the benchmark auditor, the reward demo, the harness comparison, the step checker, the second checker, the locked specs, or the checking-status program.
 4. The wasm module's lack of imports is what this build emits, and `tools/wasm-smoke.mjs` checks it. The tensor body does reference a failed-check path. `tools/wasm-checks.c` defines `__gnat_last_chance_handler` and `system__assertions__raise_assert_failure` as traps, so that path links without an import. On the native runtime the same check raises. `-gnatp` is not used. `-gnatw.X` is the same switch as the native Alire profile: this runtime forbids exception propagation, and the compiler's reminder of that is turned off.
-5. JavaScript does not compute the splash, the product, the softmax, the loss, the decision boundary, the merges, the attention, the weight text, the chain check, the training-speed verdict, the wrong-turn verdict, the benchmark audit, the reward scores, the harness table, the step grades, the locked-statement fingerprints, or the second-checker counts. The counts are a file this build writes. It reads coordinates, copies numbers, and sends UTF-8 bytes. It adds up the weights it already read when it writes the sentence under the heatmap. On the speed panel it reads the host wall clock before and after the Ada call and passes those two readings in. Ada subtracts them. If the module is missing, not WebAssembly, missing an export, or its stamp differs from the badge, the page says "The Ada module did not load" and still shows the title and the badge. The tensor demo then says it has no product. The leaky ReLU panel says it has no leaky ReLU. The training panel says it cannot train. The weight buttons say the weights cannot be edited. The speed panel says it cannot time a run. The token panel says it cannot tokenize. The chain panel says it cannot check a chain. The wrong-turn panel says it cannot check a next step. The audit panel says it cannot audit the tasks. The reward panel says it cannot score the submissions. The harness panel says it cannot run the harnesses. The steps panel says it cannot check the steps. The locked-statements panel says it cannot show the locked statements.
+5. JavaScript does not compute the splash, the product, the softmax, the loss, the decision boundary, the merges, the attention, the weight text, the chain check, the training-speed verdict, the wrong-turn verdict, the benchmark audit, the reward scores, the harness table, the step grades, the locked-statement fingerprints, the second-checker counts, or the checking-status labels. The counts are a file this build writes. It reads coordinates, copies numbers, and sends UTF-8 bytes. It adds up the weights it already read when it writes the sentence under the heatmap. On the speed panel it reads the host wall clock before and after the Ada call and passes those two readings in. Ada subtracts them. If the module is missing, not WebAssembly, missing an export, or its stamp differs from the badge, the page says "The Ada module did not load" and still shows the title and the badge. The tensor demo then says it has no product. The leaky ReLU panel says it has no leaky ReLU. The training panel says it cannot train. The weight buttons say the weights cannot be edited. The speed panel says it cannot time a run. The token panel says it cannot tokenize. The chain panel says it cannot check a chain. The wrong-turn panel says it cannot check a next step. The audit panel says it cannot audit the tasks. The reward panel says it cannot score the submissions. The harness panel says it cannot run the harnesses. The steps panel says it cannot check the steps. The locked-statements panel says it cannot show the locked statements. The checking-status panel does not use the module. It copies the report this build embedded. If that report is missing, the panel says so.
 6. The network on the splash is not a model. The tensor demo is not a model. The training panel is a model: forward, binary cross-entropy, backprop, and gradient descent, in the MLP unit. The token panel tokenizes and runs attention, forward only. Those weights are the seed. They are not trained.
 7. The MLP, the tokenizer, the attention block, the chain checker, the speed harness, the wrong-turn checker, the benchmark auditor, the reward demo, the harness comparison, and the step checker are plain Ada. `SPARK_Mode` is off. The finite-difference check, the hand-computed attention pass, the recorded chains, the four traces, and the planted tasks are tests, not proofs. There is no Silver claim and no Gold claim on these units. The MLP and attention call the tensor kernels, so a component outside `Summand_Bound` or a softmax logit outside `Logit_Bound` fails the kernel `Pre` at run time. The seeded nets and the tests stay inside those bounds. The chain checker does not call those kernels. A bad blob is a result, not a trap. A weight outside `Weight_Limit` is a verdict, not a trap: the checker does not call the loss on it.
 8. `Float` results are approximate. The tensor test and the attention test allow `0.000_05`. Softmax of a non-empty vector sums to 1 within that tolerance, because the largest logit becomes `exp(0) = 1`. The gradient check allows `0.002` plus 5 percent of the analytical value, at a central step of `0.001`. The log, square root, sine, and cosine in the MLP body, and the square root in the attention body, are series, not `Ada.Numerics`. The hand-computed layer-norm values in the attention section are this Newton square root.
@@ -1094,6 +1146,7 @@ Items landed one at a time. Item 17 is the last one done. Items 18 and 19 are pl
 20. The harness comparison is plain Ada. It is not proved. The solver is one procedure, and the four rows differ in what they keep and what they send back. The table is 1 of 8, 2 of 8, 8 of 8, and 5 of 8, with 7, 6, 0, and 0 wrong answers kept. That shows a harness can change this solver's score. It does not show the size of that change for a real model. The public pages linked from `docs/HARNESS.md` are the credit for the idea. Nothing from them was copied. JavaScript copies Ada's cells and the walk. The page does not call a model. `harness_cli --ask` can, and only on the machine where the user set a key.
 21. The step checker is plain Ada. It is not proved. It accepts a step only when that step matches a value this repository already computes: the hand-written XOR forward pass, one `Step` of that net, a Fibonacci chain through `Recurse.Check_Step`, or one `Tensors.Add`. A `Float` matches within `0.00005`. Eleven of the twelve answers pass. Four solutions pass every step. The eight planted flaws fail at the step named in `docs/CHECKED_STEPS.md`. That is possible because each step is recomputed from our own code. Most real reasoning is not like that, and this checker cannot grade it. The public pages linked from that file are the credit for the idea. Nothing from them was copied. JavaScript copies Ada's cells and the lines. The page does not call a model.
 22. The locked statements are plain Ada. They are not proved. Each spec repeats numbers the earlier tests already check, and CI runs those specs against the library. `specs/LOCK` is the SHA-256 of the spec files. A change to a spec that does not update that file fails CI. An update of `specs/LOCK` has to be named in the pull request description. That stops a silent edit. It does not say the spec is the right statement. A wrong spec with a matching fingerprint still passes. The repository linked from `docs/LOCKED_STATEMENTS.md` is the credit for the statement-and-proof split. Nothing from it was copied. JavaScript copies the spec text, the fingerprint, and the pass word. It does not hash and it does not grade.
+23. The checking status is plain Ada. It is not proved. `proved` is printed only for units GNATprove proved: the root and the version unit for item 1, the tensor kernels for item 3, and that same run for item 7. The summary total is 419 checks, of which the tensor detail lines sum to 378 and the summary's flow column is 41. Item 1's detail lines are 0 checks. The page demos are not in that proof. `tested` means the named test program and the locked spec passed. It is not a proof. `unchecked` is what is left. On this tree no item is unchecked. Items 9, 11, and 14 still name a live `--ask` mode that needs a key and is not run in CI. That mode is not covered by the tested label. The public repository linked from `docs/CHECKING_STATUS.md` is the credit for labelling a result by its verification stage. Nothing from it was copied. JavaScript copies the cells. It does not choose the label.
 
 ## License
 

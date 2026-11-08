@@ -5,9 +5,9 @@ grader is `AI_Amplifier.Recheck`. It does not call
 `AI_Amplifier.Traces`, `AI_Amplifier.Audit`, or
 `AI_Amplifier.Steps`.
 
-Visible stamp: **v0.17.0-second**
+Visible stamp: **v0.18.0-status**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.17.0-second
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.18.0-status
 
 ## The idea, and the licence
 

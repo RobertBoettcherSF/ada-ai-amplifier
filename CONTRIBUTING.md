@@ -17,17 +17,17 @@ GitHub Pages from `main`, not with a secret gist.
 4. Report what landed, what the checks did, and what is still open.
 5. Stop. Do not start the next item in the same change.
 
-Items 1 through 17 are done. Item 15 is the checked-steps demo.
-Item 16 is the locked statements. Item 17 is the second checker.
-Items 18 and 19 are planned and not started. Item 18 is a
-checking status on items 1–15. Item 19 is a reasoning summary
-set against the checked steps. Item 20, the README update, is
-last, after items 1–19. The ideas for 16 and 17 come from
+Items 1 through 18 are done. Item 16 is the locked statements.
+Item 17 is the second checker. Item 18 labels items 1–17
+proved, tested, or unchecked. Item 19 is a reasoning summary
+set against the checked steps, and it is planned, not
+started. Item 20, the README update, is last, after
+items 1–19. The ideas for 16 and 17 come from
 [formal-math](https://github.com/anthropics/formal-math)
 (Apache-2.0). The ideas for 18 and 19 come from
 [openai/math](https://github.com/openai/math) (Apache-2.0).
-Both are ideas only, for an independent reimplementation.
-Nothing from either repository is copied. CI runs `./prove.sh` (GNATprove level 2, timeout 120 seconds). If a change touches
+Item 18 is an independent reimplementation. Item 19 is still
+an idea only. Nothing from either repository is copied. CI runs `./prove.sh` (GNATprove level 2, timeout 120 seconds). If a change touches
 a proved unit, `./prove.sh` must still pass and `proof/gnatprove.out`
 is part of that change. Do not regenerate it as a side effect of a
 change that does not touch a proved unit. There is no `pragma Annotate`
@@ -43,7 +43,7 @@ These four are the same text:
 
 | Place | Text |
 |---|---|
-| `AI_Amplifier.Version.Version_Text` | `v0.17.0-second` on this tree |
+| `AI_Amplifier.Version.Version_Text` | `v0.18.0-status` on this tree |
 | `web/template.html`, the `#ver` badge | the same, so it shows with JavaScript off |
 | `version.txt` | the same, one line |
 | `alire.toml` `version` | the same without the leading `v` |
@@ -54,7 +54,7 @@ Bump the stamp when the page, or the Ada a visitor runs, would differ.
 Do not reuse a stamp. Pages deploys from `main` only, so the bump lands
 with the change that deploys. The link you send is
 
-`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.17.0-second`
+`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.18.0-status`
 
 with `?v=` set to the stamp without the leading `v`. Before you say
 that stamp is live, fetch the page and `version.txt` and see the text
@@ -92,11 +92,12 @@ seen.
 2. **Is it still there?** `node tools/page-smoke.mjs` walks those, on a
    desktop viewport and a phone-sized viewport.
 3. **Does the new behaviour work?**    Native tests (`tensors ok`,
-   `mlp ok`, `attention ok`, `recurse ok`, `traces ok`, `audit ok`, `reward ok`, `harness ok`, `steps ok`, `recheck ok`), then `./tools/run-specs.sh` (the specs, each printing `pass`), then `./build.sh` (the wasm smoke), then
+   `mlp ok`, `attention ok`, `recurse ok`, `traces ok`, `audit ok`, `reward ok`, `harness ok`, `steps ok`, `recheck ok`), then `./tools/check-status.sh` (the report matches `STATUS`), then `./tools/run-specs.sh` (the specs, each printing `pass`), then `./build.sh` (the wasm smoke), then
    the page smoke. `./tools/howto-steps.sh` is that path in one file,
    after Alire, Node 22, Chrome, and `./tools/howto-packages.sh`.
    `python3 tools/check-locked.py` checks `specs/LOCK`. `./tools/check-locked-selftest.sh` checks that a bad edit fails the gate.
    `./tools/check-recheck-selftest.sh` checks that a planted bug in either checker fails the comparison.
+   `./tools/check-status-selftest.sh` checks that a missing `mlp ok` is not labelled tested.
 4. **Does the stamp match?** `./tools/check-version.sh`.
 5. **Do the docs name the numbers the code uses?** The How-To quotes
    `tools/howto-packages.sh` and `tools/howto-steps.sh`.

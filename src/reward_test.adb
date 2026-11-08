@@ -22,6 +22,12 @@ is
    package IO renames Ada.Text_IO;
 
    Failures : Natural := 0;
+   Cases    : Natural := 0;
+
+   procedure Mark is
+   begin
+      Cases := Cases + 1;
+   end Mark;
 
    procedure Fail (Message : String) is
    begin
@@ -49,6 +55,7 @@ is
       Last : Natural;
       Hits : Natural;
    begin
+      Mark;
       R.Build (Bank);
       if Bank.Count /= 5 then
          Fail ("count");
@@ -176,6 +183,7 @@ is
       Line   : String (1 .. R.Max_Line);
       Last   : Natural;
    begin
+      Mark;
       R.Search (R.Flawed_Aim, Flawed);
       R.Search (R.Real_Aim, Real);
       R.Search (R.Flawed_Aim, Again);
@@ -257,6 +265,7 @@ is
       Line : String (1 .. R.Max_Line);
       Last : Natural;
    begin
+      Mark;
       D.Run;
       if D.Submission_Count /= 5 or else D.Column_Count /= 5 then
          Fail ("demo count");
@@ -273,6 +282,7 @@ is
          Fail ("demo mark");
       end if;
       for I in 1 .. 5 loop
+         Mark;
          declare
             Word  : String (1 .. 16);
             WLast : Natural;
@@ -393,6 +403,7 @@ is
       Buf  : String (1 .. 40_000);
       Last : Natural;
    begin
+      Mark;
       Run_Cli (Empty, Code, Buf, Last);
       if Code /= 0
         or else Ada.Strings.Fixed.Count
@@ -447,6 +458,7 @@ begin
    Check_Demo;
    Check_Cli;
    if Failures = 0 then
+      IO.Put_Line ("cases reward_test" & Cases'Image);
       IO.Put_Line ("reward ok");
       Ada.Command_Line.Set_Exit_Status (0);
    else
