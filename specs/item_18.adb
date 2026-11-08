@@ -1,7 +1,8 @@
---  Item 18. The checking status of items 1 through 17.
+--  Item 18. The checking status of items 1 through 19.
 --  The labels are computed from the build logs. A tested
---  label is not a proof. A live --ask mode is not a test
---  that CI ran.
+--  label is not a proof. Item 18 itself is tested: this
+--  program is plain Ada and has no gnatprove run. A live
+--  --ask mode is not a test that CI ran.
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 with AI_Amplifier.Status;
@@ -48,7 +49,11 @@ begin
       pragma Assert (S.Item_Label (N) = Expected (N));
    end loop;
    pragma Assert
-     (S.Summary = "proved 6 of 17, tested 11, unchecked 0");
+     (S.Summary = "proved 7 of 19, tested 12, unchecked 0");
+   pragma Assert (S.Item_Label (18) = S.Tested);
+   pragma Assert (S.Item_Label (18) /= S.Proved);
+   pragma Assert (Has (18, "not proved:"));
+   pragma Assert (Has (18, "no gnatprove run"));
    pragma Assert (Has (1, "proof/item_01.out"));
    pragma Assert (Has (1, "unproved 0"));
    pragma Assert (Has (1, "ai_amplifier-version"));

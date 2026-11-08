@@ -63,5 +63,7 @@ done
 ./bin/status_cli > obj/gen/STATUS.out
 diff -u STATUS obj/gen/STATUS.out
 python3 tools/check-proof-runs.py
+python3 tools/check-built-status.py
+python3 tools/check-built-status.py --self-test
 ./tools/check-status-selftest.sh
 echo "status ok"

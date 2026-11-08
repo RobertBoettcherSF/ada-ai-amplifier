@@ -6,9 +6,9 @@ item's tests already check. CI builds those programs and runs
 them. The page shows the source, the SHA-256, and whether this
 build passed.
 
-Visible stamp: **v0.19.1-proofs**
+Visible stamp: **v0.20.0-readme**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.19.1-proofs
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.20.0-readme
 
 ## The idea, and the licence
 

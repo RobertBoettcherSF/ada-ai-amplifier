@@ -10,7 +10,10 @@ is
    Name_Max  : constant := 48;
    Line_Max  : constant := 400;
    Ev_Max    : constant := 800;
+   --  Item 16's case count is the specs for items 1 .. 17.
+   --  The report and the summary count items 1 .. 19.
    Item_Last : constant := 17;
+   Report_Last : constant := 19;
    Proof_Last : constant := 19;
 
    type Name_Text is record
@@ -951,6 +954,37 @@ is
                Add (E, " recheck ok, the three pairs agreeing,");
                Add (E, " and spec item_17 pass");
             end if;
+         when 18 =>
+            --  This item is the status program. It has a locked
+            --  spec. It is proved only when proof/item_18.out is
+            --  that program's own clean run. There is no such
+            --  run on this tree, so the label is tested.
+            if Own_Proof (18, "ai_amplifier-status") then
+               K := Proved;
+               Add_Run_Head (E, 18);
+               Add_Unit (E, 18, "ai_amplifier-status");
+               if Asserts (18) > 0 then
+                  Add (E, "; spec item_18 asserts ");
+                  Add_Nat (E, Asserts (18));
+               end if;
+            elsif Asserts (18) > 0 then
+               K := Tested;
+               Add (E, "spec item_18 asserts ");
+               Add_Nat (E, Asserts (18));
+               if Proofs (18).Present then
+                  Add_Why (E, "proof/item_18.out does not prove");
+                  Add (E, " ai_amplifier-status with checks above 0");
+                  Add (E, " and unproved 0");
+               else
+                  Add_Why (E, "AI_Amplifier.Status is plain Ada");
+                  Add (E, " and has no gnatprove run");
+               end if;
+            else
+               Add (E, "would take specs/item_18.adb with asserts,");
+               Add (E, " or proof/item_18.out proving");
+               Add (E, " ai_amplifier-status with checks above 0");
+               Add (E, " and unproved 0");
+            end if;
          when 19 =>
             if Own_Proof (19, "ai_amplifier-summary_rules")
               and then Run_Ok (T_Summary)
@@ -976,7 +1010,7 @@ is
                Add (E, " summary ok and spec item_19 pass");
             end if;
          when others =>
-            Add (E, "would take an item in 1 .. 17");
+            Add (E, "would take an item in 1 .. 19");
       end case;
    end Classify;
 
@@ -1030,7 +1064,7 @@ is
          Add (Why, Spec_Dir);
          return;
       end if;
-      for N in 1 .. Item_Last loop
+      for N in 1 .. Report_Last loop
          declare
             Path : constant String :=
               Prove_Dir & "/item_" & Two (N) & ".out";
@@ -1040,20 +1074,12 @@ is
             end if;
          end;
       end loop;
-      declare
-         Path : constant String := Prove_Dir & "/item_19.out";
-      begin
-         if Open_Ok (Path) then
-            Read_Prove (19, Path);
-         end if;
-      end;
       Read_Tests (Tests_Path);
       Read_Specs (Specs_Path);
       Read_Recheck (Recheck_Path);
-      for N in 1 .. Item_Last loop
+      for N in 1 .. Report_Last loop
          Count_Asserts (Spec_Dir, N);
       end loop;
-      Count_Asserts (Spec_Dir, 19);
       Files_Ok := True;
    end Load;
 
@@ -1063,7 +1089,7 @@ is
       K : Kind;
       E : Ev;
    begin
-      if Number not in 1 .. 17 and then Number /= 19 then
+      if Number not in 1 .. Report_Last then
          return Unchecked;
       end if;
       Classify (Number, K, E);
@@ -1074,8 +1100,8 @@ is
       K : Kind;
       E : Ev;
    begin
-      if Number not in 1 .. 17 and then Number /= 19 then
-         return "would take an item in 1 .. 17";
+      if Number not in 1 .. Report_Last then
+         return "would take an item in 1 .. 19";
       end if;
       Classify (Number, K, E);
       if E.Last = 0 then
@@ -1099,7 +1125,7 @@ is
    function Summary return String is
       P, T, U : Natural := 0;
    begin
-      for N in 1 .. 17 loop
+      for N in 1 .. Report_Last loop
          case Item_Label (N) is
             when Proved =>
                P := P + 1;
@@ -1109,13 +1135,13 @@ is
                U := U + 1;
          end case;
       end loop;
-      return "proved " & Trim (P) & " of 17, tested "
+      return "proved " & Trim (P) & " of 19, tested "
         & Trim (T) & ", unchecked " & Trim (U);
    end Summary;
 
    procedure Put_Report is
    begin
-      for N in 1 .. 17 loop
+      for N in 1 .. Report_Last loop
          Ada.Text_IO.Put ("item ");
          Ada.Text_IO.Put (Two (N));
          Ada.Text_IO.Put (" ");
@@ -1123,10 +1149,6 @@ is
          Ada.Text_IO.Put (" ");
          Ada.Text_IO.Put_Line (Item_Evidence (N));
       end loop;
-      Ada.Text_IO.Put ("item 19 ");
-      Ada.Text_IO.Put (Kind_Word (Item_Label (19)));
-      Ada.Text_IO.Put (" ");
-      Ada.Text_IO.Put_Line (Item_Evidence (19));
       Ada.Text_IO.Put ("summary ");
       Ada.Text_IO.Put_Line (Summary);
    end Put_Report;

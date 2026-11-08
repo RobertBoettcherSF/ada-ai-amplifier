@@ -1,6 +1,5 @@
---  Checking status for items 1 through 17, plus item 19.
---  The summary line is still the seventeen. Item 19 is
---  its own row. It is not one of those seventeen.
+--  Checking status for items 1 through 19.
+--  The summary counts every one of those nineteen.
 --
 --  Plain Ada (SPARK_Mode off). Nothing here is proved. The
 --  label is computed from the build logs: one GNATprove
@@ -36,7 +35,7 @@ is
 
    function Item_Evidence (Number : Positive) return String;
 
-   --  "proved X of 17, tested Y, unchecked Z"
+   --  "proved X of 19, tested Y, unchecked Z"
    function Summary return String;
 
    procedure Put_Report;
