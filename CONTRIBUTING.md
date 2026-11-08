@@ -17,16 +17,13 @@ GitHub Pages from `main`, not with a secret gist.
 4. Report what landed, what the checks did, and what is still open.
 5. Stop. Do not start the next item in the same change.
 
-Items 1 through 15 are done. Item 11 is the wrong-turn traces and
-the Ada checker. Item 12 is the benchmark audit. Item 13 is
-the reward-hacking demo. Item 14 is the same solver under
-four harnesses. Item 15 is the checked-steps demo.
-Items 16 through 19 are planned and not started. Item 16 is
-next: locked statements. Item 17 is a second, independent
-checker. Item 18 is a checking status on items 1–15. Item 19
-is a reasoning summary set against the checked steps. Item 20,
-the README update, is last, after items 1–19. The ideas for
-16 and 17 come from
+Items 1 through 16 are done. Item 14 is the same solver under
+four harnesses. Item 15 is the checked-steps demo. Item 16 is
+the locked statements. Items 17 through 19 are planned and not
+started. Item 17 is a second, independent checker. Item 18 is
+a checking status on items 1–15. Item 19 is a reasoning summary
+set against the checked steps. Item 20, the README update, is
+last, after items 1–19. The ideas for 16 and 17 come from
 [formal-math](https://github.com/anthropics/formal-math)
 (Apache-2.0). The ideas for 18 and 19 come from
 [openai/math](https://github.com/openai/math) (Apache-2.0).
@@ -47,7 +44,7 @@ These four are the same text:
 
 | Place | Text |
 |---|---|
-| `AI_Amplifier.Version.Version_Text` | `v0.15.1-backlog` on this tree |
+| `AI_Amplifier.Version.Version_Text` | `v0.16.0-locked` on this tree |
 | `web/template.html`, the `#ver` badge | the same, so it shows with JavaScript off |
 | `version.txt` | the same, one line |
 | `alire.toml` `version` | the same without the leading `v` |
@@ -58,7 +55,7 @@ Bump the stamp when the page, or the Ada a visitor runs, would differ.
 Do not reuse a stamp. Pages deploys from `main` only, so the bump lands
 with the change that deploys. The link you send is
 
-`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.15.1-backlog`
+`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.16.0-locked`
 
 with `?v=` set to the stamp without the leading `v`. Before you say
 that stamp is live, fetch the page and `version.txt` and see the text
@@ -91,14 +88,15 @@ seen.
 
 1. **Was it already there?** Splash, tensor demo, leaky ReLU, training,
    the weight workbench, the training-speed panel, tokens and
-   attention, the recorded chains, the wrong-turn panel, the benchmark audit, the reward table, the harness table, the checked-steps table, F9, the crash report, the badge,
+   attention, the recorded chains, the wrong-turn panel, the benchmark audit, the reward table, the harness table, the checked-steps table, the locked statements, F9, the crash report, the badge,
    the How-To link.
 2. **Is it still there?** `node tools/page-smoke.mjs` walks those, on a
    desktop viewport and a phone-sized viewport.
 3. **Does the new behaviour work?**    Native tests (`tensors ok`,
-   `mlp ok`, `attention ok`, `recurse ok`, `traces ok`, `audit ok`, `reward ok`, `harness ok`, `steps ok`), then `./build.sh` (the wasm smoke), then
+   `mlp ok`, `attention ok`, `recurse ok`, `traces ok`, `audit ok`, `reward ok`, `harness ok`, `steps ok`), then `./tools/run-specs.sh` (fifteen specs, each printing `pass`), then `./build.sh` (the wasm smoke), then
    the page smoke. `./tools/howto-steps.sh` is that path in one file,
    after Alire, Node 22, Chrome, and `./tools/howto-packages.sh`.
+   `python3 tools/check-locked.py` checks `specs/LOCK`. `./tools/check-locked-selftest.sh` checks that a bad edit fails the gate.
 4. **Does the stamp match?** `./tools/check-version.sh`.
 5. **Do the docs name the numbers the code uses?** The How-To quotes
    `tools/howto-packages.sh` and `tools/howto-steps.sh`.

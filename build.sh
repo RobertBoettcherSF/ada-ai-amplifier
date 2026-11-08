@@ -11,6 +11,9 @@
 # native test is where a shape mismatch raises.
 set -e
 cd "$(dirname "$0")"
+# The locked panel is this build's spec run. The generated body
+# is compiled below in place of src/ai_amplifier-locked.adb.
+./tools/run-specs.sh
 T=$PWD/toolchain/usr
 [ -x "$T/bin/llvm-gcc" ] || { echo "Run tools/get-toolchain.sh first"; exit 1; }
 export LD_LIBRARY_PATH="$PWD/toolchain/lib"
@@ -19,7 +22,7 @@ rm -rf obj/wasm && mkdir -p obj/wasm
 cd obj/wasm
 for F in ../../src/*.adb; do
   case $(basename "$F") in
-    hello.adb|tensors_test.adb|mlp_test.adb|attention_test.adb|recurse_test.adb|recurse_cli.adb|traces_test.adb|traces_cli.adb|audit_test.adb|audit_cli.adb|reward_test.adb|reward_cli.adb|harness_test.adb|harness_cli.adb|steps_test.adb|steps_cli.adb) continue ;;
+    hello.adb|tensors_test.adb|mlp_test.adb|attention_test.adb|recurse_test.adb|recurse_cli.adb|traces_test.adb|traces_cli.adb|audit_test.adb|audit_cli.adb|reward_test.adb|reward_cli.adb|harness_test.adb|harness_cli.adb|steps_test.adb|steps_cli.adb|ai_amplifier-locked.adb) continue ;;
   esac
   # -gnatw.X: this runtime forbids exception propagation, and the
   # compiler warns that a check would call Last_Chance_Handler. The
@@ -34,6 +37,13 @@ ar x "$T/lib/rts-native/adalib/libgnat.a" s-memcop.o s-memmov.o s-memset.o
 #  mismatch raises. The link does not pass --allow-undefined.
 "$T/bin/llvm-gcc" -c --target=wasm32 -O2 \
   -o wasm_checks.o "$PWD/../../tools/wasm-checks.c"
+#  The locked body is the one tools/run-specs.sh just wrote.
+#  src/ai_amplifier-locked.adb is the placeholder, not this link.
+[ -f ../../obj/gen/ai_amplifier-locked.adb ] || {
+  echo "obj/gen/ai_amplifier-locked.adb is missing"; exit 1; }
+"$T/bin/llvm-gcc" -c --target=wasm32 -O2 -gnat2012 -gnata -gnatwa -gnatw.X -gnatwe \
+  --RTS="$T/lib/rts-native" -I../../src \
+  -o ai_amplifier-locked.o ../../obj/gen/ai_amplifier-locked.adb
 "$LD" --no-entry --strip-all \
   --export=aa_version_length --export=aa_version_byte \
   --export=aa_splash_reset --export=aa_splash_tick \
@@ -123,6 +133,12 @@ ar x "$T/lib/rts-native/adalib/libgnat.a" s-memcop.o s-memmov.o s-memset.o
   --export=aa_st_rows --export=aa_st_row_len --export=aa_st_row_byte \
   --export=aa_st_bad --export=aa_st_rule_len --export=aa_st_rule_byte \
   --export=aa_st_stat_len --export=aa_st_stat_byte \
+  --export=aa_lk_count --export=aa_lk_item \
+  --export=aa_lk_name_len --export=aa_lk_name_byte \
+  --export=aa_lk_text_len --export=aa_lk_text_byte \
+  --export=aa_lk_fp_len --export=aa_lk_fp_byte \
+  --export=aa_lk_status_len --export=aa_lk_status_byte \
+  --export=aa_lk_stat_len --export=aa_lk_stat_byte \
   -z stack-size=2097152 --initial-memory=16777216 \
   -o ai_amplifier.wasm *.o
 cd ../..

@@ -2,9 +2,9 @@
 
 The idea, and what this repository actually shows.
 
-Visible stamp: **v0.15.1-backlog**
+Visible stamp: **v0.16.0-locked**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.15.1-backlog
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.16.0-locked
 
 ## The idea
 

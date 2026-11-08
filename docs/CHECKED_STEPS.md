@@ -4,9 +4,9 @@ Twelve worked solutions. Two grades. The answer-only grade
 looks at the final number. The step grade accepts a solution
 only when every step matches a value this repository recomputes.
 
-Visible stamp: **v0.15.1-backlog**
+Visible stamp: **v0.16.0-locked**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.15.1-backlog
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.16.0-locked
 
 ## The idea, and the licences
 
