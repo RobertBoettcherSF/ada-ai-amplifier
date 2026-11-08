@@ -54,6 +54,14 @@ is
       return Slice (Buf, Last);
    end Name_Of;
 
+   function Exit_Of (Code : Integer) return Integer is
+   begin
+      if Code >= 256 then
+         return Code / 256;
+      end if;
+      return Code;
+   end Exit_Of;
+
    function Has_Kind (Index : Positive; Kind : R.Step_Mark) return Boolean is
    begin
       for J in 1 .. U.Step_Count (Index) loop
@@ -280,14 +288,14 @@ begin
 
    declare
       use GNAT.OS_Lib;
-      Out_Path : constant String := "obj/gen/summary-cli.txt";
+      Out_Path : constant String := "/tmp/aaa-summary-cli-out";
       Empty    : Argument_List (1 .. 0);
       OK       : Boolean;
       Raw      : Integer;
    begin
       Spawn ("bin/summary_cli", Empty, Out_Path, OK, Raw, Err_To_Out => True);
       Mark;
-      if not OK or else Raw /= 0 then
+      if not OK or else Exit_Of (Raw) /= 0 then
          Fail ("cli status");
       else
          declare
