@@ -3,9 +3,9 @@
 One task, two graders, and a hill-climb that can please the weak
 grader without solving the task.
 
-Visible stamp: **v0.20.0-readme**
+Visible stamp: **v0.21.0-moreproofs**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.20.0-readme
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.21.0-moreproofs
 
 The task is to make this repository's XOR net right. The real check
 reruns the net. The flawed grader does not. Four of the five
@@ -174,8 +174,11 @@ does not run that program.
 
 ## What this is not
 
-- Not a proof. `AI_Amplifier.Reward` is plain Ada. `SPARK_Mode`
-  is off. There is no Silver claim and no Gold claim.
+- Not a proof of the float scores. `AI_Amplifier.Reward_Rule`
+  is proved for the accept/reject gate (`proof/item_13.out`,
+  summary 4, 2 checks, unproved 0). `AI_Amplifier.Reward` is
+  plain Ada. `SPARK_Mode` is off. There is no Silver claim
+  and no Gold claim on the nets.
 - Not evidence of how often a real model reward-hacks. The gaps
   are planted. The cheats were written to fit them. A hill-climb
   that is handed a proxy whose optimum is not the XOR net will

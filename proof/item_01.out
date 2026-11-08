@@ -2,24 +2,24 @@
 Summary of SPARK analysis
 =========================
 
------------------------------------------------------------------------------------------------------------------------
-SPARK Analysis results        Total       Flow                                           Provers   Justified   Unproved
------------------------------------------------------------------------------------------------------------------------
-Data Dependencies                 2          2                                                 .           .          .
-Flow Dependencies                 .          .                                                 .           .          .
-Initialization                    .          .                                                 .           .          .
-Non-Aliasing                      .          .                                                 .           .          .
-Run-time Checks                   5          .                              5 (CVC5 14%, Z3 86%)           .          .
-Assertions                        6          .                                            6 (Z3)           .          .
-Functional Contracts              2          .    2 (CVC5 14%, Trivial 14%, Z3 57%, altergo 14%)           .          .
-LSP Verification                  .          .                                                 .           .          .
-Termination                       3          2                                            1 (Z3)           .          .
-Concurrency                       .          .                                                 .           .          .
------------------------------------------------------------------------------------------------------------------------
-Total                            18    4 (22%)                                          14 (78%)           .          .
+----------------------------------------------------------------------------------------------------------
+SPARK Analysis results        Total       Flow                              Provers   Justified   Unproved
+----------------------------------------------------------------------------------------------------------
+Data Dependencies                 2          2                                    .           .          .
+Flow Dependencies                 .          .                                    .           .          .
+Initialization                    .          .                                    .           .          .
+Non-Aliasing                      .          .                                    .           .          .
+Run-time Checks                   5          .                  5 (CVC5 7%, Z3 93%)           .          .
+Assertions                        6          .                               6 (Z3)           .          .
+Functional Contracts              2          .    2 (CVC5 29%, Trivial 14%, Z3 57%)           .          .
+LSP Verification                  .          .                                    .           .          .
+Termination                       3          2                               1 (Z3)           .          .
+Concurrency                       .          .                                    .           .          .
+----------------------------------------------------------------------------------------------------------
+Total                            18    4 (22%)                             14 (78%)           .          .
 
 
-max steps used for successful proof: 49
+max steps used for successful proof: 2
 
 ============================
 Most difficult proved checks

@@ -6,9 +6,9 @@ item's tests already check. CI builds those programs and runs
 them. The page shows the source, the SHA-256, and whether this
 build passed.
 
-Visible stamp: **v0.20.0-readme**
+Visible stamp: **v0.21.0-moreproofs**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.20.0-readme
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.21.0-moreproofs
 
 ## The idea, and the licence
 
@@ -59,10 +59,15 @@ too. A lock update whose pull-request text does not name
 
 ## What is proved
 
-Nothing in this item is proved. `AI_Amplifier.Locked` is plain
-Ada. `SPARK_Mode` is off. The specs are plain Ada. They are
-tests. A fingerprint is not a proof. This change does not add
-an Assume pragma or an Annotate pragma.
+`AI_Amplifier.Lock_Rule` is proved for the lock-compare rule.
+`proof/item_16.out` is summary 11, 9 checks on that unit,
+unproved 0. Two fingerprints match when every hex digit
+matches, and the set holds only when every compared spec
+matches. Hashing a file is not in that unit.
+`AI_Amplifier.Locked` is plain Ada. `SPARK_Mode` is off.
+The specs are plain Ada. They are tests. A fingerprint is
+not a proof of the spec. This change does not add an Assume
+pragma or an Annotate pragma.
 
 The page reads a body that `tools/bake-locked.py` writes after
 the specs have run. JavaScript copies the spec text, the

@@ -4,9 +4,9 @@ Twelve worked solutions. Two grades. The answer-only grade
 looks at the final number. The step grade accepts a solution
 only when every step matches a value this repository recomputes.
 
-Visible stamp: **v0.20.0-readme**
+Visible stamp: **v0.21.0-moreproofs**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.20.0-readme
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.21.0-moreproofs
 
 ## The idea, and the licences
 
@@ -162,10 +162,15 @@ to 12, and `sum` for the two vectors above. Anything else is
 
 ## What is proved
 
-Nothing in this item. `AI_Amplifier.Steps` and its demo are
-plain Ada. `SPARK_Mode` is off. There is no new proof, no
-`pragma Annotate`, and no `pragma Assume`. The tensor kernels
-these steps call stay at the levels already in the proof
-table. A pass in `bin/steps_test` is a test. It is not a
-proof that every future solution will be graded the same way,
-and it is not a proof about reasoning outside this code.
+`AI_Amplifier.Step_Rule` is proved for the step-grade rule.
+`proof/item_15.out` is summary 8, 4 checks on that unit,
+unproved 0. The grade passes only when no row was blamed,
+the answer passed, and every required step was seen.
+`AI_Amplifier.Steps` and its demo are plain Ada.
+`SPARK_Mode` is off. Recomputing a value is not proved.
+There is no `pragma Annotate` and no `pragma Assume`. The
+tensor kernels these steps call stay at the levels already
+in the proof table. A pass in `bin/steps_test` is a test.
+It is not a proof that every future solution will be graded
+the same way, and it is not a proof about reasoning outside
+this code.

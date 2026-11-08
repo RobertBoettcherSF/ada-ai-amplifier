@@ -6,7 +6,7 @@ title: ""
 
 ## Stamp
 
-The yellow badge, bottom right. Example: `v0.20.0-readme`.
+The yellow badge, bottom right. Example: `v0.21.0-moreproofs`.
 
 ## What you expected
 

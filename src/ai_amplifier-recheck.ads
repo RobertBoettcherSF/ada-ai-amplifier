@@ -1,7 +1,9 @@
 --  A second checker for the verdicts of items 11, 12, and 15.
 --
---  Plain Ada (SPARK_Mode off). Nothing here is proved. This
---  unit does not with AI_Amplifier.Traces, AI_Amplifier.Audit,
+--  Plain Ada (SPARK_Mode off). Agreement is not a proof
+--  of either checker. The agreement count is
+--  AI_Amplifier.Agree_Rule, called by the comparison
+--  program. This unit does not with AI_Amplifier.Traces, AI_Amplifier.Audit,
 --  or AI_Amplifier.Steps. It does not call their graders. The
 --  comparison program runs a case through one of those units
 --  and through this one, and it fails when the verdict, the

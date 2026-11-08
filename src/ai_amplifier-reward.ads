@@ -2,8 +2,9 @@ with AI_Amplifier.MLP;
 
 --  Two graders for one task: make the XOR net right.
 --
---  Plain Ada (SPARK_Mode off). Nothing here is proved. The
---  submissions and the hill-climb are tests, not a measurement
+--  Plain Ada (SPARK_Mode off). Scoring a float net is not
+--  proved. The accept/reject gate is AI_Amplifier.Reward_Rule.
+--  The submissions and the hill-climb are tests, not a measurement
 --  of how often a model cheats.
 --
 --  The flawed grader accepts a report when any one of these

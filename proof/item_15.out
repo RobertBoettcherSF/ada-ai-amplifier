@@ -1,0 +1,42 @@
+=========================
+Summary of SPARK analysis
+=========================
+
+---------------------------------------------------------------------------------------------------------
+SPARK Analysis results        Total       Flow                             Provers   Justified   Unproved
+---------------------------------------------------------------------------------------------------------
+Data Dependencies                 .          .                                   .           .          .
+Flow Dependencies                 .          .                                   .           .          .
+Initialization                    .          .                                   .           .          .
+Non-Aliasing                      .          .                                   .           .          .
+Run-time Checks                   .          .                                   .           .          .
+Assertions                        .          .                                   .           .          .
+Functional Contracts              4          .    4 (CVC5 39%, Z3 56%, altergo 6%)           .          .
+LSP Verification                  .          .                                   .           .          .
+Termination                       4          4                                   .           .          .
+Concurrency                       .          .                                   .           .          .
+---------------------------------------------------------------------------------------------------------
+Total                             8    4 (50%)                             4 (50%)           .          .
+
+
+max steps used for successful proof: 27
+
+============================
+Most difficult proved checks
+============================
+
+No check found with max time greater than 1 second
+
+========================
+Detailed analysis report
+========================
+
+Analyzed 2 units
+in unit ai_amplifier, 1 subprograms and packages out of 1 analyzed
+  AI_Amplifier at ai_amplifier.ads:2 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
+in unit ai_amplifier-step_rule, 5 subprograms and packages out of 5 analyzed
+  AI_Amplifier.Step_Rule at ai_amplifier-step_rule.ads:7 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
+  AI_Amplifier.Step_Rule.Answer_Fault at ai_amplifier-step_rule.ads:46 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (1 checks)
+  AI_Amplifier.Step_Rule.Order_Of at ai_amplifier-step_rule.ads:18 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (1 checks)
+  AI_Amplifier.Step_Rule.Step_Grade_Passes at ai_amplifier-step_rule.ads:61 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (1 checks)
+  AI_Amplifier.Step_Rule.Steps_Complete at ai_amplifier-step_rule.ads:35 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (1 checks)

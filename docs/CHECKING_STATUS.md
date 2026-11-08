@@ -3,9 +3,9 @@
 Items 1 through 19, each with one label. The label is computed
 from this build. The page and the README copy that text.
 
-Visible stamp: **v0.20.0-readme**
+Visible stamp: **v0.21.0-moreproofs**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.20.0-readme
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.21.0-moreproofs
 
 ## The idea, and the licence
 
@@ -29,7 +29,7 @@ own items.
 A tested label is not a proof. A proved label is only the units
 named in that row, from that row's own run. The summary counts
 items 1 through 19. On this tree it is
-`proved 7 of 19, tested 12, unchecked 0`.
+`proved 12 of 19, tested 7, unchecked 0`.
 
 ## What the numbers are
 
@@ -95,10 +95,11 @@ A throwaway copy of the test log with `mlp ok` removed
 has to label items 4, 8, and 10 unchecked, and it has to leave
 item 3 proved. Removing `proof/item_03.out`, or appending
 `unproved` to `proof/item_07.out`, has to drop that proved
-label. A throwaway `proof/item_18.out` that proves
-`ai_amplifier-status` with checks above 0 and unproved 0 has
-to label item 18 proved. Appending `unproved` to that file
-has to put the tested label back. `specs/item_18.adb` locks
+label. A throwaway `proof/item_18.out` that names
+`ai_amplifier-status` and not `ai_amplifier-label_rule` has
+to leave item 18 tested. Appending `unproved` to the real
+label-rule log has to put the tested label back.
+`specs/item_18.adb` locks
 the labels, the summary, and the three agreement pairs.
 
 `build.sh` embeds `obj/gen/STATUS.out` in the page and writes
@@ -108,7 +109,7 @@ panel says so.
 
 ## This build
 
-proved 7 of 19, tested 12, unchecked 0.
+proved 12 of 19, tested 7, unchecked 0.
 
 | Item | Label | Evidence |
 |---|---|---|
@@ -124,19 +125,23 @@ proved 7 of 19, tested 12, unchecked 0.
 | 10 Training-speed harness | tested | mlp_test cases 185 spec item_10 pass asserts 18; not proved: a measured training time is not a proof |
 | 11 Wrong-turn traces | proved | gnatprove proof/item_11.out summary 15 flow 4 provers 11 unproved 0; unit ai_amplifier-trace_rule 4/4 checks 11; traces_test cases 4 spec item_11 pass asserts 22; live-ask unchecked: traces_cli --ask needs TRACES_LLM_URL, TRACES_LLM_KEY, and TRACES_LLM_MODEL; CI does not call a live model |
 | 12 Benchmark audit | proved | gnatprove proof/item_12.out summary 2 flow 1 provers 1 unproved 0; unit ai_amplifier-audit_rule 2/2 checks 1; audit_test cases 13 spec item_12 pass asserts 11 |
-| 13 Reward hacking | tested | reward_test cases 9 spec item_13 pass asserts 43; not proved: the two graders score float nets and are not proved |
+| 13 Reward hacking | proved | gnatprove proof/item_13.out summary 4 flow 2 provers 2 unproved 0; unit ai_amplifier-reward_rule 3/3 checks 2; proved for the accept/reject gate; reward_test cases 9 spec item_13 pass asserts 43; not proved: the two graders score float nets and are not proved |
 | 14 Harness comparison | tested | harness_test cases 406 spec item_14 pass asserts 19; live-ask unchecked: harness_cli --ask needs HARNESS_LLM_URL, HARNESS_LLM_KEY, and HARNESS_LLM_MODEL; CI does not call a live model; not proved: the harness schedule is not a proof target |
-| 15 Checked steps | tested | steps_test cases 16 spec item_15 pass asserts 10; not proved: a step grade recomputes values and is not a proof |
-| 16 Locked statements | tested | check-locked cases 17 spec item_16 pass asserts 14; not proved: a fingerprint detects an edit and does not prove the spec |
-| 17 Second checker | tested | recheck_test agree 44 of 44, 22 of 22, 12 of 12 spec item_17 pass asserts 18; not proved: agreement of two checkers is not a proof of either |
-| 18 Checking status | tested | spec item_18 asserts 34; not proved: AI_Amplifier.Status is plain Ada and has no gnatprove run |
+| 15 Checked steps | proved | gnatprove proof/item_15.out summary 8 flow 4 provers 4 unproved 0; unit ai_amplifier-step_rule 5/5 checks 4; proved for the step-grade rule; steps_test cases 16 spec item_15 pass asserts 10; not proved: a step grade recomputes values and is not a proof |
+| 16 Locked statements | proved | gnatprove proof/item_16.out summary 11 flow 2 provers 9 unproved 0; unit ai_amplifier-lock_rule 3/3 checks 9; proved for the lock-compare rule; check-locked cases 17 spec item_16 pass asserts 14; not proved: a fingerprint detects an edit and does not prove the spec |
+| 17 Second checker | proved | gnatprove proof/item_17.out summary 9 flow 2 provers 7 unproved 0; unit ai_amplifier-agree_rule 4/4 checks 7; proved for the agreement count; recheck_test agree 44 of 44, 22 of 22, 12 of 12 spec item_17 pass asserts 18; not proved: agreement of two checkers is not a proof of either |
+| 18 Checking status | proved | gnatprove proof/item_18.out summary 6 flow 3 provers 3 unproved 0; unit ai_amplifier-label_rule 4/4 checks 3; proved for the label rule; spec item_18 asserts 45; not in this run: ai_amplifier-status; not proved: AI_Amplifier.Status is plain Ada and is not a proof target |
 | 19 Reasoning summary | proved | gnatprove proof/item_19.out summary 22 flow 7 provers 15 unproved 0; unit ai_amplifier-summary_rules 6/6 checks 15; summary_test cases 36 spec item_19 pass asserts 22; not in this run: ai_amplifier-summary |
 
 ## What is proved
 
-Nothing in this item is proved. `AI_Amplifier.Status` is plain
-Ada. `SPARK_Mode` is off. It does not decide a label from a
-shared project total. Each proved item has its own log.
+`AI_Amplifier.Label_Rule` is proved for the label rule:
+`proof/item_18.out` is summary 6, 3 checks on that unit,
+unproved 0. Proved needs that item's own log, a positive
+check count, and an unproved count of 0. `AI_Amplifier.Status`
+is plain Ada. `SPARK_Mode` is off. It reads the logs and is
+not in that run. It does not decide a label from a shared
+project total. Each proved item has its own log.
 This change does not add an Assume pragma or an Annotate
 pragma.
 
@@ -145,11 +150,9 @@ do not describe anyone else's proof, and they do not describe a
 live model. A fingerprint, an agreement, and a passing test are
 still tests.
 
-The summary `proved 7 of 19, tested 12, unchecked 0` counts
-items 1 through 19. Item 18 is tested. `AI_Amplifier.Status`
-is plain Ada. There is no `proof/item_18.out`. A clean run of
-that unit, with checks above 0 and unproved 0, would change
-the label to proved. Item 19 is proved for
+The summary `proved 12 of 19, tested 7, unchecked 0` counts
+items 1 through 19. Item 18 is proved for the label rule.
+Reading the logs is not proved. Item 19 is proved for
 `ai_amplifier-summary_rules`: `proof/item_19.out` is summary
 22, 15 checks on that unit, unproved 0. The summaries and the
 step checker are not in that run.

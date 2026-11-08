@@ -11,7 +11,7 @@ Initialization                    2          2                       .          
 Non-Aliasing                      .          .                       .           .          .
 Run-time Checks                   4          .    4 (CVC5 75%, Z3 25%)           .          .
 Assertions                        .          .                       .           .          .
-Functional Contracts              7          .    7 (CVC5 32%, Z3 68%)           .          .
+Functional Contracts              7          .    7 (CVC5 36%, Z3 64%)           .          .
 LSP Verification                  .          .                       .           .          .
 Termination                       2          2                       .           .          .
 Concurrency                       .          .                       .           .          .

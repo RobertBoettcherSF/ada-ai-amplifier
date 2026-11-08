@@ -53,6 +53,8 @@ fi
 for need in obj/gen/tests.out obj/gen/specs.out obj/gen/recheck-report.txt \
   proof/item_01.out proof/item_03.out proof/item_07.out \
   proof/item_09.out proof/item_11.out proof/item_12.out \
+  proof/item_13.out proof/item_15.out proof/item_16.out \
+  proof/item_17.out proof/item_18.out \
   proof/item_19.out
 do
   if [ ! -f "$need" ]; then

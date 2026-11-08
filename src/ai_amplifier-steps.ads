@@ -1,7 +1,8 @@
 --  Checked steps, not just answers.
 --
---  Plain Ada (SPARK_Mode off). Nothing here is proved. The
---  twelve solutions are written in this unit. Four of them
+--  Plain Ada (SPARK_Mode off). Recomputing a value is not
+--  proved. The step-grade rule is AI_Amplifier.Step_Rule.
+--  The twelve solutions are written in this unit. Four of them
 --  follow the code. The other eight are planted so the final
 --  answer can be right while a step is not. The manifest in
 --  the child unit names which. This package does not with
