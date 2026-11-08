@@ -2,7 +2,8 @@
 <!-- ada-ai-amplifier. Splash motion, the tensor demo, leaky ReLU,
      the MLP, the weight text, the byte-level tokenizer, the
      attention block, the recorded chains, the wrong-turn
-     checker, the benchmark audit, and the reward demo are Ada, compiled to WebAssembly and embedded by
+     checker, the benchmark audit, the reward demo, and the harness
+     comparison are Ada, compiled to WebAssembly and embedded by
      build.sh. This file only draws,
      copies numbers and text bytes into the module, and writes
      F9 / crash files. -->
@@ -393,8 +394,39 @@
       touch-action: manipulation;
     }
     #attnread { margin-top: 0.4rem; }
-    #recurse, #turns, #audit, #reward { margin: 0.2rem 0 1.2rem; }
-    #reward { overflow-x: auto; }
+    #recurse, #turns, #audit, #reward, #harness { margin: 0.2rem 0 1.2rem; }
+    #reward, #harness { overflow-x: auto; }
+    #harnesstable {
+      border-collapse: collapse;
+      margin: 0.4rem 0 0.8rem;
+      font: 15px/1.4 ui-monospace, monospace;
+    }
+    #harnesstable th, #harnesstable td {
+      text-align: left;
+      padding: 0.2rem 0.7rem 0.2rem 0;
+      vertical-align: top;
+    }
+    #harnesstable .halt { color: #ffb4b4; }
+    #harnesstable .base { color: #ffe14a; }
+    #harnesstask {
+      min-height: 44px;
+      margin: 0.4rem 0 0.8rem;
+      padding: 8px;
+      border: 1px solid #555;
+      background: #111;
+      color: #f3e6c4;
+      font: 16px/1.2 ui-sans-serif, system-ui, sans-serif;
+    }
+    .harness-walk {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.8rem;
+    }
+    .harness-walk h3 {
+      margin: 0.2rem 0;
+      font-size: 1rem;
+      font-weight: 600;
+    }
     .reward-curves {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -448,7 +480,7 @@
     .rec-steps .base { color: #ffe14a; }
     .rec-steps .halt { color: #ffb4b4; }
     @media (max-width: 640px) {
-      .mlp-views, .turn-pair, .reward-curves { grid-template-columns: minmax(0, 1fr); }
+      .mlp-views, .turn-pair, .reward-curves, .harness-walk { grid-template-columns: minmax(0, 1fr); }
     }
     @media (max-width: 520px) {
       .demo-cols { flex-direction: column; }
@@ -461,7 +493,7 @@
   </style>
 </head>
 <body>
-  <div id="ver">v0.13.0-reward</div>
+  <div id="ver">v0.14.0-harness</div>
   <main id="main" tabindex="-1">
     <h1>ada-ai-amplifier</h1>
     <p id="banner" class="err" hidden></p>
@@ -766,6 +798,41 @@
         often a real model does this.
       </p>
     </div>
+    <h2>Same model, different harness</h2>
+    <p>
+      One Ada solver, four harnesses, the same eight tasks and the
+      same seed. One-shot keeps the first reply. Retry keeps the
+      first reply that parses. Checked runs each step through the
+      Fibonacci checker or the wrong-turn checker and does not keep
+      a failed step. Budgeted is that check with three calls. The
+      solver does not change. Pick a task to see where the four
+      walks diverge. JavaScript only copies the words. This page
+      does not call a model. The solver is a tiny fixed procedure,
+      so the table is not a measurement of a real model.
+    </p>
+    <div id="harness">
+      <p id="harnessstat" class="out">Waiting for the Ada module.</p>
+      <table id="harnesstable">
+        <thead>
+          <tr>
+            <th>Harness</th>
+            <th>Solve rate</th>
+            <th>Steps</th>
+            <th>Wrong accepted</th>
+          </tr>
+        </thead>
+        <tbody id="harnessbody"></tbody>
+      </table>
+      <label for="harnesstask">Task</label>
+      <select id="harnesstask"></select>
+      <div id="harnesswalk" class="harness-walk"></div>
+      <p id="harnesserr" class="err" hidden></p>
+      <p class="fine">
+        <code>harness_cli</code> prints this same table. It can ask
+        a model for the checked harness only when you give it your
+        own key, and this page never runs that program.
+      </p>
+    </div>
     <h2>On this page</h2>
     <ul>
       <li>Tap the splash, or press Enter, to leave it.</li>
@@ -779,6 +846,7 @@
       <li>Wrong turns asks Ada to run one next step on a recorded trainer trace and to say whether that step fixes it.</li>
       <li>Benchmark audit asks Ada to flag each task, then to score the samples on the full set and on the cleaned set.</li>
       <li>Reward hacking asks Ada to score five XOR submissions with both graders, and to climb each score from the same seed.</li>
+      <li>The harness section asks Ada to run one solver under four harnesses and to show where one task diverges.</li>
       <li>F9, or Feedback, writes a feedback file.</li>
       <li>If the previous session did not end cleanly, a crash report is offered.</li>
     </ul>
@@ -797,7 +865,7 @@
       <li><span class="n">11.</span><span>Wrong-turn traces</span> <span class="st done">done</span></li>
       <li><span class="n">12.</span><span>Benchmark audit</span> <span class="st done">done</span></li>
       <li><span class="n">13.</span><span>Reward-hacking demo</span> <span class="st done">done</span></li>
-      <li><span class="n">14.</span><span>Same model, different harness</span> <span class="st">planned</span></li>
+      <li><span class="n">14.</span><span>Same model, different harness</span> <span class="st done">done</span></li>
       <li><span class="n">15.</span><span>Checked steps, not just answers</span> <span class="st">planned</span></li>
       <li><span class="n">16.</span><span>README update after items 1–15</span> <span class="st">planned</span></li>
     </ol>
@@ -834,6 +902,7 @@
         <tr><td>Wrong turns</td><td class="st">not proved</td></tr>
         <tr><td>Benchmark audit</td><td class="st">not proved</td></tr>
         <tr><td>Reward hacking</td><td class="st">not proved</td></tr>
+        <tr><td>Harness comparison</td><td class="st">not proved</td></tr>
       </tbody>
     </table>
     <h2>Links</h2>
@@ -846,6 +915,7 @@
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/WRONG_TURNS.md">Wrong turns</a></li>
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/BENCHMARK_AUDIT.md">Benchmark audit</a></li>
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/REWARD_HACKING.md">Reward hacking</a></li>
+      <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/HARNESS.md">Same model, different harness</a></li>
     </ul>
     <noscript>
       <p class="err">JavaScript is off, so the Ada module is not running. Open this page in Safari or Chrome.</p>
@@ -1043,6 +1113,7 @@ function fail(detail) {
   showTurnsDown();
   showAuditDown();
   showRewardDown();
+  showHarnessDown();
 }
 function skip(how) {
   if (splash.hidden) return;
@@ -2214,6 +2285,97 @@ function paintReward() {
   drawRewardCurve("rewardflawed", flawed.vals, flawedReal.vals);
   drawRewardCurve("rewardreal", realScore.vals, realProxy.vals);
 }
+function paintHarnessWalk() {
+  const walk = box("harnesswalk");
+  if (!walk) return;
+  walk.textContent = "";
+  const logs = [];
+  for (let h = 1; h <= 4; h += 1) {
+    const block = document.createElement("div");
+    const title = document.createElement("h3");
+    title.textContent = adaText(() => ada.aa_hn_cell_len(h, 1), (p) => ada.aa_hn_cell_byte(h, 1, p));
+    const result = document.createElement("p");
+    result.className = "out";
+    result.textContent = adaText(() => ada.aa_hn_result_len(h), (p) => ada.aa_hn_result_byte(h, p));
+    const list = document.createElement("ol");
+    list.className = "rec-steps";
+    const lines = [];
+    const count = ada.aa_hn_logs(h);
+    for (let i = 1; i <= count; i += 1) {
+      const li = document.createElement("li");
+      const text = adaText(() => ada.aa_hn_log_len(h, i), (p) => ada.aa_hn_log_byte(h, i, p));
+      li.textContent = text;
+      if (text.indexOf("rejected") >= 0) li.className = "halt";
+      else if (text.indexOf("reached-base") >= 0 || text.indexOf("fixes-it") >= 0) li.className = "base";
+      list.appendChild(li);
+      lines.push(text);
+    }
+    block.appendChild(title);
+    block.appendChild(result);
+    block.appendChild(list);
+    walk.appendChild(block);
+    logs.push({name: title.textContent, result: result.textContent, lines: lines, solved: ada.aa_hn_solved(h)});
+  }
+  window.__harnessWalk = logs;
+}
+function paintHarness() {
+  ada.aa_hn_run();
+  const body = box("harnessbody");
+  body.textContent = "";
+  const rows = [];
+  const n = ada.aa_hn_harnesses();
+  const cols = ada.aa_hn_cols();
+  for (let r = 1; r <= n; r += 1) {
+    const tr = document.createElement("tr");
+    const cells = [];
+    for (let c = 1; c <= cols; c += 1) {
+      const td = document.createElement("td");
+      const text = adaText(() => ada.aa_hn_cell_len(r, c), (p) => ada.aa_hn_cell_byte(r, c, p));
+      td.textContent = text;
+      if (c === 4) td.className = text === "0" ? "base" : "halt";
+      tr.appendChild(td);
+      cells.push(text);
+    }
+    body.appendChild(tr);
+    rows.push(cells);
+  }
+  const stat = adaText(() => ada.aa_hn_stat_len(), (p) => ada.aa_hn_stat_byte(p));
+  box("harnessstat").textContent = stat;
+  const sel = box("harnesstask");
+  const keep = sel.value;
+  sel.textContent = "";
+  const tasks = ada.aa_hn_tasks();
+  for (let i = 1; i <= tasks; i += 1) {
+    const opt = document.createElement("option");
+    opt.value = String(i);
+    opt.textContent = adaText(() => ada.aa_hn_task_len(i), (p) => ada.aa_hn_task_byte(i, p));
+    sel.appendChild(opt);
+  }
+  sel.value = keep && Number(keep) >= 1 ? keep : "2";
+  ada.aa_hn_select(Number(sel.value));
+  paintHarnessWalk();
+  window.__harness = {rows: rows, stat: stat};
+}
+function bootHarness() {
+  const err = box("harnesserr");
+  if (err) err.hidden = true;
+  const sel = box("harnesstask");
+  if (sel) sel.onchange = () => {
+    ada.aa_hn_select(Number(sel.value));
+    paintHarnessWalk();
+    note("harness", sel.options[sel.selectedIndex].textContent);
+  };
+  paintHarness();
+  note("harness", box("harnessstat").textContent);
+}
+function showHarnessDown() {
+  const err = box("harnesserr");
+  if (!err) return;
+  err.hidden = false;
+  err.textContent = "The Ada module did not load, so this panel cannot run the harnesses.";
+  const stat = box("harnessstat");
+  if (stat) stat.textContent = "Waiting for the Ada module.";
+}
 function bootReward() {
   const err = box("rewarderr");
   if (err) err.hidden = true;
@@ -2452,7 +2614,7 @@ async function boot() {
     fail(String(e && e.message ? e.message : e));
     return;
   }
-  const need = ["aa_version_length", "aa_version_byte", "aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get", "aa_set_m", "aa_get_m", "aa_set_v", "aa_get_v", "aa_tensor_run", "aa_product", "aa_softmax", "aa_lrelu_set", "aa_lrelu_in", "aa_lrelu_run", "aa_lrelu_out", "aa_lrelu_slope", "aa_mlp_reset", "aa_mlp_set_rate", "aa_mlp_rate", "aa_mlp_train", "aa_mlp_epoch", "aa_mlp_loss", "aa_mlp_predict", "aa_mlp_count", "aa_mlp_x", "aa_mlp_y", "aa_mlp_label", "aa_mlp_lo", "aa_mlp_hi", "aa_mlp_grid_n", "aa_mlp_fill", "aa_mlp_cell", "aa_mlp_curve_n", "aa_mlp_curve", "aa_mlp_kind", "aa_w_limit", "aa_w_span", "aa_w_count", "aa_w_get", "aa_w_set", "aa_w_name_len", "aa_w_name_byte", "aa_w_len", "aa_w_byte", "aa_w_clear", "aa_w_push", "aa_w_load", "aa_w_hand", "aa_w_trained", "aa_w_preset", "aa_w_note_len", "aa_w_note_byte", "aa_speed_prepare", "aa_speed_execute", "aa_speed_finish", "aa_speed_steps", "aa_speed_repeats", "aa_speed_us", "aa_speed_loss", "aa_speed_answer", "aa_speed_counted", "aa_speed_reason", "aa_speed_published_steps", "aa_speed_published_native_us", "aa_speed_published_wasm_us", "aa_speed_len", "aa_speed_byte", "aa_speed_describe", "aa_bpe_clear", "aa_bpe_push", "aa_bpe_corpus", "aa_attn_run", "aa_attn_tokens", "aa_attn_id", "aa_attn_piece_len", "aa_attn_piece_byte", "aa_attn_vocab", "aa_attn_merges", "aa_attn_used", "aa_attn_weight", "aa_attn_dropped", "aa_attn_bytes", "aa_rec_chains", "aa_rec_max_index", "aa_rec_select", "aa_rec_name_len", "aa_rec_name_byte", "aa_rec_states", "aa_rec_line_len", "aa_rec_line_byte", "aa_rec_mark", "aa_rec_parsed", "aa_rec_index", "aa_rec_minus", "aa_rec_current", "aa_rec_stop", "aa_rec_stop_len", "aa_rec_stop_byte", "aa_rec_stop_at", "aa_rec_accepted", "aa_rec_answer", "aa_rec_note_len", "aa_rec_note_byte", "aa_tr_count", "aa_tr_select", "aa_tr_name_len", "aa_tr_name_byte", "aa_tr_steps", "aa_tr_line_len", "aa_tr_line_byte", "aa_tr_wrong", "aa_tr_menu", "aa_tr_menu_len", "aa_tr_menu_byte", "aa_tr_propose", "aa_tr_verdict", "aa_tr_reason", "aa_tr_reason_len", "aa_tr_reason_byte", "aa_tr_report_len", "aa_tr_report_byte", "aa_tr_good_len", "aa_tr_good_byte", "aa_tr_state_len", "aa_tr_state_byte", "aa_au_run", "aa_au_count", "aa_au_flagged", "aa_au_mark", "aa_au_line_len", "aa_au_line_byte", "aa_au_stat_len", "aa_au_stat_byte", "aa_au_full_len", "aa_au_full_byte", "aa_au_clean_len", "aa_au_clean_byte", "aa_rw_run", "aa_rw_count", "aa_rw_cols", "aa_rw_col_len", "aa_rw_col_byte", "aa_rw_mark", "aa_rw_tally_len", "aa_rw_tally_byte", "aa_rw_stat_len", "aa_rw_stat_byte", "aa_rw_steps", "aa_rw_flawed_proxy", "aa_rw_flawed_real", "aa_rw_flawed_holds", "aa_rw_real_proxy", "aa_rw_real_score", "aa_rw_real_holds", "aa_rw_flawed_end_len", "aa_rw_flawed_end_byte", "aa_rw_real_end_len", "aa_rw_real_end_byte"];
+  const need = ["aa_version_length", "aa_version_byte", "aa_splash_reset", "aa_splash_tick", "aa_step", "aa_count", "aa_get", "aa_set_m", "aa_get_m", "aa_set_v", "aa_get_v", "aa_tensor_run", "aa_product", "aa_softmax", "aa_lrelu_set", "aa_lrelu_in", "aa_lrelu_run", "aa_lrelu_out", "aa_lrelu_slope", "aa_mlp_reset", "aa_mlp_set_rate", "aa_mlp_rate", "aa_mlp_train", "aa_mlp_epoch", "aa_mlp_loss", "aa_mlp_predict", "aa_mlp_count", "aa_mlp_x", "aa_mlp_y", "aa_mlp_label", "aa_mlp_lo", "aa_mlp_hi", "aa_mlp_grid_n", "aa_mlp_fill", "aa_mlp_cell", "aa_mlp_curve_n", "aa_mlp_curve", "aa_mlp_kind", "aa_w_limit", "aa_w_span", "aa_w_count", "aa_w_get", "aa_w_set", "aa_w_name_len", "aa_w_name_byte", "aa_w_len", "aa_w_byte", "aa_w_clear", "aa_w_push", "aa_w_load", "aa_w_hand", "aa_w_trained", "aa_w_preset", "aa_w_note_len", "aa_w_note_byte", "aa_speed_prepare", "aa_speed_execute", "aa_speed_finish", "aa_speed_steps", "aa_speed_repeats", "aa_speed_us", "aa_speed_loss", "aa_speed_answer", "aa_speed_counted", "aa_speed_reason", "aa_speed_published_steps", "aa_speed_published_native_us", "aa_speed_published_wasm_us", "aa_speed_len", "aa_speed_byte", "aa_speed_describe", "aa_bpe_clear", "aa_bpe_push", "aa_bpe_corpus", "aa_attn_run", "aa_attn_tokens", "aa_attn_id", "aa_attn_piece_len", "aa_attn_piece_byte", "aa_attn_vocab", "aa_attn_merges", "aa_attn_used", "aa_attn_weight", "aa_attn_dropped", "aa_attn_bytes", "aa_rec_chains", "aa_rec_max_index", "aa_rec_select", "aa_rec_name_len", "aa_rec_name_byte", "aa_rec_states", "aa_rec_line_len", "aa_rec_line_byte", "aa_rec_mark", "aa_rec_parsed", "aa_rec_index", "aa_rec_minus", "aa_rec_current", "aa_rec_stop", "aa_rec_stop_len", "aa_rec_stop_byte", "aa_rec_stop_at", "aa_rec_accepted", "aa_rec_answer", "aa_rec_note_len", "aa_rec_note_byte", "aa_tr_count", "aa_tr_select", "aa_tr_name_len", "aa_tr_name_byte", "aa_tr_steps", "aa_tr_line_len", "aa_tr_line_byte", "aa_tr_wrong", "aa_tr_menu", "aa_tr_menu_len", "aa_tr_menu_byte", "aa_tr_propose", "aa_tr_verdict", "aa_tr_reason", "aa_tr_reason_len", "aa_tr_reason_byte", "aa_tr_report_len", "aa_tr_report_byte", "aa_tr_good_len", "aa_tr_good_byte", "aa_tr_state_len", "aa_tr_state_byte", "aa_au_run", "aa_au_count", "aa_au_flagged", "aa_au_mark", "aa_au_line_len", "aa_au_line_byte", "aa_au_stat_len", "aa_au_stat_byte", "aa_au_full_len", "aa_au_full_byte", "aa_au_clean_len", "aa_au_clean_byte", "aa_rw_run", "aa_rw_count", "aa_rw_cols", "aa_rw_col_len", "aa_rw_col_byte", "aa_rw_mark", "aa_rw_tally_len", "aa_rw_tally_byte", "aa_rw_stat_len", "aa_rw_stat_byte", "aa_rw_steps", "aa_rw_flawed_proxy", "aa_rw_flawed_real", "aa_rw_flawed_holds", "aa_rw_real_proxy", "aa_rw_real_score", "aa_rw_real_holds", "aa_rw_flawed_end_len", "aa_rw_flawed_end_byte", "aa_rw_real_end_len", "aa_rw_real_end_byte", "aa_hn_run", "aa_hn_harnesses", "aa_hn_tasks", "aa_hn_cols", "aa_hn_cell_len", "aa_hn_cell_byte", "aa_hn_task_len", "aa_hn_task_byte", "aa_hn_select", "aa_hn_logs", "aa_hn_log_len", "aa_hn_log_byte", "aa_hn_solved", "aa_hn_result_len", "aa_hn_result_byte", "aa_hn_stat_len", "aa_hn_stat_byte"];
   for (let i = 0; i < need.length; i += 1) {
     if (typeof ada[need[i]] !== "function") {
       ada = null;
@@ -2487,6 +2649,7 @@ async function boot() {
   bootTurns();
   bootAudit();
   bootReward();
+  bootHarness();
   note("wasm loaded", stamp);
   hint.textContent = "Tap or Enter";
   started = true;

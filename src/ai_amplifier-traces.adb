@@ -874,10 +874,17 @@ is
       Add_C (Text, Last, '.');
    end Report_Line;
 
-   function Trimmed (Text : String) return String is
-      First : Natural := Text'First;
-      Last  : Natural := Text'Last;
+   --  Character by character. A returned slice uses the
+   --  secondary stack, and a slice compare pulls in memcmp.
+   --  This wasm link has neither symbol.
+   procedure Trim_Bounds
+     (Text  : String;
+      First : out Natural;
+      Last  : out Natural)
+   is
    begin
+      First := Text'First;
+      Last := Text'Last;
       while First <= Last
         and then (Text (First) = ' ' or else Text (First) = LF
                   or else Text (First) = Character'Val (13)
@@ -892,26 +899,47 @@ is
       loop
          Last := Last - 1;
       end loop;
-      if First > Last then
-         return "";
+   end Trim_Bounds;
+
+   function Same_Span
+     (Text       : String;
+      First      : Natural;
+      Last       : Natural;
+      Word       : String) return Boolean
+   is
+   begin
+      if Last < First then
+         return Word'Length = 0;
       end if;
-      return Text (First .. Last);
-   end Trimmed;
+      if Last - First + 1 /= Word'Length then
+         return False;
+      end if;
+      for I in Word'Range loop
+         if Text (First + (I - Word'First)) /= Word (I) then
+            return False;
+         end if;
+      end loop;
+      return True;
+   end Same_Span;
 
    procedure Parse_Proposal
      (Text  : String;
       Which : out Proposal;
       OK    : out Boolean)
    is
-      Token : constant String := Trimmed (Text);
+      First : Natural;
+      TLast : Natural;
       Word : String (1 .. Max_Name);
       Last : Natural;
    begin
       Which := Train_200;
       OK := False;
+      Trim_Bounds (Text, First, TLast);
       for Item in Proposal loop
          Proposal_Word (Item, Word, Last);
-         if Last >= 1 and then Token = Word (1 .. Last) then
+         if Last >= 1
+           and then Same_Span (Text, First, TLast, Word (1 .. Last))
+         then
             Which := Item;
             OK := True;
             return;

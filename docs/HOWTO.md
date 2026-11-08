@@ -4,9 +4,9 @@ A walkthrough for someone new to this repository, and possibly new to
 Ada. The logic lives in Ada. JavaScript only draws. The live page is one
 HTML file with that Ada compiled to WebAssembly inside it.
 
-Visible stamp: **v0.13.0-reward**
+Visible stamp: **v0.14.0-harness**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.13.0-reward
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.14.0-harness
 
 The yellow badge, `version.txt`, and `AI_Amplifier.Version.Version_Text`
 are that same text. The query on the link is the cache bust (the stamp
@@ -106,7 +106,7 @@ mean something:
 | `alr -n toolchain --select …` | Puts GNAT 16.1.0 and gprbuild 26.0.1 on the Alire toolchain |
 | `./tools/get-toolchain.sh` | Downloads AdaWebPack 24 into `toolchain/` (gitignored). Later runs see the compiler and return |
 | `alr -n build` | Native build. Warnings and checks are on, including `-gnata`, so `Pre` and `Post` run |
-| `./bin/hello` | Prints `ada-ai-amplifier v0.13.0-reward` |
+| `./bin/hello` | Prints `ada-ai-amplifier v0.14.0-harness` |
 | `./tools/check-version.sh` | That line, `version.txt`, and the badge in `web/template.html` must be the same stamp |
 | `./bin/tensors_test` | Prints `tensors ok` |
 | `./bin/mlp_test` | Prints `mlp ok` |
@@ -119,12 +119,14 @@ mean something:
 | `./bin/audit_cli` | Audits the built-in benchmark. The full-set score is not accepted |
 | `./bin/reward_test` | Prints `reward ok` |
 | `./bin/reward_cli` | Scores the five XOR submissions and prints both searches |
+| `./bin/harness_test` | Prints `harness ok` |
+| `./bin/harness_cli` | Prints the four harness rows. It does not call a model |
 | `npm ci` | Installs `puppeteer-core` from the lockfile |
 | `./build.sh` | Compiles the library to WebAssembly, runs `tools/wasm-smoke.mjs`, writes `site/index.html` and `site/version.txt` |
-| `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, the speed panel, tokens, recorded chains, wrong turns, the benchmark audit, the reward table, F9, crash report, a failed module |
+| `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, the speed panel, tokens, recorded chains, wrong turns, the benchmark audit, the reward table, the harness table, F9, crash report, a failed module |
 
 Then open `site/index.html` in a browser yourself. The badge reads
-`v0.13.0-reward`. Leaky ReLU shows slope `0.01` and the output
+`v0.14.0-harness`. Leaky ReLU shows slope `0.01` and the output
 `-0.02`, `0`, `3`. Compute still shows the product `14`, `14`, `17`.
 
 The file, which CI runs as `./tools/howto-steps.sh`:
@@ -153,6 +155,8 @@ alr -n build
 ./bin/audit_cli
 ./bin/reward_test
 ./bin/reward_cli
+./bin/harness_test
+./bin/harness_cli
 npm ci
 ./build.sh
 node tools/page-smoke.mjs
@@ -262,12 +266,15 @@ header comment, whether it is in SPARK.
 | `AI_Amplifier.Audit.Manifest` | `src/ai_amplifier-audit-manifest.ads` | Planted ids and rules. The auditor does not read it |
 | `AI_Amplifier.Reward` | `src/ai_amplifier-reward.ads/.adb` | Two graders for the XOR task, five submissions, and the hill-climb. Plain Ada |
 | `AI_Amplifier.Reward.Demo` | `src/ai_amplifier-reward-demo.ads/.adb` | The page's table and the two search curves |
+| `AI_Amplifier.Harness` | `src/ai_amplifier-harness.ads/.adb` | One fixed solver and four harnesses. Plain Ada |
+| `AI_Amplifier.Harness.Demo` | `src/ai_amplifier-harness-demo.ads/.adb` | The page's score table and one task's four walks. No network |
 | `Hello` | `src/hello.adb` | Prints the stamp. Native only |
 | `Recurse_Cli` | `src/recurse_cli.adb` | Replays the chains. Calls a model only when the user sets a key, a URL, and a model name. Native only |
 | `Traces_Cli` | `src/traces_cli.adb` | Replays the wrong-turn traces. Calls a model only when the user sets a key, a URL, and a model name. Native only |
 | `Audit_Cli` | `src/audit_cli.adb` | Audits the built-in benchmark, or one task file. Native only |
 | `Reward_Cli` | `src/reward_cli.adb` | Prints the submission table and runs either search. Native only |
-| `Tensors_Test`, `MLP_Test`, `Attention_Test`, `Recurse_Test`, `Traces_Test`, `Audit_Test`, `Reward_Test` | `src/tensors_test.adb`, `src/mlp_test.adb`, `src/attention_test.adb`, `src/recurse_test.adb`, `src/traces_test.adb`, `src/audit_test.adb`, `src/reward_test.adb` | Native tests. They use `Ada.Text_IO`, so `build.sh` does not compile them into the module |
+| `Harness_Cli` | `src/harness_cli.adb` | Prints the harness table. Calls a model only when the user sets a key, a URL, and a model name. Native only |
+| `Tensors_Test`, `MLP_Test`, `Attention_Test`, `Recurse_Test`, `Traces_Test`, `Audit_Test`, `Reward_Test`, `Harness_Test` | `src/tensors_test.adb`, `src/mlp_test.adb`, `src/attention_test.adb`, `src/recurse_test.adb`, `src/traces_test.adb`, `src/audit_test.adb`, `src/reward_test.adb`, `src/harness_test.adb` | Native tests. They use `Ada.Text_IO`, so `build.sh` does not compile them into the module |
 
 `Vector` and `Matrix` carry their shape as a discriminant (`Length`, or
 `Rows` and `Cols`). Components are `Float`, indexed `1 ..` that bound.
@@ -284,7 +291,7 @@ link has no imports.
 JavaScript does not compute the splash, the product, the softmax, the
 leaky ReLU, the loss, the decision boundary, the weight text, the
 merges, the attention, the chain check, the training-speed verdict,
-or the wrong-turn verdict, or the reward scores.
+or the wrong-turn verdict, or the reward scores, or the harness table.
 It reads coordinates, copies numbers, and sends UTF-8 bytes. On the
 speed panel it passes in two host wall-clock readings. Ada subtracts them.
 It adds up attention weights it already read, when it writes the
@@ -315,25 +322,25 @@ to the stamp without the `v`. A screenshot of the new page shows the
 new badge.
 
 **Plan, then Go, then one item.** Post a numbered plan for one change.
-Wait for Go. Build that item. Report, and stop. Items 1 through 13 are
-done. Item 11 is the wrong-turn traces and the Ada checker. Item 12
-is the benchmark audit. Item 13 is the reward-hacking demo. Items
-14 through 16 are planned and not started. Do not start one of
-those in a change that is still about item 13.
+Wait for Go. Build that item. Report, and stop. Items 1 through 14 are
+done. Item 13 is the reward-hacking demo. Item 14 is the same
+solver under four harnesses. Items 15 and 16 are planned and not
+started. Do not start one of those in a change that is still
+about item 14.
 
 **Honesty.** Say what is checked at run time and what a prover has
 seen. On the tensor kernels, Silver means no run-time error and Gold
 means the component rule. Sigmoid, tanh, and softmax are Silver: the
 result lies in range, and the series is not the real function. The
 splash, the MLP, the tokenizer, attention, the chain checker,
-the wrong-turn checker, the benchmark auditor, and the reward demo
-are not proved. `Pre`
+the wrong-turn checker, the benchmark auditor, the reward demo,
+and the harness comparison are not proved. `Pre`
 and `Post` are still ordinary Ada contracts, checked when the program
 runs. `Float` results are approximate; the tests name the tolerance.
 The spirals are not solved. The attention weights are a seed.
 
 **Pre-push.** Was the previous behaviour still there (splash, tensor
-demo, leaky ReLU, training, tokens, recorded chains, wrong turns, the benchmark audit, the reward table, F9, crash report, badge)? Does the
+demo, leaky ReLU, training, tokens, recorded chains, wrong turns, the benchmark audit, the reward table, the harness table, F9, crash report, badge)? Does the
 new behaviour work? `./tools/howto-steps.sh` is the long check, after
 the packages and the compilers are installed. `./tools/check-version.sh`
 is the stamp check. Docs that name a number should name the number the
@@ -375,6 +382,7 @@ The log is `proof/gnatprove.out`. The same table is on the live page.
 | Wrong turns | not proved |
 | Benchmark audit | not proved |
 | Reward hacking | not proved |
+| Harness comparison | not proved |
 
 Silver on dot and the two products means no run-time error, and the
 numeric result lies in `[-Acc_Bound, Acc_Bound]`. It does not mean the
@@ -391,13 +399,14 @@ outside the bound fails the `Pre`.
 
 The splash, the page wrappers, the MLP, the tokenizer, attention,
 the chain checker, the wrong-turn checker, the benchmark
-auditor, and the reward demo are plain Ada. Their tests are tests. The weight
+auditor, the reward demo, and the harness comparison are plain Ada. Their tests are tests. The weight
 text and the hand-written XOR net live in the MLP unit, so they are
 tests too. `docs/WEIGHT_SPACE.md` is that account.
 `docs/RECURSIVE_PROMPTS.md` is the account of the recorded chains.
 `docs/WRONG_TURNS.md` is the account of the four trainer traces.
 `docs/BENCHMARK_AUDIT.md` is the account of the benchmark auditor.
 `docs/REWARD_HACKING.md` is the account of the two graders.
+`docs/HARNESS.md` is the account of the four harnesses.
 `AI_Amplifier.Version` is SPARK,
 with the contracts from the skeleton. The stamp there is
-`v0.13.0-reward`.
+`v0.14.0-harness`.

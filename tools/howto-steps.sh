@@ -20,6 +20,8 @@ alr -n build
 ./bin/audit_cli
 ./bin/reward_test
 ./bin/reward_cli
+./bin/harness_test
+./bin/harness_cli
 npm ci
 ./build.sh
 node tools/page-smoke.mjs
