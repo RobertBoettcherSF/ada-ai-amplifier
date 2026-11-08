@@ -1,11 +1,11 @@
 # Checking status
 
-Items 1 through 17, each with one label. The label is computed
+Items 1 through 19, each with one label. The label is computed
 from this build. The page and the README copy that text.
 
-Visible stamp: **v0.19.1-proofs**
+Visible stamp: **v0.20.0-readme**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.19.1-proofs
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.20.0-readme
 
 ## The idea, and the licence
 
@@ -27,8 +27,9 @@ own items.
 | unchecked | Neither of those. The evidence says what it would take |
 
 A tested label is not a proof. A proved label is only the units
-named in that row, from that row's own run. The summary is
-`proved 6 of 17, tested 11, unchecked 0`.
+named in that row, from that row's own run. The summary counts
+items 1 through 19. On this tree it is
+`proved 7 of 19, tested 12, unchecked 0`.
 
 ## What the numbers are
 
@@ -38,7 +39,7 @@ named in that row, from that row's own run. The summary is
 |---|---|
 | `proof/item_NN.out` | That item's own GNATprove run: the summary total, the flow count, the prover count, the unproved count, and the named unit's proved checks |
 | `obj/gen/tests.out` | `tensors ok`, `mlp ok`, and the other program lines, plus `cases <program> <count>` |
-| `obj/gen/specs.out` | `item NN pass` for items 1–15 and 17 |
+| `obj/gen/specs.out` | `item NN pass` for the specs that loop runs: items 1–17 and 19. Item 18's program reads that file, so its own pass line is not an input |
 | `obj/gen/recheck-report.txt` | The three agreement pairs from item 17 |
 | `specs/item_NN.adb` | How many `pragma Assert` lines that passing spec contains |
 
@@ -81,19 +82,24 @@ tested label does not cover that command.
 | 11 | `traces_cli --ask` | `TRACES_LLM_URL`, `TRACES_LLM_KEY`, `TRACES_LLM_MODEL` |
 | 14 | `harness_cli --ask` | `HARNESS_LLM_URL`, `HARNESS_LLM_KEY`, `HARNESS_LLM_MODEL` |
 
-There is no unchecked item among 1–17 on this tree. The summary's
+There is no unchecked item among 1–19 on this tree. The summary's
 0 is that count. It is not a claim that a live model was run.
 
 ## The file CI checks
 
 `tools/check-status.sh` runs the programs, writes the logs, and
 runs `status_cli`. The stdout has to match `STATUS` byte for
-byte. A throwaway copy of the test log with `mlp ok` removed
+byte. `tools/check-built-status.py` fails if an `item_NN.adb`
+main in `ada_ai_amplifier.gpr` has no `item NN` row in `STATUS`.
+A throwaway copy of the test log with `mlp ok` removed
 has to label items 4, 8, and 10 unchecked, and it has to leave
 item 3 proved. Removing `proof/item_03.out`, or appending
 `unproved` to `proof/item_07.out`, has to drop that proved
-label. `specs/item_18.adb` locks the seventeen labels, the
-summary, and the three agreement pairs.
+label. A throwaway `proof/item_18.out` that proves
+`ai_amplifier-status` with checks above 0 and unproved 0 has
+to label item 18 proved. Appending `unproved` to that file
+has to put the tested label back. `specs/item_18.adb` locks
+the labels, the summary, and the three agreement pairs.
 
 `build.sh` embeds `obj/gen/STATUS.out` in the page and writes
 `site/STATUS.txt`. JavaScript copies the lines into the table.
@@ -102,7 +108,7 @@ panel says so.
 
 ## This build
 
-proved 6 of 17, tested 11, unchecked 0.
+proved 7 of 19, tested 12, unchecked 0.
 
 | Item | Label | Evidence |
 |---|---|---|
@@ -123,7 +129,9 @@ proved 6 of 17, tested 11, unchecked 0.
 | 15 Checked steps | tested | steps_test cases 16 spec item_15 pass asserts 10; not proved: a step grade recomputes values and is not a proof |
 | 16 Locked statements | tested | check-locked cases 17 spec item_16 pass asserts 14; not proved: a fingerprint detects an edit and does not prove the spec |
 | 17 Second checker | tested | recheck_test agree 44 of 44, 22 of 22, 12 of 12 spec item_17 pass asserts 18; not proved: agreement of two checkers is not a proof of either |
+| 18 Checking status | tested | spec item_18 asserts 34; not proved: AI_Amplifier.Status is plain Ada and has no gnatprove run |
 | 19 Reasoning summary | proved | gnatprove proof/item_19.out summary 22 flow 7 provers 15 unproved 0; unit ai_amplifier-summary_rules 6/6 checks 15; summary_test cases 36 spec item_19 pass asserts 22; not in this run: ai_amplifier-summary |
+
 ## What is proved
 
 Nothing in this item is proved. `AI_Amplifier.Status` is plain
@@ -137,8 +145,11 @@ do not describe anyone else's proof, and they do not describe a
 live model. A fingerprint, an agreement, and a passing test are
 still tests.
 
-Item 19 is a row after those seventeen. It is not inside the
-summary `proved 6 of 17, tested 11, unchecked 0`. The row is
-proved for `ai_amplifier-summary_rules`: `proof/item_19.out`
-is summary 22, 15 checks on that unit, unproved 0. The
-summaries and the step checker are not in that run.
+The summary `proved 7 of 19, tested 12, unchecked 0` counts
+items 1 through 19. Item 18 is tested. `AI_Amplifier.Status`
+is plain Ada. There is no `proof/item_18.out`. A clean run of
+that unit, with checks above 0 and unproved 0, would change
+the label to proved. Item 19 is proved for
+`ai_amplifier-summary_rules`: `proof/item_19.out` is summary
+22, 15 checks on that unit, unproved 0. The summaries and the
+step checker are not in that run.

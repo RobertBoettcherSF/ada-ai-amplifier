@@ -149,14 +149,15 @@ try {
   assert(items[16].includes("formal-math") && items[16].includes("Apache-2.0"), items[16]);
   assert(items[17].includes("Checking status") && items[17].includes("done"), items[17]);
   assert(items[17].includes("openai/math") && items[17].includes("Apache-2.0"), items[17]);
+  assert(items[17].includes("Ideas inspired by"), items[17]);
   assert(items[18].includes("Reasoning summary") && items[18].includes("done"), items[18]);
   assert(!items[18].includes("planned"), items[18]);
   assert(items[18].includes("openai/math") && items[18].includes("Apache-2.0"), items[18]);
-  assert(items[19].includes("README update after items 1–19") && items[19].includes("last"), items[19]);
+  assert(items[19].includes("README update after items 1–19") && items[19].includes("done"), items[19]);
   const status16 = await page.$eval("#backlog li:nth-child(16) .st", (el) => el.textContent.trim());
   assert(status16 === "done", status16);
   const status20 = await page.$eval("#backlog li:nth-child(20) .st", (el) => el.textContent.trim());
-  assert(status20 === "last", status20);
+  assert(status20 === "done", status20);
   const proof = await page.$$eval("#proof tbody tr", (els) => els.map((el) => el.innerText.replace(/\s+/g, " ").trim()));
   assert(proof.length === 26, "proof rows " + proof.length);
   const statusOf = (name) => {
@@ -635,12 +636,11 @@ try {
   const recheckErr = await page.$eval("#recheckmiss", (el) => el.textContent.trim());
   assert(recheckErr === "", "recheck disagree " + recheckErr);
   const statusStat = await page.$eval("#statusstat", (el) => el.textContent);
-  assert(statusStat.includes("proved 6 of 17, tested 11, unchecked 0"), statusStat);
-  assert(statusStat.includes("Item 19 is proved"), statusStat);
+  assert(statusStat.includes("proved 7 of 19, tested 12, unchecked 0"), statusStat);
   assert(statusStat.includes("Tested is not proved"), statusStat);
   const status = await page.evaluate(() => window.__status);
-  assert(status.rows.length === 18, "status rows " + status.rows.length);
-  assert(status.summary === "proved 6 of 17, tested 11, unchecked 0", status.summary);
+  assert(status.rows.length === 19, "status rows " + status.rows.length);
+  assert(status.summary === "proved 7 of 19, tested 12, unchecked 0", status.summary);
   assert(status.rows[0].item === 1 && status.rows[0].label === "proved" && status.rows[0].evidence.includes("checks 14"), JSON.stringify(status.rows[0]));
   assert(status.rows[2].item === 3 && status.rows[2].label === "proved" && status.rows[2].evidence.includes("414") && status.rows[2].evidence.includes("unproved 0"), status.rows[2].evidence);
   assert(status.rows[3].item === 4 && status.rows[3].label === "tested" && status.rows[3].evidence.includes("mlp_test"), status.rows[3].evidence);
@@ -649,9 +649,10 @@ try {
   assert(status.rows[10].evidence.includes("TRACES_LLM_KEY"), status.rows[10].evidence);
   assert(status.rows[13].evidence.includes("HARNESS_LLM_KEY"), status.rows[13].evidence);
   assert(status.rows[16].item === 17 && status.rows[16].evidence.includes("44 of 44"), status.rows[16].evidence);
-  assert(status.rows[17].item === 19 && status.rows[17].label === "proved" && status.rows[17].evidence.includes("summary 22") && status.rows[17].evidence.includes("unproved 0"), status.rows[17].evidence);
+  assert(status.rows[17].item === 18 && status.rows[17].label === "tested" && status.rows[17].evidence.includes("no gnatprove run"), status.rows[17].evidence);
+  assert(status.rows[18].item === 19 && status.rows[18].label === "proved" && status.rows[18].evidence.includes("summary 22") && status.rows[18].evidence.includes("unproved 0"), status.rows[18].evidence);
   const statusCells = await page.$$eval("#statustable tbody tr", (els) => els.map((el) => el.textContent.replace(/\s+/g, " ").trim()));
-  assert(statusCells.length === 18, "status cells " + statusCells.length);
+  assert(statusCells.length === 19, "status cells " + statusCells.length);
   assert(statusCells[6].includes("proved") && statusCells[6].includes("unproved 0"), statusCells[6]);
   await page.evaluate(() => document.getElementById("status").scrollIntoView({ block: "center" }));
   await page.screenshot({ path: resolve(shotDir, "status.png") });

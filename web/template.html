@@ -607,7 +607,7 @@
   </style>
 </head>
 <body>
-  <div id="ver">v0.19.1-proofs</div>
+  <div id="ver">v0.20.0-readme</div>
   <main id="main" tabindex="-1">
     <h1>ada-ai-amplifier</h1>
     <p id="banner" class="err" hidden></p>
@@ -1074,11 +1074,11 @@
     </div>
     <h2>Checking status</h2>
     <p>
-      Items 1 through 17, each labelled from this build.
-      Proved means GNATprove proved that code. Tested means the
-      test program and the locked spec passed. Anything else is
-      unchecked. Item 19 is an extra row. It is not one of those
-      seventeen. JavaScript only draws the lines.
+      Items 1 through 19, each labelled from this build.
+      Proved means that item's own GNATprove run finished with
+      nothing unproved. Tested means the checks named in the row
+      passed, and the row says why that is not a proof. Anything
+      else is unchecked. JavaScript only draws the lines.
     </p>
     <div id="status">
       <p id="statusstat" class="out">Waiting for this build's report.</p>
@@ -1117,7 +1117,7 @@
       <li>Reasoning summary shows eight written summaries beside the steps Ada checked one at a time, and marks a summary that does not match those steps.</li>
       <li>Locked statements shows each spec, its fingerprint, and whether that spec passed in this build.</li>
       <li>The second checker shows how many cases the two graders agreed on. The counts were written when this page was built.</li>
-      <li>Checking status shows proved, tested, or unchecked for items 1 through 17. The lines were written when this page was built.</li>
+      <li>Checking status shows proved, tested, or unchecked for items 1 through 19. The lines were written when this page was built.</li>
       <li>F9, or Feedback, writes a feedback file.</li>
       <li>If the previous session did not end cleanly, a crash report is offered.</li>
     </ul>
@@ -1138,11 +1138,11 @@
       <li><span class="n">13.</span><span>Reward-hacking demo</span> <span class="st done">done</span></li>
       <li><span class="n">14.</span><span>Same model, different harness</span> <span class="st done">done</span></li>
       <li><span class="n">15.</span><span>Checked steps, not just answers</span> <span class="st done">done</span></li>
-      <li><span class="n">16.</span><span>Locked statements. Each finished item has a fixed spec. CI fails if its fingerprint changes without <code>specs/LOCK</code>, or if <code>pragma Assume</code> or <code>pragma Annotate</code> appear. Independent reimplementation of the statement/proof split in <a href="https://github.com/anthropics/formal-math">formal-math</a> (Apache-2.0).</span> <span class="st done">done</span></li>
-      <li><span class="n">17.</span><span>Second, independent checker. A separately written Ada checker re-checks the verdicts of items 11, 12, and 15. CI fails on disagreement. Independent reimplementation of the independent kernel check in <a href="https://github.com/anthropics/formal-math">formal-math</a> (Apache-2.0).</span> <span class="st done">done</span></li>
-      <li><span class="n">18.</span><span>Checking status on every item. This page and the README label items 1–17 proved, tested, or unchecked, with the numbers from this build. Independent reimplementation of results at different stages of verification in <a href="https://github.com/openai/math">openai/math</a> (Apache-2.0).</span> <span class="st done">done</span></li>
-      <li><span class="n">19.</span><span>Reasoning summary vs checked steps. Eight written summaries beside the steps Ada checked one at a time. A summary that leaves out a failed step, claims a step that never happened, or tells a smoother story is marked. Independent reimplementation of the reasoning summaries in <a href="https://github.com/openai/math">openai/math</a> (Apache-2.0).</span> <span class="st done">done</span></li>
-      <li><span class="n">20.</span><span>README update after items 1–19</span> <span class="st">last</span></li>
+      <li><span class="n">16.</span><span>Locked statements. Each finished item has a fixed spec. CI fails if its fingerprint changes without <code>specs/LOCK</code>, or if <code>pragma Assume</code> or <code>pragma Annotate</code> appear. Ideas inspired by the statement/proof split in <a href="https://github.com/anthropics/formal-math">formal-math</a> (Apache-2.0). Independent reimplementation. No code was copied.</span> <span class="st done">done</span></li>
+      <li><span class="n">17.</span><span>Second, independent checker. A separately written Ada checker re-checks the verdicts of items 11, 12, and 15. CI fails on disagreement. Ideas inspired by the independent kernel check in <a href="https://github.com/anthropics/formal-math">formal-math</a> (Apache-2.0). Independent reimplementation. No code was copied.</span> <span class="st done">done</span></li>
+      <li><span class="n">18.</span><span>Checking status on every item. This page and the README label items 1–19 proved, tested, or unchecked, with the numbers from this build. Ideas inspired by labelling results by verification stage in <a href="https://github.com/openai/math">openai/math</a> (Apache-2.0). Independent reimplementation. No code was copied.</span> <span class="st done">done</span></li>
+      <li><span class="n">19.</span><span>Reasoning summary vs checked steps. Eight written summaries beside the steps Ada checked one at a time. A summary that leaves out a failed step, claims a step that never happened, or tells a smoother story is marked. Ideas inspired by the reasoning summaries in <a href="https://github.com/openai/math">openai/math</a> (Apache-2.0). Independent reimplementation. No code was copied.</span> <span class="st done">done</span></li>
+      <li><span class="n">20.</span><span>README update after items 1–19. One line per item, with the label this build wrote in STATUS.</span> <span class="st done">done</span></li>
     </ol>
     <h2>Proof status</h2>
     <p>
@@ -3123,6 +3123,7 @@ function paintStatus() {
     15: "Checked steps",
     16: "Locked statements",
     17: "Second checker",
+    18: "Checking status",
     19: "Reasoning summary"
   };
   const rows = [];
@@ -3157,15 +3158,14 @@ function paintStatus() {
     body.append(tr);
   });
   window.__status = {rows: rows, summary: summary};
-  const core = rows.filter((row) => row.item >= 1 && row.item <= 17);
-  const extra = rows.filter((row) => row.item === 19);
+  const counted = rows.filter((row) => row.item >= 1 && row.item <= 19);
   const counts = {proved: 0, tested: 0, unchecked: 0};
-  core.forEach((row) => {
+  counted.forEach((row) => {
     if (Object.prototype.hasOwnProperty.call(counts, row.label)) counts[row.label] += 1;
   });
-  const expect = "proved " + counts.proved + " of 17, tested " + counts.tested + ", unchecked " + counts.unchecked;
-  if (core.length === 17 && summary === expect && extra.length === 1) {
-    stat.textContent = summary + ". Item 19 is " + extra[0].label + ". Tested is not proved. The labels describe only the checks in this repository.";
+  const expect = "proved " + counts.proved + " of 19, tested " + counts.tested + ", unchecked " + counts.unchecked;
+  if (counted.length === 19 && summary === expect) {
+    stat.textContent = summary + ". Tested is not proved. The labels describe only the checks in this repository.";
   } else {
     stat.textContent = "This build's status report is incomplete.";
   }

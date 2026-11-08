@@ -2,9 +2,9 @@
 
 The idea, and what this repository actually shows.
 
-Visible stamp: **v0.19.1-proofs**
+Visible stamp: **v0.20.0-readme**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.19.1-proofs
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.20.0-readme
 
 ## The idea
 

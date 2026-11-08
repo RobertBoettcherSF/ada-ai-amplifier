@@ -57,4 +57,48 @@ if grep -q '^item 07 proved ' "$tmp/bad"; then
   echo "unproved mark still proved item 07" >&2
   exit 1
 fi
+./bin/status_cli \
+  proof \
+  obj/gen/tests.out \
+  obj/gen/specs.out \
+  obj/gen/recheck-report.txt \
+  specs > "$tmp/good"
+grep -q '^item 18 tested ' "$tmp/good"
+grep -q 'no gnatprove run' "$tmp/good"
+grep -q '^summary proved 7 of 19, tested 12, unchecked 0$' "$tmp/good"
+if grep -q '^item 18 proved ' "$tmp/good"; then
+  echo "item 18 was proved without a gnatprove run" >&2
+  exit 1
+fi
+mkdir -p "$tmp/proof18"
+cp proof/item_*.out "$tmp/proof18/"
+cat > "$tmp/proof18/item_18.out" << 'EOF'
+Total                             4    1 (25%)    3 (75%)           .          .
+
+in unit ai_amplifier-status, 1 subprograms and packages out of 1 analyzed
+  AI_Amplifier.Status at ai_amplifier-status.ads:1 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (3 checks)
+EOF
+./bin/status_cli \
+  "$tmp/proof18" \
+  obj/gen/tests.out \
+  obj/gen/specs.out \
+  obj/gen/recheck-report.txt \
+  specs > "$tmp/proved18"
+grep -q '^item 18 proved ' "$tmp/proved18"
+grep -q 'proof/item_18.out' "$tmp/proved18"
+grep -q 'unproved 0' "$tmp/proved18"
+grep -q 'ai_amplifier-status' "$tmp/proved18"
+grep -q '^summary proved 8 of 19, tested 11, unchecked 0$' "$tmp/proved18"
+printf '\nunproved\n' >> "$tmp/proof18/item_18.out"
+./bin/status_cli \
+  "$tmp/proof18" \
+  obj/gen/tests.out \
+  obj/gen/specs.out \
+  obj/gen/recheck-report.txt \
+  specs > "$tmp/bad18"
+if grep -q '^item 18 proved ' "$tmp/bad18"; then
+  echo "a marked proof still proved item 18" >&2
+  exit 1
+fi
+grep -q '^item 18 tested ' "$tmp/bad18"
 echo "status self-test ok"

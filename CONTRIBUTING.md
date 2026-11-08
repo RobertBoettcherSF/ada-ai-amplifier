@@ -17,16 +17,19 @@ GitHub Pages from `main`, not with a secret gist.
 4. Report what landed, what the checks did, and what is still open.
 5. Stop. Do not start the next item in the same change.
 
-Items 1 through 19 are done. Item 16 is the locked statements.
-Item 17 is the second checker. Item 18 labels items 1–17
-proved, tested, or unchecked. Item 19 sets a written summary
-against the checked steps. Item 20, the README update, is last, after
-items 1–19, and is not started. The ideas for 16 and 17 come from
+Items 1 through 20 are done. Item 16 is the locked statements.
+Item 17 is the second checker. Item 18 labels items 1–19
+proved, tested, or unchecked. The summary is proved 7 of 19,
+tested 12, unchecked 0. Item 18 itself is tested. Item 19 sets
+a written summary against the checked steps. Item 20 is the
+README: one line per item, with the label from `STATUS`.
+Ideas inspired by
 [formal-math](https://github.com/anthropics/formal-math)
-(Apache-2.0). The ideas for 18 and 19 come from
-[openai/math](https://github.com/openai/math) (Apache-2.0).
-Items 18 and 19 are independent reimplementations.
-Nothing from either repository is copied. CI runs `./prove.sh` (GNATprove level 2, timeout 120 seconds). If a change touches
+(Apache-2.0) for items 16 and 17, and by
+[openai/math](https://github.com/openai/math) (Apache-2.0)
+for items 18 and 19. Those are independent reimplementations.
+No code was copied. The links are not an endorsement, and
+Anthropic and OpenAI are not involved in this repository. CI runs `./prove.sh` (GNATprove level 2, timeout 120 seconds). If a change touches
 a proved unit, `./prove.sh` must still pass and that item's
 `proof/item_NN.out` is part of that change. Do not regenerate a
 proof log as a side effect of a change that does not touch a
@@ -43,7 +46,7 @@ These four are the same text:
 
 | Place | Text |
 |---|---|
-| `AI_Amplifier.Version.Version_Text` | `v0.19.1-proofs` on this tree |
+| `AI_Amplifier.Version.Version_Text` | `v0.20.0-readme` on this tree |
 | `web/template.html`, the `#ver` badge | the same, so it shows with JavaScript off |
 | `version.txt` | the same, one line |
 | `alire.toml` `version` | the same without the leading `v` |
@@ -54,7 +57,7 @@ Bump the stamp when the page, or the Ada a visitor runs, would differ.
 Do not reuse a stamp. Pages deploys from `main` only, so the bump lands
 with the change that deploys. The link you send is
 
-`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.19.1-proofs`
+`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.20.0-readme`
 
 with `?v=` set to the stamp without the leading `v`. Before you say
 that stamp is live, fetch the page and `version.txt` and see the text

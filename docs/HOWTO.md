@@ -4,9 +4,9 @@ A walkthrough for someone new to this repository, and possibly new to
 Ada. The logic lives in Ada. JavaScript only draws. The live page is one
 HTML file with that Ada compiled to WebAssembly inside it.
 
-Visible stamp: **v0.19.1-proofs**
+Visible stamp: **v0.20.0-readme**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.19.1-proofs
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.20.0-readme
 
 The yellow badge, `version.txt`, and `AI_Amplifier.Version.Version_Text`
 are that same text. The query on the link is the cache bust (the stamp
@@ -106,7 +106,7 @@ mean something:
 | `alr -n toolchain --select …` | Puts GNAT 16.1.0 and gprbuild 26.0.1 on the Alire toolchain |
 | `./tools/get-toolchain.sh` | Downloads AdaWebPack 24 into `toolchain/` (gitignored). Later runs see the compiler and return |
 | `alr -n build` | Native build. Warnings and checks are on, including `-gnata`, so `Pre` and `Post` run |
-| `./bin/hello` | Prints `ada-ai-amplifier v0.19.1-proofs` |
+| `./bin/hello` | Prints `ada-ai-amplifier v0.20.0-readme` |
 | `./tools/check-version.sh` | That line, `version.txt`, and the badge in `web/template.html` must be the same stamp |
 | `./bin/tensors_test` | Prints `tensors ok` |
 | `./bin/mlp_test` | Prints `mlp ok` |
@@ -131,7 +131,7 @@ mean something:
 | `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, the speed panel, tokens, recorded chains, wrong turns, the benchmark audit, the reward table, the harness table, the checked-steps table, the locked statements, the second checker, the checking-status table, F9, crash report, a failed module |
 
 Then open `site/index.html` in a browser yourself. The badge reads
-`v0.19.1-proofs`. Leaky ReLU shows slope `0.01` and the output
+`v0.20.0-readme`. Leaky ReLU shows slope `0.01` and the output
 `-0.02`, `0`, `3`. Compute still shows the product `14`, `14`, `17`.
 
 The file, which CI runs as `./tools/howto-steps.sh`:
@@ -344,27 +344,29 @@ to the stamp without the `v`. A screenshot of the new page shows the
 new badge.
 
 **Plan, then Go, then one item.** Post a numbered plan for one change.
-Wait for Go. Build that item. Report, and stop. Items 1 through 17 are
+Wait for Go. Build that item. Report, and stop. Items 1 through 20 are
 done. Item 15 is the checked-steps demo. Item 16 is the locked
 statements: a fixed spec per finished item, and a CI gate that fails
 if a spec's fingerprint changes without `specs/LOCK`, or if
 `pragma Assume` or `pragma Annotate` appear. Item 17 is a second Ada
 checker, written separately, for the verdicts of items 11, 12, and
 15. CI fails if the two checkers disagree. Item 18 labels
-items 1–17 proved, tested, or unchecked, from the build logs,
-and CI fails if `STATUS` is not that report. Tested is not
+items 1–19 proved, tested, or unchecked, from the build logs.
+The summary is proved 7 of 19, tested 12, unchecked 0. Item 18
+itself is tested. CI fails if `STATUS` is not that report, and
+it fails if a built item is missing from `STATUS`. Tested is not
 proved. Item 19 is the reasoning summary set against the
-checked steps. Item 20, the README update, is last, after
-items 1–19, and is not started. The ideas for items 16 and 17 are the
+checked steps. Item 20 is this repository's README: one line per
+item, with the label from `STATUS`. Ideas inspired by the
 Challenge/Solution split, the comparator, and the independent kernel
 check in [formal-math](https://github.com/anthropics/formal-math)
-(Apache-2.0). The ideas for items 18 and 19 are results at
-different stages of verification, and reasoning summaries, in
+(Apache-2.0), and by results at different stages of verification
+and reasoning summaries in
 [openai/math](https://github.com/openai/math) (Apache-2.0).
 Items 16, 17, 18, and 19 are
-independent reimplementations. Nothing from either
-repository is copied. Do not start item 20 in a change that is
-still about item 19.
+independent reimplementations. No code was copied. The links are
+not an endorsement, and Anthropic and OpenAI are not involved in
+this repository.
 
 **Honesty.** Say what is checked at run time and what a prover has
 seen. On the tensor kernels, Silver means no run-time error and Gold
@@ -456,8 +458,9 @@ tests too. `docs/WEIGHT_SPACE.md` is that account.
 `docs/CHECKING_STATUS.md` is the account of the labels.
 `docs/REASONING_SUMMARY.md` is the account of the summaries.
 The flag rules in `AI_Amplifier.Summary_Rules` are a separate
-proof of 22 checks. That proof is not the 419, and it does not
-cover the summaries or the step checker. The item is tested.
+proof of 22 checks. That proof does not cover the summaries
+or the step checker. The flag rules are proved. The summaries
+are not.
 `AI_Amplifier.Version` is SPARK,
 with the contracts from the skeleton. The stamp there is
-`v0.19.1-proofs`.
+`v0.20.0-readme`.
