@@ -27,6 +27,7 @@ is
    package Env renames Ada.Environment_Variables;
    package IO renames Ada.Text_IO;
    use type Ada.Streams.Stream_Element_Offset;
+   use type GNAT.OS_Lib.String_Access;
 
    LF : constant Character := Character'Val (10);
    CR : constant Character := Character'Val (13);
@@ -86,6 +87,26 @@ is
           (Value'Length >= 7
            and then Value (Value'First .. Value'First + 6) = "http://");
    end Web_URL;
+
+   --  Spawn does not search PATH. A bare name such as curl is
+   --  turned into the executable Locate_Exec_On_Path finds.
+   --  A path that already contains a slash is left as it is.
+   function Resolved_Program (Name : String) return String is
+      Found : GNAT.OS_Lib.String_Access;
+   begin
+      if Ada.Strings.Fixed.Index (Name, "/") = 0 then
+         Found := GNAT.OS_Lib.Locate_Exec_On_Path (Name);
+         if Found /= null then
+            declare
+               Text : constant String := Found.all;
+            begin
+               GNAT.OS_Lib.Free (Found);
+               return Text;
+            end;
+         end if;
+      end if;
+      return Name;
+   end Resolved_Program;
 
    function Model_OK (Value : String) return Boolean is
    begin
@@ -282,10 +303,11 @@ is
       Key : constant String := Env_Or_Empty ("HARNESS_LLM_KEY");
       Model : constant String := Env_Or_Empty ("HARNESS_LLM_MODEL");
       Curl : constant String :=
-        (if Env.Exists ("HARNESS_LLM_CURL")
-           and then Trimmed (Env.Value ("HARNESS_LLM_CURL"))'Length > 0
-         then Trimmed (Env.Value ("HARNESS_LLM_CURL"))
-         else "curl");
+        Resolved_Program
+          (if Env.Exists ("HARNESS_LLM_CURL")
+             and then Trimmed (Env.Value ("HARNESS_LLM_CURL"))'Length > 0
+           then Trimmed (Env.Value ("HARNESS_LLM_CURL"))
+           else "curl");
       Name : String (1 .. H.Max_Name);
       NLast : Natural;
       Fib : Natural := 0;

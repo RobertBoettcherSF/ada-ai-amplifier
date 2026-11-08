@@ -4,9 +4,9 @@ A walkthrough for someone new to this repository, and possibly new to
 Ada. The logic lives in Ada. JavaScript only draws. The live page is one
 HTML file with that Ada compiled to WebAssembly inside it.
 
-Visible stamp: **v0.21.0-moreproofs**
+Visible stamp: **v0.22.0-askcheck**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.21.0-moreproofs
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.22.0-askcheck
 
 The yellow badge, `version.txt`, and `AI_Amplifier.Version.Version_Text`
 are that same text. The query on the link is the cache bust (the stamp
@@ -106,7 +106,7 @@ mean something:
 | `alr -n toolchain --select …` | Puts GNAT 16.1.0 and gprbuild 26.0.1 on the Alire toolchain |
 | `./tools/get-toolchain.sh` | Downloads AdaWebPack 24 into `toolchain/` (gitignored). Later runs see the compiler and return |
 | `alr -n build` | Native build. Warnings and checks are on, including `-gnata`, so `Pre` and `Post` run |
-| `./bin/hello` | Prints `ada-ai-amplifier v0.21.0-moreproofs` |
+| `./bin/hello` | Prints `ada-ai-amplifier v0.22.0-askcheck` |
 | `./tools/check-version.sh` | That line, `version.txt`, and the badge in `web/template.html` must be the same stamp |
 | `./bin/tensors_test` | Prints `tensors ok` |
 | `./bin/mlp_test` | Prints `mlp ok` |
@@ -131,7 +131,7 @@ mean something:
 | `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, the speed panel, tokens, recorded chains, wrong turns, the benchmark audit, the reward table, the harness table, the checked-steps table, the locked statements, the second checker, the checking-status table, F9, crash report, a failed module |
 
 Then open `site/index.html` in a browser yourself. The badge reads
-`v0.21.0-moreproofs`. Leaky ReLU shows slope `0.01` and the output
+`v0.22.0-askcheck`. Leaky ReLU shows slope `0.01` and the output
 `-0.02`, `0`, `3`. Compute still shows the product `14`, `14`, `17`.
 
 The file, which CI runs as `./tools/howto-steps.sh`:
@@ -358,7 +358,10 @@ CI fails if `STATUS` is not that report, and
 it fails if a built item is missing from `STATUS`. Tested is not
 proved. Item 19 is the reasoning summary set against the
 checked steps. Item 20 is this repository's README: one line per
-item, with the label from `STATUS`. Ideas inspired by the
+item, with the label from `STATUS`. Item 21 proved five small
+rules. Item 22 checks the three `--ask` commands against a
+stand-in model. No real model is called. Items 23 and 24
+are still planned. Ideas inspired by the
 Challenge/Solution split, the comparator, and the independent kernel
 check in [formal-math](https://github.com/anthropics/formal-math)
 (Apache-2.0), and by results at different stages of verification
@@ -464,4 +467,4 @@ or the step checker. The flag rules are proved. The summaries
 are not.
 `AI_Amplifier.Version` is SPARK,
 with the contracts from the skeleton. The stamp there is
-`v0.21.0-moreproofs`.
+`v0.22.0-askcheck`.

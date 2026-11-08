@@ -4,9 +4,9 @@ Four recorded mistakes on the XOR trainer this repository already
 has, and an Ada checker for the step that comes next. The traces
 were written here. They are not someone else's session.
 
-Visible stamp: **v0.21.0-moreproofs**
+Visible stamp: **v0.22.0-askcheck**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.21.0-moreproofs
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.22.0-askcheck
 
 ## The idea, and the caveat
 
@@ -124,6 +124,12 @@ string is one menu name. A missing string, or any other text, is
 `not-a-step`. A failed curl stops there too. The page never runs
 this program. The browser does not see the key and does not talk
 to an endpoint.
+
+CI also runs `traces_cli --ask 1` against an HTTP stand-in on
+the same machine. The good reply is the menu name `rate-1-train-200`.
+A wrong menu name, a body with no content string, and a handler
+that does not answer are each reported as a failure. No real model
+is called. [docs/ASK_CHECK.md](ASK_CHECK.md).
 
 `bin/traces_test` covers that caller with a local stand-in for
 curl. The stand-in records whether it was started, whether the key

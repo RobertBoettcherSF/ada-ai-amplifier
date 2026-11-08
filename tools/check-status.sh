@@ -27,6 +27,7 @@ if [ "$logs_only" -eq 0 ]; then
     ./bin/summary_test
     ./bin/recheck_test obj/gen/recheck-report.txt
     python3 tools/check-locked.py
+    ./tools/check-ask.sh
   ) > obj/gen/tests.out
   code=$?
   set -e

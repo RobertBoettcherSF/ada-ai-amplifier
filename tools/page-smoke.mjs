@@ -645,9 +645,9 @@ try {
   assert(status.rows[2].item === 3 && status.rows[2].label === "proved" && status.rows[2].evidence.includes("414") && status.rows[2].evidence.includes("unproved 0"), status.rows[2].evidence);
   assert(status.rows[3].item === 4 && status.rows[3].label === "tested" && status.rows[3].evidence.includes("mlp_test"), status.rows[3].evidence);
   assert(status.rows[6].item === 7 && status.rows[6].label === "proved" && status.rows[6].evidence.includes("unproved 0") && status.rows[6].evidence.includes("proof/item_07.out"), status.rows[6].evidence);
-  assert(status.rows[8].label === "proved" && status.rows[8].evidence.includes("live-ask unchecked"), status.rows[8].evidence);
-  assert(status.rows[10].evidence.includes("TRACES_LLM_KEY"), status.rows[10].evidence);
-  assert(status.rows[13].evidence.includes("HARNESS_LLM_KEY"), status.rows[13].evidence);
+  assert(status.rows[8].label === "proved" && status.rows[8].evidence.includes("tested against a stand-in model") && status.rows[8].evidence.includes("no real model is called") && status.rows[8].evidence.includes("real-model behaviour stays unchecked"), status.rows[8].evidence);
+  assert(status.rows[10].evidence.includes("TRACES_LLM_KEY") && status.rows[10].evidence.includes("tested against a stand-in model"), status.rows[10].evidence);
+  assert(status.rows[13].evidence.includes("HARNESS_LLM_KEY") && status.rows[13].label === "tested" && status.rows[13].evidence.includes("real-model behaviour stays unchecked"), status.rows[13].evidence);
   assert(status.rows[12].item === 13 && status.rows[12].label === "proved" && status.rows[12].evidence.includes("proved for the accept/reject gate") && status.rows[12].evidence.includes("not proved:"), status.rows[12].evidence);
   assert(status.rows[14].item === 15 && status.rows[14].label === "proved" && status.rows[14].evidence.includes("proved for the step-grade rule"), status.rows[14].evidence);
   assert(status.rows[15].item === 16 && status.rows[15].label === "proved" && status.rows[15].evidence.includes("proved for the lock-compare rule"), status.rows[15].evidence);

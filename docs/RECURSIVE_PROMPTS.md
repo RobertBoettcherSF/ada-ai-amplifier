@@ -2,9 +2,9 @@
 
 The idea, and what this repository actually shows.
 
-Visible stamp: **v0.21.0-moreproofs**
+Visible stamp: **v0.22.0-askcheck**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.21.0-moreproofs
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.22.0-askcheck
 
 ## The idea
 
@@ -119,6 +119,13 @@ not see the key and does not talk to an endpoint.
 curl. The stand-in records whether it was started, whether the key
 appeared on its command line, and whether the key was in the header
 file. The test does not contact a model.
+
+CI also runs `recurse_cli --ask 1` against an HTTP stand-in on
+the same machine, using `RECURSE_LLM_URL`, `RECURSE_LLM_KEY`, and
+`RECURSE_LLM_MODEL`. The good reply is the base-case blob for
+index 1. A wrong sum, a body with no content string, and a
+handler that does not answer are each reported as a failure.
+No real model is called. [docs/ASK_CHECK.md](ASK_CHECK.md).
 
 ## What this is not
 

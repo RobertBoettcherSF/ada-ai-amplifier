@@ -9,8 +9,8 @@ Data Dependencies                 2          2                                  
 Flow Dependencies                 .          .                                    .           .          .
 Initialization                    .          .                                    .           .          .
 Non-Aliasing                      .          .                                    .           .          .
-Run-time Checks                   5          .                  5 (CVC5 7%, Z3 93%)           .          .
-Assertions                        6          .                               6 (Z3)           .          .
+Run-time Checks                   5          .                               5 (Z3)           .          .
+Assertions                        6          .                 6 (CVC5 13%, Z3 88%)           .          .
 Functional Contracts              2          .    2 (CVC5 29%, Trivial 14%, Z3 57%)           .          .
 LSP Verification                  .          .                                    .           .          .
 Termination                       3          2                               1 (Z3)           .          .

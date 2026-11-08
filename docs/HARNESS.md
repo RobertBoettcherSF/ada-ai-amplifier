@@ -3,9 +3,9 @@
 One fixed solver, four harnesses, eight tasks, one seed.
 The solver does not change. The harness does. The score moves.
 
-Visible stamp: **v0.21.0-moreproofs**
+Visible stamp: **v0.22.0-askcheck**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.21.0-moreproofs
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.22.0-askcheck
 
 ## The idea, and the licences
 
@@ -150,6 +150,12 @@ file for curl and is not placed on the command line. If any
 of the three is missing, the program says no request was sent
 and does not fall back to the Ada solver. The page does not
 run this program, and the page does not call a model.
+
+CI runs `harness_cli --ask rate-diverges` against an HTTP
+stand-in on the same machine. One accepted menu name solves
+that task. A wrong menu name, a body with no content string,
+and a handler that does not answer are each reported as a
+failure. No real model is called. [docs/ASK_CHECK.md](ASK_CHECK.md).
 
 ## What is not proved
 
