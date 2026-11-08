@@ -22,13 +22,63 @@ retry() {
   done
 }
 
+# The github.com release page has been returning 504. The asset
+# API still serves the same file.
+github_asset() {
+  case $1 in
+    https://github.com/*/releases/download/*/*) ;;
+    *) return 1 ;;
+  esac
+  rest=${1#https://github.com/}
+  owner=${rest%%/*}
+  rest=${rest#*/}
+  repo=${rest%%/*}
+  rest=${rest#*/releases/download/}
+  tag=${rest%%/*}
+  name=${rest#*/}
+  meta=$(mktemp)
+  if ! curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 \
+      -o "$meta" \
+      "https://api.github.com/repos/$owner/$repo/releases/tags/$tag"; then
+    rm -f "$meta"
+    return 1
+  fi
+  found=$(python3 -c '
+import json, sys
+data = json.load(open(sys.argv[1], encoding="utf-8"))
+name = sys.argv[2]
+for item in data.get("assets", []):
+    if item["name"] == name:
+        print(item["url"])
+        raise SystemExit(0)
+raise SystemExit(1)
+' "$meta" "$name" || true)
+  rm -f "$meta"
+  if [ -z "$found" ]; then
+    return 1
+  fi
+  printf '%s\n' "$found"
+}
+
 fetch_rpm() {
   url=$1
   dest=$(mktemp)
   echo "Downloading $url"
-  if ! retry curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 -o "$dest" "$url"; then
+  if ! curl -fsSL --retry 2 --retry-all-errors --retry-delay 3 -o "$dest" "$url"; then
     rm -f "$dest"
-    return 1
+    dest=$(mktemp)
+    asset=$(github_asset "$url" || true)
+    if [ -z "$asset" ]; then
+      rm -f "$dest"
+      return 1
+    fi
+    echo "Release page failed; using the asset API" >&2
+    if ! retry curl -fL --retry 5 --retry-all-errors --retry-delay 5 \
+        -H "Accept: application/octet-stream" \
+        -o "$dest" "$asset"; then
+      rm -f "$dest"
+      return 1
+    fi
   fi
   rpm2cpio "$dest" | cpio -idm --quiet
   rm -f "$dest"
@@ -50,8 +100,27 @@ cp usr/lib64/llvm16/lib/libLLVM-16.so usr/lib64/llvm16/lib/libclang-cpp.so.16 li
 [ -e /usr/lib/x86_64-linux-gnu/libedit.so.0 ] || ln -sf /usr/lib/x86_64-linux-gnu/libedit.so.2 lib/libedit.so.0
 # The compiler itself is written in Ada and needs the GNAT 14 runtime library.
 if ! ldconfig -p | grep -q libgnat-14.so; then
-  retry alr -n install --prefix="$PWD/gnat14" gnat_native=14.2.1
-  cp "$(find gnat14 -name libgnat-14.so | head -1)" lib/
+  # Alire's download page has been returning 504. The crate
+  # gnat_native=14.2.1 is this archive. The asset API still
+  # serves it.
+  if ! alr -n install --prefix="$PWD/gnat14" gnat_native=14.2.1; then
+    echo "alr could not fetch GNAT 14; downloading the release asset" >&2
+    archive=$(mktemp)
+    asset=$(github_asset \
+      "https://github.com/alire-project/GNAT-FSF-builds/releases/download/gnat-14.2.0-1/gnat-x86_64-linux-14.2.0-1.tar.gz")
+    retry curl -fL --retry 5 --retry-all-errors --retry-delay 5 \
+      -H "Accept: application/octet-stream" \
+      -o "$archive" "$asset"
+    mkdir -p gnat14
+    tar -xzf "$archive" -C gnat14
+    rm -f "$archive"
+  fi
+  lib=$(find gnat14 -name 'libgnat-14.so' | head -1)
+  if [ -z "$lib" ]; then
+    echo "libgnat-14.so was not in the GNAT 14 archive" >&2
+    exit 1
+  fi
+  cp "$lib" lib/
 fi
 rm -rf usr/lib64 gnat14
 echo "Toolchain ready in $PWD"
