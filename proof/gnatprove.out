@@ -9,9 +9,9 @@ Data Dependencies                 2           2                                 
 Flow Dependencies                 .           .                                                 .           .          .
 Initialization                    8           8                                                 .           .          .
 Non-Aliasing                      .           .                                                 .           .          .
-Run-time Checks                 225           .    225 (CVC5 36%, Trivial 2%, Z3 61%, altergo 2%)           .          .
-Assertions                      106           .    106 (CVC5 32%, Trivial 6%, Z3 59%, altergo 4%)           .          .
-Functional Contracts             47           .                 47 (CVC5 37%, Z3 62%, altergo 1%)           .          .
+Run-time Checks                 225           .    225 (CVC5 38%, Trivial 2%, Z3 59%, altergo 2%)           .          .
+Assertions                      106           .    106 (CVC5 34%, Trivial 6%, Z3 57%, altergo 4%)           .          .
+Functional Contracts             47           .                 47 (CVC5 40%, Z3 58%, altergo 1%)           .          .
 LSP Verification                  .           .                                                 .           .          .
 Termination                      31          31                                                 .           .          .
 Concurrency                       .           .                                                 .           .          .
@@ -25,22 +25,22 @@ max steps used for successful proof: 24233
 Most difficult proved checks
 ============================
 
-ai_amplifier-tensors.adb:542:13: loop invariant after first iteration proved in max 6 seconds
-ai_amplifier-tensors.adb:84:33: loop invariant after first iteration proved in max 6 seconds
+ai_amplifier-tensors.adb:84:33: loop invariant after first iteration proved in max 5 seconds
+ai_amplifier-tensors.adb:542:13: loop invariant after first iteration proved in max 4 seconds
 ai_amplifier-tensors.adb:410:52: fp_overflow check proved in max 4 seconds
-ai_amplifier-tensors.adb:326:16: loop invariant after first iteration proved in max 3 seconds
+ai_amplifier-tensors.adb:326:16: loop invariant after first iteration proved in max 2 seconds
 ai_amplifier-tensors.adb:408:13: loop invariant after first iteration proved in max 2 seconds
 ai_amplifier-tensors.adb:300:13: loop invariant after first iteration proved in max 2 seconds
 ai_amplifier-tensors.adb:528:13: loop invariant after first iteration proved in max 2 seconds
 ai_amplifier-tensors.adb:65:19: postcondition proved in max 1 seconds
+ai_amplifier-tensors.adb:50:19: postcondition proved in max 1 seconds
 ai_amplifier-tensors.adb:456:13: loop invariant after first iteration proved in max 1 seconds
-ai_amplifier-tensors.adb:374:13: loop invariant after first iteration proved in max 1 seconds
 
 ========================
 Detailed analysis report
 ========================
 
-Analyzed 57 units
+Analyzed 60 units
 in unit ai_amplifier, 1 subprograms and packages out of 1 analyzed
   AI_Amplifier at ai_amplifier.ads:2 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
 in unit ai_amplifier-attention, 0 subprograms and packages out of 0 analyzed
@@ -54,6 +54,7 @@ in unit ai_amplifier-harness-demo, 0 subprograms and packages out of 0 analyzed
 in unit ai_amplifier-mlp, 0 subprograms and packages out of 0 analyzed
 in unit ai_amplifier-mlp-demo, 0 subprograms and packages out of 0 analyzed
 in unit ai_amplifier-mlp-speed, 0 subprograms and packages out of 0 analyzed
+in unit ai_amplifier-recheck, 0 subprograms and packages out of 0 analyzed
 in unit ai_amplifier-recurse, 0 subprograms and packages out of 0 analyzed
 in unit ai_amplifier-recurse-demo, 0 subprograms and packages out of 0 analyzed
 in unit ai_amplifier-reward, 0 subprograms and packages out of 0 analyzed
@@ -122,7 +123,9 @@ in unit item_12, 0 subprograms and packages out of 0 analyzed
 in unit item_13, 0 subprograms and packages out of 0 analyzed
 in unit item_14, 0 subprograms and packages out of 0 analyzed
 in unit item_15, 0 subprograms and packages out of 0 analyzed
+in unit item_17, 0 subprograms and packages out of 0 analyzed
 in unit mlp_test, 0 subprograms and packages out of 0 analyzed
+in unit recheck_test, 0 subprograms and packages out of 0 analyzed
 in unit recurse_cli, 0 subprograms and packages out of 0 analyzed
 in unit recurse_test, 0 subprograms and packages out of 0 analyzed
 in unit reward_cli, 0 subprograms and packages out of 0 analyzed

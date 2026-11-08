@@ -145,7 +145,7 @@ try {
   assert(items[15].includes("Locked statements") && items[15].includes("done"), items[15]);
   assert(items[15].includes("formal-math") && items[15].includes("Apache-2.0"), items[15]);
   assert(!items[15].includes("README update"), items[15]);
-  assert(items[16].includes("independent checker") && items[16].includes("planned"), items[16]);
+  assert(items[16].includes("independent checker") && items[16].includes("done"), items[16]);
   assert(items[16].includes("formal-math") && items[16].includes("Apache-2.0"), items[16]);
   assert(items[17].includes("Checking status") && items[17].includes("planned"), items[17]);
   assert(items[17].includes("openai/math") && items[17].includes("Apache-2.0"), items[17]);
@@ -157,7 +157,7 @@ try {
   const status20 = await page.$eval("#backlog li:nth-child(20) .st", (el) => el.textContent.trim());
   assert(status20 === "last", status20);
   const proof = await page.$$eval("#proof tbody tr", (els) => els.map((el) => el.innerText.replace(/\s+/g, " ").trim()));
-  assert(proof.length === 23, "proof rows " + proof.length);
+  assert(proof.length === 24, "proof rows " + proof.length);
   const statusOf = (name) => {
     const row = proof.find((r) => r.slice(0, name.length) === name && (r.length === name.length || r[name.length] === " "));
     return row ? row.slice(name.length).trim() : "";
@@ -185,6 +185,7 @@ try {
   assert(statusOf("Harness comparison") === "not proved", "harness proof " + statusOf("Harness comparison"));
   assert(statusOf("Checked steps") === "not proved", "steps proof " + statusOf("Checked steps"));
   assert(statusOf("Locked statements") === "not proved", "locked proof " + statusOf("Locked statements"));
+  assert(statusOf("Second checker") === "not proved", "recheck proof " + statusOf("Second checker"));
   const hrefs = await page.$$eval("#links a", (els) => els.map((a) => a.href));
   assert(hrefs.some((h) => h === "https://github.com/RobertBoettcherSF/ada-ai-amplifier"), "repo link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/HOWTO.md")), "howto link " + hrefs);
@@ -197,6 +198,7 @@ try {
   assert(hrefs.some((h) => h.includes("/docs/HARNESS.md")), "harness link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/CHECKED_STEPS.md")), "steps link " + hrefs);
   assert(hrefs.some((h) => h.includes("/docs/LOCKED_STATEMENTS.md")), "locked link " + hrefs);
+  assert(hrefs.some((h) => h.includes("/docs/SECOND_CHECKER.md")), "recheck link " + hrefs);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
   assert(overflow, "desktop main overflows");
   const numbered = await page.$$eval("#backlog .n", (els) => els.map((el) => el.textContent.trim()));
@@ -579,13 +581,31 @@ try {
   const stepsErr = await page.$eval("#stepserr", (el) => el.hidden);
   assert(stepsErr, "steps error visible");
   const lockedStat = await page.$eval("#lockedstat", (el) => el.textContent);
-  assert(lockedStat.includes("15 of 15 statements passed"), lockedStat);
+  assert(lockedStat.includes("16 of 16 statements passed"), lockedStat);
   assert(lockedStat.includes("cannot tell whether a spec is the right one"), lockedStat);
   const lockedRows = await page.evaluate(() => window.__locked);
-  assert(lockedRows.length === 15, "locked rows " + lockedRows.length);
+  assert(lockedRows.length === 16, "locked rows " + lockedRows.length);
   assert(lockedRows.every((row) => row.status === "pass" && /^[0-9a-f]{64}$/.test(row.fp)), "locked row");
   assert(lockedRows[2].text.includes("14.0") && lockedRows[2].item === 3, lockedRows[2].name);
   assert(lockedRows[0].text.includes("118"), lockedRows[0].text.slice(0, 80));
+  assert(lockedRows[15].item === 17 && lockedRows[15].text.includes("item 17 pass"), lockedRows[15].name);
+  const recheckStat = await page.$eval("#recheckstat", (el) => el.textContent);
+  assert(recheckStat.includes("agree on every case"), recheckStat);
+  assert(recheckStat.includes("does not prove either checker right"), recheckStat);
+  assert(recheckStat.includes("Both were written in this project"), recheckStat);
+  const recheck = await page.evaluate(() => window.__recheck);
+  assert(recheck.length === 3, "recheck rows " + recheck.length);
+  assert(recheck[0].item === 11 && recheck[0].agree === 44 && recheck[0].total === 44, JSON.stringify(recheck[0]));
+  assert(recheck[1].item === 12 && recheck[1].agree === 22 && recheck[1].total === 22, JSON.stringify(recheck[1]));
+  assert(recheck[2].item === 15 && recheck[2].agree === 12 && recheck[2].total === 12, JSON.stringify(recheck[2]));
+  const recheckCells = await page.$$eval("#rechecktable tbody tr", (els) => els.map((el) => el.textContent.replace(/\s+/g, " ").trim()));
+  assert(recheckCells[0].includes("Wrong turns") && recheckCells[0].includes("44 of 44"), recheckCells[0]);
+  assert(recheckCells[1].includes("Benchmark audit") && recheckCells[1].includes("22 of 22"), recheckCells[1]);
+  assert(recheckCells[2].includes("Checked steps") && recheckCells[2].includes("12 of 12"), recheckCells[2]);
+  const recheckErr = await page.$eval("#recheckmiss", (el) => el.textContent.trim());
+  assert(recheckErr === "", "recheck disagree " + recheckErr);
+  await page.evaluate(() => document.getElementById("recheck").scrollIntoView({ block: "center" }));
+  await page.screenshot({ path: resolve(shotDir, "recheck.png") });
   const lockedErr = await page.$eval("#lockederr", (el) => el.hidden);
   assert(lockedErr, "locked error visible");
   await page.evaluate(() => document.getElementById("locked").scrollIntoView({ block: "center" }));

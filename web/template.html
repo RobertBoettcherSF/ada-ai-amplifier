@@ -491,6 +491,19 @@
       padding: 8px 10px 8px 0;
       overflow-wrap: anywhere;
     }
+    #rechecktable {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.4rem 0;
+    }
+    #rechecktable th, #rechecktable td {
+      text-align: left;
+      padding: 8px 10px 8px 0;
+    }
+    #rechecksrc {
+      white-space: pre-wrap;
+    }
+    #rechecktable .ok { color: #b6f0b6; }
     #lockedtable pre {
       margin: 0.3rem 0 0;
       white-space: pre-wrap;
@@ -539,7 +552,7 @@
   </style>
 </head>
 <body>
-  <div id="ver">v0.16.0-locked</div>
+  <div id="ver">v0.17.0-second</div>
   <main id="main" tabindex="-1">
     <h1>ada-ai-amplifier</h1>
     <p id="banner" class="err" hidden></p>
@@ -913,7 +926,7 @@
     </div>
     <h2>Locked statements</h2>
     <p>
-      Fifteen statements, one for each finished item. Each one is
+      Sixteen statements: items 1 through 15, and item 17. Each one is
       the plain Ada assertions in <code>specs/</code>. This build
       ran them. The fingerprint is the SHA-256 of that source.
       JavaScript only copies the words. A fingerprint stops a
@@ -937,6 +950,33 @@
         <a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/LOCKED_STATEMENTS.md">What a fingerprint does not show</a>.
       </p>
     </div>
+    <h2>Second checker</h2>
+    <p>
+      The verdicts of the wrong turns, the benchmark audit, and the
+      checked steps are graded twice. The second grader does not call
+      the first. This build compared them. JavaScript only draws the
+      counts.
+    </p>
+    <div id="recheck">
+      <p id="recheckstat" class="out">Waiting for this build's report.</p>
+      <table id="rechecktable">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Cases</th>
+            <th>Agree</th>
+          </tr>
+        </thead>
+        <tbody id="recheckbody"></tbody>
+      </table>
+      <pre id="recheckmiss"></pre>
+      <pre id="rechecksrc">__RECHECK_REPORT__</pre>
+      <p class="fine">
+        Agreement makes a shared bug less likely. It does not prove
+        either checker right. Both were written in this project.
+        <a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/SECOND_CHECKER.md">What an agreement does not prove</a>.
+      </p>
+    </div>
     <h2>On this page</h2>
     <ul>
       <li>Tap the splash, or press Enter, to leave it.</li>
@@ -953,6 +993,7 @@
       <li>The harness section asks Ada to run one solver under four harnesses and to show where one task diverges.</li>
       <li>Checked steps asks Ada to grade twelve solutions by the final answer and by every step, and to mark the first bad step.</li>
       <li>Locked statements shows each spec, its fingerprint, and whether that spec passed in this build.</li>
+      <li>The second checker shows how many cases the two graders agreed on. The counts were written when this page was built.</li>
       <li>F9, or Feedback, writes a feedback file.</li>
       <li>If the previous session did not end cleanly, a crash report is offered.</li>
     </ul>
@@ -974,7 +1015,7 @@
       <li><span class="n">14.</span><span>Same model, different harness</span> <span class="st done">done</span></li>
       <li><span class="n">15.</span><span>Checked steps, not just answers</span> <span class="st done">done</span></li>
       <li><span class="n">16.</span><span>Locked statements. Each finished item has a fixed spec. CI fails if its fingerprint changes without <code>specs/LOCK</code>, or if <code>pragma Assume</code> or <code>pragma Annotate</code> appear. Independent reimplementation of the statement/proof split in <a href="https://github.com/anthropics/formal-math">formal-math</a> (Apache-2.0).</span> <span class="st done">done</span></li>
-      <li><span class="n">17.</span><span>Second, independent checker. A separately written Ada checker re-checks the verdicts of items 11, 12, and 15. CI fails on disagreement. Idea only, an independent reimplementation of the independent kernel check in <a href="https://github.com/anthropics/formal-math">formal-math</a> (Apache-2.0).</span> <span class="st">planned</span></li>
+      <li><span class="n">17.</span><span>Second, independent checker. A separately written Ada checker re-checks the verdicts of items 11, 12, and 15. CI fails on disagreement. Independent reimplementation of the independent kernel check in <a href="https://github.com/anthropics/formal-math">formal-math</a> (Apache-2.0).</span> <span class="st done">done</span></li>
       <li><span class="n">18.</span><span>Checking status on every item. This page and the README label items 1–15 proved, tested, or unchecked, with real numbers. Idea only, an independent reimplementation of results at different stages of verification in <a href="https://github.com/openai/math">openai/math</a> (Apache-2.0).</span> <span class="st">planned</span></li>
       <li><span class="n">19.</span><span>Reasoning summary vs checked steps. A short written summary of an item-15 solution, each claim linked to the step that backs it, and unbacked claims flagged. Idea only, an independent reimplementation of the reasoning summaries in <a href="https://github.com/openai/math">openai/math</a> (Apache-2.0).</span> <span class="st">planned</span></li>
       <li><span class="n">20.</span><span>README update after items 1–19</span> <span class="st">last</span></li>
@@ -1015,6 +1056,7 @@
         <tr><td>Harness comparison</td><td class="st">not proved</td></tr>
         <tr><td>Checked steps</td><td class="st">not proved</td></tr>
         <tr><td>Locked statements</td><td class="st">not proved</td></tr>
+        <tr><td>Second checker</td><td class="st">not proved</td></tr>
       </tbody>
     </table>
     <h2>Links</h2>
@@ -1030,6 +1072,7 @@
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/HARNESS.md">Same model, different harness</a></li>
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/CHECKED_STEPS.md">Checked steps</a></li>
       <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/LOCKED_STATEMENTS.md">Locked statements</a></li>
+      <li><a href="https://github.com/RobertBoettcherSF/ada-ai-amplifier/blob/main/docs/SECOND_CHECKER.md">Second checker</a></li>
     </ul>
     <noscript>
       <p class="err">JavaScript is off, so the Ada module is not running. Open this page in Safari or Chrome.</p>
@@ -2841,6 +2884,52 @@ function frame() {
 }
 setInterval(() => { fps = frames; frames = 0; }, 1000);
 
+function paintRecheck() {
+  const src = document.getElementById("rechecksrc");
+  const body = document.getElementById("recheckbody");
+  const stat = document.getElementById("recheckstat");
+  const miss = document.getElementById("recheckmiss");
+  if (!src || !body || !stat) return;
+  const text = src.textContent.replace(/^\n+|\n+$/g, "");
+  body.textContent = "";
+  if (miss) miss.textContent = "";
+  const names = {11: "Wrong turns", 12: "Benchmark audit", 15: "Checked steps"};
+  const rows = [];
+  const misses = [];
+  if (!text || text.indexOf("pair ") === -1) {
+    stat.textContent = "This build did not write the comparison.";
+    return;
+  }
+  text.split("\n").forEach((line) => {
+    const parts = line.trim().split(/\s+/);
+    if (parts[0] === "pair" && parts.length >= 4) {
+      rows.push({item: Number(parts[1]), agree: Number(parts[2]), total: Number(parts[3])});
+    } else if (line.trim().indexOf("disagree ") === 0) {
+      misses.push(line.trim());
+    }
+  });
+  rows.forEach((row) => {
+    const tr = document.createElement("tr");
+    const item = document.createElement("td");
+    item.textContent = "Item " + row.item + (names[row.item] ? ", " + names[row.item] : "");
+    const cases = document.createElement("td");
+    cases.textContent = String(row.total);
+    const agree = document.createElement("td");
+    agree.textContent = String(row.agree) + " of " + String(row.total);
+    if (row.agree === row.total) agree.className = "ok";
+    tr.append(item, cases, agree);
+    body.append(tr);
+  });
+  window.__recheck = rows;
+  const all = rows.length === 3 && rows.every((row) => row.agree === row.total && row.total > 0);
+  if (all && misses.length === 0) {
+    stat.textContent = "The two checkers agree on every case. Agreement makes a shared bug less likely. It does not prove either checker right. Both were written in this project.";
+  } else {
+    stat.textContent = "The two checkers disagree.";
+    if (miss) miss.textContent = misses.join("\n");
+  }
+  src.hidden = true;
+}
 async function boot() {
   if (params.has("nowasm")) {
     fail("It was not started because the address has ?nowasm=1.");
@@ -2911,6 +3000,7 @@ async function boot() {
 setTimeout(() => {
   if (!started && wasmerr.hidden) fail("It did not start within 8 seconds.");
 }, 8000);
+paintRecheck();
 boot().catch((e) => fail(String(e && e.message ? e.message : e)));
   </script>
 </body>
