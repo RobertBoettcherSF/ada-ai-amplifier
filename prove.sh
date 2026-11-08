@@ -94,4 +94,17 @@ prove_one proof/item_09.out ai_amplifier-chain_rule.adb
 prove_one proof/item_11.out ai_amplifier-trace_rule.adb
 prove_one proof/item_12.out ai_amplifier-audit_rule.adb
 gnatprove --version | head -1 > proof/version.txt
+
+# Item 19's flag rules. Separate project, separate log.
+# The same bytes are also item_19.out so STATUS names that run.
+rm -rf obj/summary_rules
+gnatprove -P summary_rules.gpr -j0
+rules=$(find obj/summary_rules -path '*/gnatprove/gnatprove.out' -print | head -1)
+if [ -z "$rules" ] || [ ! -f "$rules" ]; then
+  echo "no gnatprove.out for summary rules" >&2
+  exit 1
+fi
+cp "$rules" proof/summary_rules.out
+cp "$rules" proof/item_19.out
+gnatprove --version | head -1 > proof/version.txt
 echo "Wrote per-item proof logs"

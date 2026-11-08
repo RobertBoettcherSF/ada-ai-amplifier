@@ -1,4 +1,6 @@
---  Checking status for items 1 through 17.
+--  Checking status for items 1 through 17, plus item 19.
+--  The summary line is still the seventeen. Item 19 is
+--  its own row. It is not one of those seventeen.
 --
 --  Plain Ada (SPARK_Mode off). Nothing here is proved. The
 --  label is computed from the build logs: one GNATprove

@@ -15,4 +15,5 @@ item 14 tested harness_test cases 406 spec item_14 pass asserts 19; live-ask unc
 item 15 tested steps_test cases 16 spec item_15 pass asserts 10; not proved: a step grade recomputes values and is not a proof
 item 16 tested check-locked cases 17 spec item_16 pass asserts 14; not proved: a fingerprint detects an edit and does not prove the spec
 item 17 tested recheck_test agree 44 of 44, 22 of 22, 12 of 12 spec item_17 pass asserts 18; not proved: agreement of two checkers is not a proof of either
+item 19 proved gnatprove proof/item_19.out summary 22 flow 7 provers 15 unproved 0; unit ai_amplifier-summary_rules 6/6 checks 15; summary_test cases 36 spec item_19 pass asserts 22; not in this run: ai_amplifier-summary
 summary proved 6 of 17, tested 11, unchecked 0

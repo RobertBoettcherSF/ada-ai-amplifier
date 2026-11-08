@@ -123,6 +123,7 @@ proved 6 of 17, tested 11, unchecked 0.
 | 15 Checked steps | tested | steps_test cases 16 spec item_15 pass asserts 10; not proved: a step grade recomputes values and is not a proof |
 | 16 Locked statements | tested | check-locked cases 17 spec item_16 pass asserts 14; not proved: a fingerprint detects an edit and does not prove the spec |
 | 17 Second checker | tested | recheck_test agree 44 of 44, 22 of 22, 12 of 12 spec item_17 pass asserts 18; not proved: agreement of two checkers is not a proof of either |
+| 19 Reasoning summary | proved | gnatprove proof/item_19.out summary 22 flow 7 provers 15 unproved 0; unit ai_amplifier-summary_rules 6/6 checks 15; summary_test cases 36 spec item_19 pass asserts 22; not in this run: ai_amplifier-summary |
 ## What is proved
 
 Nothing in this item is proved. `AI_Amplifier.Status` is plain
@@ -135,3 +136,9 @@ The labels describe only the checks this repository runs. They
 do not describe anyone else's proof, and they do not describe a
 live model. A fingerprint, an agreement, and a passing test are
 still tests.
+
+Item 19 is a row after those seventeen. It is not inside the
+summary `proved 6 of 17, tested 11, unchecked 0`. The row is
+proved for `ai_amplifier-summary_rules`: `proof/item_19.out`
+is summary 22, 15 checks on that unit, unproved 0. The
+summaries and the step checker are not in that run.

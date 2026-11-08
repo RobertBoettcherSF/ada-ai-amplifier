@@ -69,6 +69,10 @@ begin
    pragma Assert (Has (14, "HARNESS_LLM_KEY"));
    pragma Assert (Has (16, "spec item_16"));
    pragma Assert (Has (16, "not proved:"));
+   pragma Assert (S.Item_Label (19) = S.Proved);
+   pragma Assert (Has (19, "proof/item_19.out"));
+   pragma Assert (Has (19, "unproved 0"));
+   pragma Assert (Has (19, "ai_amplifier-summary_rules"));
    pragma Assert (Has (17, "44 of 44"));
    pragma Assert (Has (17, "22 of 22"));
    pragma Assert (Has (17, "12 of 12"));

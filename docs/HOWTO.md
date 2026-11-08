@@ -123,6 +123,8 @@ mean something:
 | `./bin/harness_cli` | Prints the four harness rows. It does not call a model |
 | `./bin/steps_test` | Prints `steps ok` |
 | `./bin/steps_cli` | Prints the twelve step grades. A file whose steps fail exits 1 |
+| `./bin/summary_test` | Prints `summary ok` |
+| `./bin/summary_cli` | Prints the eight summaries beside the checked steps |
 | `./bin/recheck_test` | Compares the two checkers. It prints `recheck ok` when every case agrees |
 | `npm ci` | Installs `puppeteer-core` from the lockfile |
 | `./build.sh` | Checks `STATUS`, runs the locked specs, compiles the library to WebAssembly, runs `tools/wasm-smoke.mjs`, writes `site/index.html`, `site/version.txt`, and `site/STATUS.txt` |
@@ -162,6 +164,8 @@ alr -n build
 ./bin/harness_cli
 ./bin/steps_test
 ./bin/steps_cli
+./bin/summary_test
+./bin/summary_cli
 ./bin/recheck_test
 npm ci
 ./build.sh
@@ -289,7 +293,8 @@ header comment, whether it is in SPARK.
 | `Reward_Cli` | `src/reward_cli.adb` | Prints the submission table and runs either search. Native only |
 | `Harness_Cli` | `src/harness_cli.adb` | Prints the harness table. Calls a model only when the user sets a key, a URL, and a model name. Native only |
 | `Steps_Cli` | `src/steps_cli.adb` | Prints the step table, or grades one solution file. Native only |
-| `Tensors_Test`, `MLP_Test`, `Attention_Test`, `Recurse_Test`, `Traces_Test`, `Audit_Test`, `Reward_Test`, `Harness_Test`, `Steps_Test` | `src/tensors_test.adb`, `src/mlp_test.adb`, `src/attention_test.adb`, `src/recurse_test.adb`, `src/traces_test.adb`, `src/audit_test.adb`, `src/reward_test.adb`, `src/harness_test.adb`, `src/steps_test.adb` | Native tests. They use `Ada.Text_IO`, so `build.sh` does not compile them into the module |
+| `Summary_Cli` | `src/summary_cli.adb` | Prints the eight summaries beside the checked steps. Native only |
+| `Tensors_Test`, `MLP_Test`, `Attention_Test`, `Recurse_Test`, `Traces_Test`, `Audit_Test`, `Reward_Test`, `Harness_Test`, `Steps_Test`, `Summary_Test` | `src/tensors_test.adb`, `src/mlp_test.adb`, `src/attention_test.adb`, `src/recurse_test.adb`, `src/traces_test.adb`, `src/audit_test.adb`, `src/reward_test.adb`, `src/harness_test.adb`, `src/steps_test.adb`, `src/summary_test.adb` | Native tests. They use `Ada.Text_IO`, so `build.sh` does not compile them into the module |
 
 `Vector` and `Matrix` carry their shape as a discriminant (`Length`, or
 `Rows` and `Cols`). Components are `Float`, indexed `1 ..` that bound.
@@ -307,7 +312,7 @@ JavaScript does not compute the splash, the product, the softmax, the
 leaky ReLU, the loss, the decision boundary, the weight text, the
 merges, the attention, the chain check, the training-speed verdict,
 or the wrong-turn verdict, or the reward scores, or the harness table,
-or the step grades, or the locked statements, or the second-checker
+or the step grades, or the summary comparison, or the locked statements, or the second-checker
 agreement. The comparison is a file this build writes.
 It reads coordinates, copies numbers, and sends UTF-8 bytes. On the
 speed panel it passes in two host wall-clock readings. Ada subtracts them.
@@ -348,20 +353,18 @@ checker, written separately, for the verdicts of items 11, 12, and
 15. CI fails if the two checkers disagree. Item 18 labels
 items 1–17 proved, tested, or unchecked, from the build logs,
 and CI fails if `STATUS` is not that report. Tested is not
-proved. Items 19 and 20 are planned and not started. Item 19
-is a short written summary of one item-15 solution. Each
-claim links to the step that backs it, and a claim with no step is
-flagged. Item 20, the README update, is last, after items 1–19, and
-is not started. The ideas for items 16 and 17 are the
+proved. Item 19 is the reasoning summary set against the
+checked steps. Item 20, the README update, is last, after
+items 1–19, and is not started. The ideas for items 16 and 17 are the
 Challenge/Solution split, the comparator, and the independent kernel
 check in [formal-math](https://github.com/anthropics/formal-math)
 (Apache-2.0). The ideas for items 18 and 19 are results at
 different stages of verification, and reasoning summaries, in
 [openai/math](https://github.com/openai/math) (Apache-2.0).
-Item 19 is still an idea only. Items 16, 17, and 18 are
+Items 16, 17, 18, and 19 are
 independent reimplementations. Nothing from either
-repository is copied. Do not start item 19 in a change that is
-still about item 18.
+repository is copied. Do not start item 20 in a change that is
+still about item 19.
 
 **Honesty.** Say what is checked at run time and what a prover has
 seen. On the tensor kernels, Silver means no run-time error and Gold
@@ -422,6 +425,8 @@ The logs are `proof/item_NN.out`, one run per proved item. The same table is on 
 | Checked steps | not proved |
 | Locked statements | not proved |
 | Second checker | not proved |
+| Checking status | not proved |
+| Reasoning summary | rule proved |
 
 Silver on dot and the two products means no run-time error, and the
 numeric result lies in `[-Acc_Bound, Acc_Bound]`. It does not mean the
@@ -448,6 +453,11 @@ tests too. `docs/WEIGHT_SPACE.md` is that account.
 `docs/HARNESS.md` is the account of the four harnesses.
 `docs/CHECKED_STEPS.md` is the account of the two grades.
 `docs/SECOND_CHECKER.md` is the account of the agreement.
+`docs/CHECKING_STATUS.md` is the account of the labels.
+`docs/REASONING_SUMMARY.md` is the account of the summaries.
+The flag rules in `AI_Amplifier.Summary_Rules` are a separate
+proof of 22 checks. That proof is not the 419, and it does not
+cover the summaries or the step checker. The item is tested.
 `AI_Amplifier.Version` is SPARK,
 with the contracts from the skeleton. The stamp there is
 `v0.19.1-proofs`.

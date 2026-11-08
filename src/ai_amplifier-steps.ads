@@ -81,6 +81,21 @@ is
    --  row that breaks a rule, or 0 when every row holds.
    procedure Grade (Text : String; Item : out Report);
 
+   --  One line, checked on its own. Problem is "xor 0 1",
+   --  "train", "fib 6", or "sum", without the word problem.
+   --  Line is one step, one answer, or a sentence. A known
+   --  value is checked against the number this repository
+   --  recomputes for that step, and the other lines are not
+   --  required. A sentence this checker cannot recompute is
+   --  Not_Checkable. Order is not a failure here.
+   type Alone is (Checked_Correct, Checked_Wrong, Not_Checkable);
+
+   procedure Check_Alone
+     (Problem : String;
+      Line    : String;
+      Item    : out Alone;
+      Rule    : out Rule_Name);
+
    --  The built-in solution. Last is 0 when Index is outside
    --  1 .. Solution_Count or Text is too short.
    procedure Built_In

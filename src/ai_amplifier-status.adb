@@ -11,6 +11,7 @@ is
    Line_Max  : constant := 400;
    Ev_Max    : constant := 800;
    Item_Last : constant := 17;
+   Proof_Last : constant := 19;
 
    type Name_Text is record
       Text : String (1 .. Name_Max) := (others => ' ');
@@ -30,7 +31,7 @@ is
    type Test_Id is
      (T_Version, T_Tensors, T_Mlp, T_Attention, T_Recurse,
       T_Traces, T_Audit, T_Reward, T_Harness, T_Steps,
-      T_Recheck, T_Locked);
+      T_Summary, T_Recheck, T_Locked);
 
    type Test_Rec is record
       OK        : Boolean := False;
@@ -57,10 +58,10 @@ is
       NUnits   : Natural := 0;
    end record;
 
-   Proofs : array (1 .. Item_Last) of Proof_Rec;
+   Proofs : array (1 .. Proof_Last) of Proof_Rec;
    Tests  : array (Test_Id) of Test_Rec;
-   Passed : array (1 .. 17) of Boolean := (others => False);
-   Asserts : array (1 .. 17) of Natural := (others => 0);
+   Passed : array (1 .. 19) of Boolean := (others => False);
+   Asserts : array (1 .. 19) of Natural := (others => 0);
    Pair_A : array (1 .. 3) of Natural := (others => 0);
    Pair_T : array (1 .. 3) of Natural := (others => 0);
    Pair_On : array (1 .. 3) of Boolean := (others => False);
@@ -395,6 +396,8 @@ is
          return T_Harness;
       elsif Line = "steps ok" then
          return T_Steps;
+      elsif Line = "summary ok" then
+         return T_Summary;
       elsif Line = "recheck ok" then
          return T_Recheck;
       else
@@ -408,6 +411,7 @@ is
       or else Line = "recurse ok" or else Line = "traces ok"
       or else Line = "audit ok" or else Line = "reward ok"
       or else Line = "harness ok" or else Line = "steps ok"
+      or else Line = "summary ok"
       or else Line = "recheck ok" or else Line = "locked ok");
 
    function Test_Of_Cases (Token : String) return Test_Id is
@@ -430,6 +434,8 @@ is
          return T_Harness;
       elsif Token = "steps_test" then
          return T_Steps;
+      elsif Token = "summary_test" then
+         return T_Summary;
       elsif Token = "recheck_test" then
          return T_Recheck;
       else
@@ -471,6 +477,7 @@ is
                        or else Token = "reward_test"
                        or else Token = "harness_test"
                        or else Token = "steps_test"
+                       or else Token = "summary_test"
                        or else Token = "recheck_test"
                      then
                         Tests (Id).Cases := Count;
@@ -498,7 +505,7 @@ is
          begin
             if Starts (Line, "item ") and then Word (Line, 3) = "pass" then
                Num := To_Nat (Word (Line, 2));
-               if Num in 1 .. 17 then
+               if Num in 1 .. 19 then
                   Passed (Num) := True;
                end if;
             end if;
@@ -944,6 +951,30 @@ is
                Add (E, " recheck ok, the three pairs agreeing,");
                Add (E, " and spec item_17 pass");
             end if;
+         when 19 =>
+            if Own_Proof (19, "ai_amplifier-summary_rules")
+              and then Run_Ok (T_Summary)
+              and then Spec_Ok (19)
+            then
+               K := Proved;
+               Add_Run_Head (E, 19);
+               Add_Unit (E, 19, "ai_amplifier-summary_rules");
+               Add (E, "; ");
+               Add_Run (E, "summary_test", T_Summary);
+               Add (E, " ");
+               Add_Spec (E, 19);
+               Add (E, "; not in this run: ai_amplifier-summary");
+            elsif Run_Ok (T_Summary) and then Spec_Ok (19) then
+               K := Tested;
+               Add_Run (E, "summary_test", T_Summary);
+               Add (E, " ");
+               Add_Spec (E, 19);
+               Add_Why (E, "the flag-rule proof file");
+               Add (E, " is missing or unproved");
+            else
+               Add (E, "would take summary_test printing");
+               Add (E, " summary ok and spec item_19 pass");
+            end if;
          when others =>
             Add (E, "would take an item in 1 .. 17");
       end case;
@@ -1009,12 +1040,20 @@ is
             end if;
          end;
       end loop;
+      declare
+         Path : constant String := Prove_Dir & "/item_19.out";
+      begin
+         if Open_Ok (Path) then
+            Read_Prove (19, Path);
+         end if;
+      end;
       Read_Tests (Tests_Path);
       Read_Specs (Specs_Path);
       Read_Recheck (Recheck_Path);
       for N in 1 .. Item_Last loop
          Count_Asserts (Spec_Dir, N);
       end loop;
+      Count_Asserts (Spec_Dir, 19);
       Files_Ok := True;
    end Load;
 
@@ -1024,7 +1063,7 @@ is
       K : Kind;
       E : Ev;
    begin
-      if Number not in 1 .. 17 then
+      if Number not in 1 .. 17 and then Number /= 19 then
          return Unchecked;
       end if;
       Classify (Number, K, E);
@@ -1035,7 +1074,7 @@ is
       K : Kind;
       E : Ev;
    begin
-      if Number not in 1 .. 17 then
+      if Number not in 1 .. 17 and then Number /= 19 then
          return "would take an item in 1 .. 17";
       end if;
       Classify (Number, K, E);
@@ -1084,6 +1123,10 @@ is
          Ada.Text_IO.Put (" ");
          Ada.Text_IO.Put_Line (Item_Evidence (N));
       end loop;
+      Ada.Text_IO.Put ("item 19 ");
+      Ada.Text_IO.Put (Kind_Word (Item_Label (19)));
+      Ada.Text_IO.Put (" ");
+      Ada.Text_IO.Put_Line (Item_Evidence (19));
       Ada.Text_IO.Put ("summary ");
       Ada.Text_IO.Put_Line (Summary);
    end Put_Report;

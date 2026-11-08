@@ -35,6 +35,7 @@ TITLES = {
     "item_16.adb": "Locked statements",
     "item_17.adb": "Second checker",
     "item_18.adb": "Checking status",
+    "item_19.adb": "Reasoning summary",
 }
 
 
@@ -62,7 +63,7 @@ def spans(lengths: list[int]) -> str:
 
 
 def main() -> int:
-    numbers = list(range(1, 19))
+    numbers = list(range(1, 20))
     files = [SPEC_DIR / f"item_{n:02d}.adb" for n in numbers]
     missing = [path.name for path in files if not path.is_file()]
     if missing:

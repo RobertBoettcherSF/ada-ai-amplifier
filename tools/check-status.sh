@@ -24,6 +24,7 @@ if [ "$logs_only" -eq 0 ]; then
     ./bin/reward_test
     ./bin/harness_test
     ./bin/steps_test
+    ./bin/summary_test
     ./bin/recheck_test obj/gen/recheck-report.txt
     python3 tools/check-locked.py
   ) > obj/gen/tests.out
@@ -37,7 +38,7 @@ if [ "$logs_only" -eq 0 ]; then
   set +e
   (
     set -e
-    for n in 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17; do
+    for n in 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 19; do
       ./bin/item_"$n"
     done
   ) > obj/gen/specs.out
@@ -51,7 +52,8 @@ if [ "$logs_only" -eq 0 ]; then
 fi
 for need in obj/gen/tests.out obj/gen/specs.out obj/gen/recheck-report.txt \
   proof/item_01.out proof/item_03.out proof/item_07.out \
-  proof/item_09.out proof/item_11.out proof/item_12.out
+  proof/item_09.out proof/item_11.out proof/item_12.out \
+  proof/item_19.out
 do
   if [ ! -f "$need" ]; then
     echo "missing $need" >&2

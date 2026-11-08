@@ -1,0 +1,43 @@
+=========================
+Summary of SPARK analysis
+=========================
+
+---------------------------------------------------------------------------------------------
+SPARK Analysis results        Total       Flow                 Provers   Justified   Unproved
+---------------------------------------------------------------------------------------------
+Data Dependencies                 1          1                       .           .          .
+Flow Dependencies                 .          .                       .           .          .
+Initialization                    2          2                       .           .          .
+Non-Aliasing                      .          .                       .           .          .
+Run-time Checks                   3          .                3 (CVC5)           .          .
+Assertions                       11          .    11 (CVC5 97%, Z3 3%)           .          .
+Functional Contracts              1          .                1 (CVC5)           .          .
+LSP Verification                  .          .                       .           .          .
+Termination                       4          4                       .           .          .
+Concurrency                       .          .                       .           .          .
+---------------------------------------------------------------------------------------------
+Total                            22    7 (32%)                15 (68%)           .          .
+
+
+max steps used for successful proof: 1
+
+============================
+Most difficult proved checks
+============================
+
+No check found with max time greater than 1 second
+
+========================
+Detailed analysis report
+========================
+
+Analyzed 2 units
+in unit ai_amplifier, 1 subprograms and packages out of 1 analyzed
+  AI_Amplifier at ai_amplifier.ads:2 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
+in unit ai_amplifier-summary_rules, 6 subprograms and packages out of 6 analyzed
+  AI_Amplifier.Summary_Rules at ai_amplifier-summary_rules.ads:6 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
+  AI_Amplifier.Summary_Rules.Bounded at ai_amplifier-summary_rules.ads:57 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
+  AI_Amplifier.Summary_Rules.Is_Phantom at ai_amplifier-summary_rules.adb:5 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
+  AI_Amplifier.Summary_Rules.Is_Smooth_Affirm at ai_amplifier-summary_rules.adb:9 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (1 checks)
+  AI_Amplifier.Summary_Rules.Judge at ai_amplifier-summary_rules.ads:60 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (14 checks)
+  AI_Amplifier.Summary_Rules.Referenced at ai_amplifier-summary_rules.adb:23 flow analyzed (0 errors, 0 checks, 0 warnings and 0 pragma Assume statements) and proved (0 checks)
