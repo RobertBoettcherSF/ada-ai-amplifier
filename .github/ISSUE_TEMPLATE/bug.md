@@ -6,7 +6,7 @@ title: ""
 
 ## Stamp
 
-The yellow badge, bottom right. Example: `v0.22.0-askcheck`.
+The yellow badge, bottom right. Example: `v0.23.0-ci-cache`.
 
 ## What you expected
 

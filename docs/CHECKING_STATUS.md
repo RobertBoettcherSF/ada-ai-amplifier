@@ -3,9 +3,9 @@
 Items 1 through 19, each with one label. The label is computed
 from this build. The page and the README copy that text.
 
-Visible stamp: **v0.22.0-askcheck**
+Visible stamp: **v0.23.0-ci-cache**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.22.0-askcheck
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.23.0-ci-cache
 
 ## The idea, and the licence
 

@@ -7,24 +7,8 @@
 set -e
 cd "$(dirname "$0")"
 
-# The release page on github.com has been returning 504. The
-# asset API still serves the same archive. Try Alire once, then
-# that API.
-retry() {
-  n=1
-  while [ "$n" -le 6 ]; do
-    if "$@"; then
-      return 0
-    fi
-    echo "attempt $n failed: $*" >&2
-    if [ "$n" -eq 6 ]; then
-      return 1
-    fi
-    sleep $((n * 15))
-    n=$((n + 1))
-  done
-}
-
+# gnatprove 16.1.0 is pinned in ci/toolchain.lock. The fetch tries
+# the cache, then the release URL, then the release asset API.
 install_gnatprove_archive() {
   root="$HOME/.local/gnatprove-16.1.0"
   bindir="$root/gnatprove-x86_64-linux-16.1.0-1/bin"
@@ -32,38 +16,29 @@ install_gnatprove_archive() {
     export PATH="$bindir:$PATH"
     return 0
   fi
-  meta=$(mktemp)
-  archive=$(mktemp)
-  retry curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 \
-    -o "$meta" \
-    https://api.github.com/repos/alire-project/GNAT-FSF-builds/releases/tags/gnatprove-16.1.0-1
-  asset=$(python3 -c '
-import json, sys
-data = json.load(open(sys.argv[1], encoding="utf-8"))
-name = "gnatprove-x86_64-linux-16.1.0-1.tar.gz"
-for item in data["assets"]:
-    if item["name"] == name:
-        print(item["url"])
-        raise SystemExit(0)
-raise SystemExit("missing " + name)
-' "$meta")
-  retry curl -fL --retry 5 --retry-all-errors --retry-delay 5 \
-    -H "Accept: application/octet-stream" \
-    -o "$archive" "$asset"
+  archive=$("$PWD/tools/toolchain-fetch.sh" --path gnatprove)
   mkdir -p "$root"
   tar -xzf "$archive" -C "$root"
-  rm -f "$meta" "$archive"
+  if [ ! -x "$bindir/gnatprove" ]; then
+    echo "gnatprove was not in the pinned archive" >&2
+    exit 1
+  fi
   export PATH="$bindir:$PATH"
 }
 
 if [ ! -f config/ada_ai_amplifier_config.gpr ]; then
   alr -n build
 fi
+if [ -x "$HOME/.alire/bin/gnatprove" ]; then
+  export PATH="$HOME/.alire/bin:$PATH"
+fi
 if ! command -v gnatprove >/dev/null 2>&1; then
-  if alr -n install gnatprove=16.1.0; then
+  "$PWD/tools/toolchain-fetch.sh" gnatprove
+  prove_ver=$(awk '$1=="gnatprove" { print $2; exit }' ci/toolchain.lock)
+  if alr -n install "gnatprove=$prove_ver"; then
     export PATH="$HOME/.alire/bin:$PATH"
   else
-    echo "alr could not fetch gnatprove; downloading the release asset" >&2
+    echo "alr could not install gnatprove; unpacking the pinned archive" >&2
     install_gnatprove_archive
   fi
 fi

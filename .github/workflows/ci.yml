@@ -18,7 +18,14 @@ jobs:
       - uses: alire-project/setup-alire@v5
         with:
           version: "2.1.1"
-          toolchain: gnat_native=16.1.0 gprbuild=26.0.1
+          toolchain: "--disable-assistant"
+
+      - uses: ./.github/actions/toolchain-cache
+        with:
+          gnatprove: "true"
+
+      - name: Pinned toolchain
+        run: ./tools/toolchain-setup.sh with-gnatprove
 
       - name: Guide quotes
         run: python3 tools/check-howto-quote.py
@@ -55,10 +62,11 @@ jobs:
           ./bin/recheck_test
           ./tools/run-specs.sh
 
-      # Level 2, on the SPARK units only. prove.sh installs FSF
-      # gnatprove 16.1.0 if the runner does not already have it.
-      # --checks-as-errors=on is in the project file, so an unproved
-      # check fails this step. Units with SPARK_Mode => Off are skipped.
+      # Level 2, on the SPARK units only. The pinned toolchain step
+      # installs FSF gnatprove 16.1.0. prove.sh installs it from
+      # ci/toolchain.lock if that step did not. --checks-as-errors=on
+      # is in the project file, so an unproved check fails this step.
+      # Units with SPARK_Mode => Off are skipped.
       - name: GNATprove
         run: ./prove.sh
 
@@ -99,7 +107,14 @@ jobs:
       - uses: alire-project/setup-alire@v5
         with:
           version: "2.1.1"
-          toolchain: gnat_native=16.1.0 gprbuild=26.0.1
+          toolchain: "--disable-assistant"
+
+      - uses: ./.github/actions/toolchain-cache
+        with:
+          gnatprove: "true"
+
+      - name: Pinned toolchain
+        run: ./tools/toolchain-setup.sh with-gnatprove
 
       - name: Guide quotes
         run: python3 tools/check-howto-quote.py
