@@ -6,7 +6,7 @@ title: ""
 
 ## Which item
 
-One item. Items 1 through 20 are done. Item 20 is the README. A new change is still one item.
+One item. Items 1 through 24 are done. Item 24 is the README table. A new change is still one item.
 
 ## Plan or Go
 

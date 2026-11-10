@@ -6,14 +6,14 @@ the feedback and crash files.
 The splash on the live page is a small picture of a network: Ada moves
 the points, and the page plots them.
 
-Visible stamp: **v0.23.0-ci-cache**
+Visible stamp: **v0.24.0-readme**
 
 The same text is `AI_Amplifier.Version.Version_Text`, the yellow badge in
 `web/template.html`, `version.txt`, and the line printed by `bin/hello`.
-The Alire crate version is `0.23.0-ci-cache` (the stamp without the leading
+The Alire crate version is `0.24.0-readme` (the stamp without the leading
 `v`, because Alire versions are semver).
 
-**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.23.0-ci-cache
+**Live page:** https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.24.0-readme
 
 **Guide:** [docs/HOWTO.md](docs/HOWTO.md). The page links there. It is the install path, a walkthrough that adds leaky ReLU, and the code tour.
 
@@ -50,25 +50,43 @@ The label on each line is the one `STATUS` prints for this tree. `proved` means 
 
 The longer account of each item is in the sections below and in `docs/`.
 
-## What is proved
+## What is proven
 
-These units have their own level-2 GNATprove runs, each with unproved 0:
+The block between the markers is written by `tools/check-readme-status.py`. The rows and the summary line come from `STATUS`. The last line comes from `proof/ask_rule.out`, because that proof is not one of the 19 items. CI fails if the block is not that text. A proved row names the rule `STATUS` states (`proved for the …`), or the unit name when `STATUS` does not name a rule, and the check count on that unit. A tested row repeats the reason `STATUS` gives for why that item is not a proof.
 
-| Item | Unit | Run |
-|---|---|---|
-| 1 | `AI_Amplifier.Version` | `proof/item_01.out`, summary 18, 14 checks on that unit |
-| 3 | `AI_Amplifier.Tensors` | `proof/item_03.out`, summary 414, 378 prover checks |
-| 7 | `AI_Amplifier.Tensors` | `proof/item_07.out`, the same unit in its own run, summary 414 |
-| 9 | `AI_Amplifier.Chain_Rule` | `proof/item_09.out`, summary 6 |
-| 11 | `AI_Amplifier.Trace_Rule` | `proof/item_11.out`, summary 15 |
-| 12 | `AI_Amplifier.Audit_Rule` | `proof/item_12.out`, summary 2 |
-| 19 | `AI_Amplifier.Summary_Rules` | `proof/item_19.out`, summary 22, 15 checks on that unit |
+<!-- status-table: begin -->
+| Item | Label | Rule proved | Checks | Why it stays tested |
+|---:|---|---|---:|---|
+| 1 | proved | ai_amplifier-version | 14 |  |
+| 2 | tested |  |  | the splash is a drawing and is not a proof target |
+| 3 | proved | ai_amplifier-tensors | 378 |  |
+| 4 | tested |  |  | gradient descent on float weights is not a proof target |
+| 5 | tested |  |  | the tokenizer and the attention block are not a proof target |
+| 6 | tested |  |  | the how-to is a document and the leaky demo is not analyzed |
+| 7 | proved | ai_amplifier-tensors | 378 |  |
+| 8 | tested |  |  | weight-file checks run with the program and are not proved |
+| 9 | proved | ai_amplifier-chain_rule | 3 |  |
+| 10 | tested |  |  | a measured training time is not a proof |
+| 11 | proved | ai_amplifier-trace_rule | 11 |  |
+| 12 | proved | ai_amplifier-audit_rule | 1 |  |
+| 13 | proved | accept/reject gate | 2 |  |
+| 14 | tested |  |  | the harness schedule is not a proof target |
+| 15 | proved | step-grade rule | 4 |  |
+| 16 | proved | lock-compare rule | 9 |  |
+| 17 | proved | agreement count | 7 |  |
+| 18 | proved | label rule | 3 |  |
+| 19 | proved | ai_amplifier-summary_rules | 15 |  |
+
+summary proved 12 of 19, tested 7, unchecked 0
+
+AI_Amplifier.Ask_Rule is not an item in STATUS. proof/ask_rule.out has 4 checks on ai_amplifier-ask_rule and unproved 0.
+<!-- status-table: end -->
 
 Silver on a tensor kernel is absence of run-time error, and a range where the proof-status table says so. Gold is the component rule. Sigmoid, tanh, and softmax are Silver: the series is not proved equal to the real function. There is no `pragma Annotate` and no `pragma Assume`.
 
 ## What is not proved
 
-Items 2, 4, 5, 6, 8, 10, 13, 14, 15, 16, 17, and 18 are tested. A passing test is not a proof. Item 18 is the status program itself: plain Ada, no `proof/item_18.out`.
+A tested label is not a proof. The reason for each tested item is the last column of the table above. Items 13, 15, 16, 17, and 18 are proved for one rule each: the accept/reject gate, the step-grade rule, the lock-compare rule, the agreement count, and the label rule. The check counts are in that table. The float scores, the recomputed values, the spec text, the two checkers, and `AI_Amplifier.Status` stay outside those runs. `proof/item_18.out` is the label rule.
 
 These parts stay outside the proved runs even when the item's label is proved: the splash, the page wrappers, the MLP and its trainer, the tokenizer, the attention block, the chain parser, the recorded chains, the speed harness, the trainer replay, the flag finder, the reward demo, the harness schedule, the step checker, the locked specs, the second checker, the status program, the written summaries, and the stand-in exchange. Items 9, 11, and 14 name a live `--ask` command. CI runs it against a stand-in on the same machine. No real model is called, so real-model behaviour stays unchecked.
 
@@ -222,6 +240,7 @@ omitted when printing.
 | `tools/wasm-smoke.mjs` | Node: stamp, no wasm imports, splash numbers, product and softmax, leaky ReLU, XOR training, the weight text, BPE round trip, attention rows, the wrong-turn checker, the benchmark audit, the reward table and both searches, the harness table, the step grades, the locked statements, the second checker |
 | `tools/page-smoke.mjs` | Headless Chrome: splash, the tensor panel, leaky ReLU, the training panel, the weight workbench, the speed panel, the token panel, the recorded chains, the wrong-turn panel, the benchmark audit, the reward table and curves, the harness table and one task's four walks, the checked-steps table, the locked statements, the second checker, the checking-status table, Enter, tap, F9, crash panel, failed module |
 | `tools/check-status.sh` | Runs the tests, the specs, and `status_cli`. Fails if `STATUS` differs |
+| `tools/check-readme-status.py` | Rebuilds the "What is proven" table from `STATUS` and `proof/ask_rule.out`. Fails if the README block differs |
 | `tools/howto-steps.sh` | The commands in the How-To. CI job `how-to steps` runs this file |
 | `docs/HOWTO.md` | Newcomer guide |
 | `CONTRIBUTING.md` | Stamp, one item at a time, honesty, the pre-push list, F9 |
@@ -245,7 +264,7 @@ alr -n build
 on). Expected line:
 
 ```text
-ada-ai-amplifier v0.23.0-ci-cache
+ada-ai-amplifier v0.24.0-readme
 ```
 
 Then:
@@ -312,6 +331,14 @@ export PATH="$HOME/.alire/bin:$PATH"
 
 `./prove.sh` installs that crate if `gnatprove` is not already on
 `PATH`, then writes one `proof/item_NN.out` per proved item.
+CI does not stop at one download. `ci/toolchain.lock` names each
+archive and its sha256. The job uses a cached copy when the checksum
+matches. If it does not, the job retries the download, then the
+GitHub release asset, and fails with
+`toolchain unavailable (HTTP <code>)` when all three fail. The log
+names the source: `toolchain from cache`, `toolchain from download`,
+or `toolchain from release asset`. A matching checksum shows the
+archive is the pinned one. It does not show that the compiler is correct.
 
 Proved units, each in its own run: `AI_Amplifier.Version`,
 `AI_Amplifier.Tensors` (twice, once for item 3 and once for item 7),
@@ -422,6 +449,9 @@ and
 AdaWebPack 24 (GNAT-LLVM), linked with `wasm-ld`. On Debian/Ubuntu the
 download step needs `rpm2cpio`, `cpio`, `lld`, and `libedit2`. The smokes
 need Node.js. The page smoke also needs Chrome and `puppeteer-core`.
+`./tools/get-toolchain.sh` reads `ci/toolchain.lock` and uses the
+same three steps: a cached archive when the sha256 matches, then
+the download with retries, then the GitHub release asset.
 
 ```sh
 sudo apt install rpm2cpio cpio lld libedit2
@@ -1039,7 +1069,7 @@ fail exits 1. The page does not run this program.
 ## Locked statements
 
 `specs/` holds one small Ada program for each finished item,
-`item_01.adb` through `item_15.adb`, `item_17.adb`, and `item_18.adb`. Each one calls the library
+`item_01.adb` through `item_19.adb`. Each one calls the library
 and asserts numbers that item's test already checks: the 3 by 3
 product `14`, `14`, `17`, the XOR bar at step 95, the corpus
 length 563, the four recorded chains, the audit lines `14 of 20`
@@ -1129,18 +1159,26 @@ repository was copied.
 19. **Reasoning summary vs checked steps — done.** Eight written summaries beside the steps Ada checked one at a time. A summary that leaves out a failed step, claims a step that never happened, or tells a smoother story is marked. [docs/REASONING_SUMMARY.md](docs/REASONING_SUMMARY.md). Ideas inspired by the reasoning summaries in [openai/math](https://github.com/openai/math) (Apache-2.0). This is an independent reimplementation. No code was copied. The summaries were written here. They are not a model's words, and they are not a laboratory result.
 20. **README update after items 1–19 — done.** This file. One line per item, with the label from `STATUS`. It is not a built Ada item, so it has no row of its own.
 
-Items 1 through 20 are done. The labels for 1 through 19 are the list at the top.
+Items 1 through 24 are done. The labels for 1 through 19 are the list at the top. `STATUS` does not label items 20 through 24.
 
-21. **Prove more tested items — done.** The accept/reject gate, the step-grade rule, the lock-compare rule, the agreement count, and the label rule. Each is its own SPARK unit and its own gnatprove run. Float training, the splash drawing, the tokenizer, the how-to, the weight files, measured timings, and the harness schedule stay tested.
-22. **A check for the live `--ask` modes of items 9, 11, and 14 — done.** A stand-in on the CI machine returns fixed chat replies. `recurse_cli --ask`, `traces_cli --ask`, and `harness_cli --ask` are pointed at it with their URL, key, and model settings. A wrong answer, a broken body, and a timeout are reported as failures. No real model is called. [docs/ASK_CHECK.md](docs/ASK_CHECK.md).
+21. **Prove more tested items — done.** The accept/reject gate, the step-grade rule, the lock-compare rule, the agreement count, and the label rule. Each is its own SPARK unit and its own gnatprove run. The check counts are in the table above. Float training, the splash drawing, the tokenizer, the how-to, the weight files, measured timings, and the harness schedule stay tested.
+22. **A check for the live `--ask` modes of items 9, 11, and 14 — done.** A stand-in on the CI machine returns fixed chat replies. `recurse_cli --ask`, `traces_cli --ask`, and `harness_cli --ask` are pointed at it with their URL, key, and model settings. A wrong answer, a broken body, and a timeout are reported as failures. No real model is called. `AI_Amplifier.Ask_Rule` is proved and is not one of the 19 items. [docs/ASK_CHECK.md](docs/ASK_CHECK.md).
 23. **Make CI less dependent on GitHub toolchain downloads — done.** `ci/toolchain.lock` pins GNAT 16.1.0, gprbuild 26.0.1, GNATprove 16.1.0, the GNAT 14.2.1 runtime AdaWebPack needs, AdaWebPack 24.0.0, and the two Fedora 40 LLVM and Clang libraries. Each line has a sha256. CI stores those archives in `actions/cache`, keyed on the version and on that file. A cached copy is used only when the checksum matches, and the log says `toolchain from cache`. If it does not, CI retries the download, then the GitHub release asset API, and stops with `toolchain unavailable (HTTP <code>)` when all three fail. A matching checksum means the bytes are the pinned archive. It does not prove the compiler.
-24. **README update — planned.** Last. Not started.
+24. **README update — done.** This file, after items 21–23. The "What is proven" table is generated from `STATUS`. CI fails if that block is not the text `tools/check-readme-status.py` builds. This item is not a built Ada program, so `STATUS` does not label it.
+
+## Honesty, in plain words
+
+A stand-in model is not a real model. The `--ask` check uses that stand-in. Real-model behaviour stays unchecked.
+
+A matching checksum shows the archive is the pinned one. It does not show that the compiler is correct.
+
+Nothing here reproduces laboratory results.
 
 ## Honesty
 
-1. The splash arithmetic is plain Ada. It is not proved. `SPARK_Mode` is off on that unit so it is not presented as a proof target. `AI_Amplifier.Version` is proved in `proof/item_01.out`: summary 18, with 14 checks on that unit. The stamp text is `v0.23.0-ci-cache`.
+1. The splash arithmetic is plain Ada. It is not proved. `SPARK_Mode` is off on that unit so it is not presented as a proof target. `AI_Amplifier.Version` is proved in `proof/item_01.out`: summary 18, with 14 checks on that unit. The stamp text is `v0.24.0-readme`.
 2. The tensor kernels are SPARK, at the levels in the proof status table. Silver is absence of run-time error (and, where the table says so, a range). Gold is the component rule. `Leaky_ReLU` is Gold. Its slope on the page is `0.01`. The `Pre` and `Post` are still checked when the program runs. The proof does not replace that check. Sigmoid, tanh, and softmax do not claim to match the real functions.
-3. CI builds the native program, runs `bin/tensors_test`, `bin/mlp_test`, `bin/attention_test`, `bin/recurse_test`, `bin/traces_test`, `bin/audit_test`, `bin/reward_test`, `bin/harness_test`, and `bin/steps_test`, runs `bin/recheck_test`, runs the locked specs, runs `./prove.sh` (GNATprove level 2, unproved checks are errors), builds the wasm module and the page, then runs the headless smoke. Before that, the job installs the toolchain named in `ci/toolchain.lock` and uses a cached copy only when the sha256 matches. The same job recomputes `specs/LOCK` and rejects an Assume pragma, an Annotate pragma, and a skipped test. The same job runs `./tools/check-status.sh` and fails if `STATUS` is not the report that program prints. The same job runs `./tools/check-ask.sh` from `check-status.sh`: the three `--ask` commands talk to a stand-in on that machine, 36 cases, and no real model is called. The committed logs are `proof/item_01.out`, `proof/item_03.out`, `proof/item_07.out`, `proof/item_09.out`, `proof/item_11.out`, `proof/item_12.out`, `proof/item_13.out`, `proof/item_15.out`, `proof/item_16.out`, `proof/item_17.out`, `proof/item_18.out`, `proof/item_19.out`, and `proof/ask_rule.out`. They prove the version unit, the tensor kernels, the Fibonacci step rule, the next-step verdict, the audit score gate, the accept/reject gate, the step-grade rule, the lock-compare rule, the agreement count, the label rule, the summary flag rules (22 checks, unproved 0), and the stand-in outcome rule (`proof/ask_rule.out`, summary 8, unproved 0). They do not prove the splash, the network, the tokenizer, the attention block, the chain parser, the speed harness, the trainer replay, the flag finder, the float reward scores, the harness comparison, the recomputed step values, either checker, the locked specs, the program that reads the logs, the request text, or the behaviour of a real model.
+3. CI builds the native program, runs `bin/tensors_test`, `bin/mlp_test`, `bin/attention_test`, `bin/recurse_test`, `bin/traces_test`, `bin/audit_test`, `bin/reward_test`, `bin/harness_test`, and `bin/steps_test`, runs `bin/recheck_test`, runs the locked specs, runs `./prove.sh` (GNATprove level 2, unproved checks are errors), builds the wasm module and the page, then runs the headless smoke. Before that, the job installs the toolchain named in `ci/toolchain.lock`. It uses a cached copy when the sha256 matches, and otherwise retries the download, then the GitHub release asset. The same job recomputes `specs/LOCK` and rejects an Assume pragma, an Annotate pragma, and a skipped test. The same job runs `./tools/check-status.sh` and fails if `STATUS` is not the report that program prints. The same job runs `python3 tools/check-readme-status.py` and fails if the "What is proven" block is not the text that script builds from `STATUS` and `proof/ask_rule.out`. The same job runs `./tools/check-ask.sh` from `check-status.sh`: the three `--ask` commands talk to a stand-in on that machine, 36 cases, and no real model is called. The committed logs are `proof/item_01.out`, `proof/item_03.out`, `proof/item_07.out`, `proof/item_09.out`, `proof/item_11.out`, `proof/item_12.out`, `proof/item_13.out`, `proof/item_15.out`, `proof/item_16.out`, `proof/item_17.out`, `proof/item_18.out`, `proof/item_19.out`, and `proof/ask_rule.out`. They prove the version unit, the tensor kernels, the Fibonacci step rule, the next-step verdict, the audit score gate, the accept/reject gate, the step-grade rule, the lock-compare rule, the agreement count, the label rule, the summary flag rules (22 checks, unproved 0), and the stand-in outcome rule (`proof/ask_rule.out`, summary 8, unproved 0). That run is not an item. Its check count is the last line of the generated table. They do not prove the splash, the network, the tokenizer, the attention block, the chain parser, the speed harness, the trainer replay, the flag finder, the float reward scores, the harness comparison, the recomputed step values, either checker, the locked specs, the program that reads the logs, the request text, or the behaviour of a real model.
 4. The wasm module's lack of imports is what this build emits, and `tools/wasm-smoke.mjs` checks it. The tensor body does reference a failed-check path. `tools/wasm-checks.c` defines `__gnat_last_chance_handler` and `system__assertions__raise_assert_failure` as traps, so that path links without an import. On the native runtime the same check raises. `-gnatp` is not used. `-gnatw.X` is the same switch as the native Alire profile: this runtime forbids exception propagation, and the compiler's reminder of that is turned off.
 5. JavaScript does not compute the splash, the product, the softmax, the loss, the decision boundary, the merges, the attention, the weight text, the chain check, the training-speed verdict, the wrong-turn verdict, the benchmark audit, the reward scores, the harness table, the step grades, the locked-statement fingerprints, the second-checker counts, the checking-status labels, or the summary comparison. The counts are a file this build writes. It reads coordinates, copies numbers, and sends UTF-8 bytes. It adds up the weights it already read when it writes the sentence under the heatmap. On the speed panel it reads the host wall clock before and after the Ada call and passes those two readings in. Ada subtracts them. If the module is missing, not WebAssembly, missing an export, or its stamp differs from the badge, the page says "The Ada module did not load" and still shows the title and the badge. The tensor demo then says it has no product. The leaky ReLU panel says it has no leaky ReLU. The training panel says it cannot train. The weight buttons say the weights cannot be edited. The speed panel says it cannot time a run. The token panel says it cannot tokenize. The chain panel says it cannot check a chain. The wrong-turn panel says it cannot check a next step. The audit panel says it cannot audit the tasks. The reward panel says it cannot score the submissions. The harness panel says it cannot run the harnesses. The steps panel says it cannot check the steps. The summary panel says it cannot compare a summary with its steps. The locked-statements panel says it cannot show the locked statements. The checking-status panel does not use the module. It copies the report this build embedded. If that report is missing, the panel says so.
 6. The network on the splash is not a model. The tensor demo is not a model. The training panel is a model: forward, binary cross-entropy, backprop, and gradient descent, in the MLP unit. The token panel tokenizes and runs attention, forward only. Those weights are the seed. They are not trained.
@@ -1149,7 +1187,7 @@ Items 1 through 20 are done. The labels for 1 through 19 are the list at the top
 9. Eight hidden units do not solve the spirals. The numbers in the network section are this seed, at the rates named there. They are not a claim about every seed.
 10. The BPE rules are whatever this excerpt and this tie-break produce. They are not a published tokenizer. ß is one token here. ä is not. A different excerpt would learn different merges. The 32, 288, and 376 figures are this text.
 11. Attention reads at most 16 tokens. The page still shows later pieces, and it says they are outside the heatmap. The box keeps at most 768 bytes.
-12. The compiler, `wasm-ld`, Chrome, and the Node smokes are trusted tools. They are not verified. CI pins the Ada toolchain archives in `ci/toolchain.lock` and uses a cached copy only when the sha256 matches. That rejects a short or substituted download. It does not prove the compiler.
+12. The compiler, `wasm-ld`, Chrome, and the Node smokes are trusted tools. They are not verified. CI pins the Ada toolchain archives in `ci/toolchain.lock`. It uses a cached copy when the sha256 matches, and otherwise retries the download, then the GitHub release asset. A matching checksum shows the archive is the pinned one. It does not show that the compiler is correct.
 13. GitHub Pages publishes `site/` from `main` via `.github/workflows/pages.yml`. The cache-bust query is the stamp without the leading `v`.
 14. The hand-written XOR net and the three weight edits are Ada source. They are not the output of a language model, and they are not a rerun of the weight-space programming post. The post is linked from `docs/WEIGHT_SPACE.md` as the idea. The checks on a loaded file run when the program runs. They are not proved.
 15. The recorded chains are Ada source written for this repository. They are not the output of a language model, and they are not a rerun of the recursive-prompt repository linked from `docs/RECURSIVE_PROMPTS.md`. That repository has no license file. The step rule is proved. The page shows checked recordings. `recurse_cli --ask` can call a model, and only on the machine where the user set a key. CI does not. It points the same command at a stand-in that returns fixed replies, including a wrong step, a broken body, and a timeout. No real model is called. The browser does not. There is no claim that a model produces the same chains, and no claim that these runs match anyone else's numbers.

@@ -23,6 +23,7 @@ touches a proved kernel, and which level that kernel is.
 - [ ] `./build.sh` and `node tools/page-smoke.mjs` pass
 - [ ] `./tools/check-version.sh` passes
 - [ ] `python3 tools/check-howto-quote.py` passes if the guide or its scripts changed
+- [ ] `python3 tools/check-readme-status.py` passes
 - [ ] Docs that name a number name the number the code uses
 
 ## Live page

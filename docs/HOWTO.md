@@ -4,9 +4,9 @@ A walkthrough for someone new to this repository, and possibly new to
 Ada. The logic lives in Ada. JavaScript only draws. The live page is one
 HTML file with that Ada compiled to WebAssembly inside it.
 
-Visible stamp: **v0.23.0-ci-cache**
+Visible stamp: **v0.24.0-readme**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.23.0-ci-cache
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.24.0-readme
 
 The yellow badge, `version.txt`, and `AI_Amplifier.Version.Version_Text`
 are that same text. The query on the link is the cache bust (the stamp
@@ -109,7 +109,7 @@ mean something:
 | `alr -n toolchain --select …` | Puts GNAT 16.1.0 and gprbuild 26.0.1 on the Alire toolchain |
 | `./tools/get-toolchain.sh` | Downloads AdaWebPack 24 into `toolchain/` (gitignored). The bytes are checked against `ci/toolchain.lock`. A cached copy is used only when the checksum matches. Later runs see the compiler and return |
 | `alr -n build` | Native build. Warnings and checks are on, including `-gnata`, so `Pre` and `Post` run |
-| `./bin/hello` | Prints `ada-ai-amplifier v0.23.0-ci-cache` |
+| `./bin/hello` | Prints `ada-ai-amplifier v0.24.0-readme` |
 | `./tools/check-version.sh` | That line, `version.txt`, and the badge in `web/template.html` must be the same stamp |
 | `./bin/tensors_test` | Prints `tensors ok` |
 | `./bin/mlp_test` | Prints `mlp ok` |
@@ -134,7 +134,7 @@ mean something:
 | `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, the speed panel, tokens, recorded chains, wrong turns, the benchmark audit, the reward table, the harness table, the checked-steps table, the locked statements, the second checker, the checking-status table, F9, crash report, a failed module |
 
 Then open `site/index.html` in a browser yourself. The badge reads
-`v0.23.0-ci-cache`. Leaky ReLU shows slope `0.01` and the output
+`v0.24.0-readme`. Leaky ReLU shows slope `0.01` and the output
 `-0.02`, `0`, `3`. Compute still shows the product `14`, `14`, `17`.
 
 The file, which CI runs as `./tools/howto-steps.sh`:
@@ -347,7 +347,7 @@ to the stamp without the `v`. A screenshot of the new page shows the
 new badge.
 
 **Plan, then Go, then one item.** Post a numbered plan for one change.
-Wait for Go. Build that item. Report, and stop. Items 1 through 20 are
+Wait for Go. Build that item. Report, and stop. Items 1 through 24 are
 done. Item 15 is the checked-steps demo. Item 16 is the locked
 statements: a fixed spec per finished item, and a CI gate that fails
 if a spec's fingerprint changes without `specs/LOCK`, or if
@@ -362,9 +362,17 @@ it fails if a built item is missing from `STATUS`. Tested is not
 proved. Item 19 is the reasoning summary set against the
 checked steps. Item 20 is this repository's README: one line per
 item, with the label from `STATUS`. Item 21 proved five small
-rules. Item 22 checks the three `--ask` commands against a
-stand-in model. No real model is called. Items 23 and 24
-are still planned. Ideas inspired by the
+rules: the accept/reject gate, the step-grade rule, the
+lock-compare rule, the agreement count, and the label rule.
+Item 22 checks the three `--ask` commands against a
+stand-in model. No real model is called. Item 23 pins the
+CI toolchain. A cached archive is used when its checksum
+matches `ci/toolchain.lock`; otherwise the download is
+retried, then the GitHub release asset. A matching checksum
+shows the archive is the pinned one. It does not show that
+the compiler is correct. Item 24 is the README table
+generated from `STATUS`. CI fails if that table and `STATUS`
+disagree. Ideas inspired by the
 Challenge/Solution split, the comparator, and the independent kernel
 check in [formal-math](https://github.com/anthropics/formal-math)
 (Apache-2.0), and by results at different stages of verification
@@ -470,4 +478,4 @@ or the step checker. The flag rules are proved. The summaries
 are not.
 `AI_Amplifier.Version` is SPARK,
 with the contracts from the skeleton. The stamp there is
-`v0.23.0-ci-cache`.
+`v0.24.0-readme`.
