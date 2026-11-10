@@ -4,9 +4,9 @@ Four recorded mistakes on the XOR trainer this repository already
 has, and an Ada checker for the step that comes next. The traces
 were written here. They are not someone else's session.
 
-Visible stamp: **v0.22.0-askcheck**
+Visible stamp: **v0.23.0-ci-cache**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.22.0-askcheck
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.23.0-ci-cache
 
 ## The idea, and the caveat
 

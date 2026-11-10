@@ -4,9 +4,9 @@ A walkthrough for someone new to this repository, and possibly new to
 Ada. The logic lives in Ada. JavaScript only draws. The live page is one
 HTML file with that Ada compiled to WebAssembly inside it.
 
-Visible stamp: **v0.22.0-askcheck**
+Visible stamp: **v0.23.0-ci-cache**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.22.0-askcheck
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.23.0-ci-cache
 
 The yellow badge, `version.txt`, and `AI_Amplifier.Version.Version_Text`
 are that same text. The query on the link is the cache bust (the stamp
@@ -50,9 +50,12 @@ alr version
 ```
 
 `alr version` should report 2.1.1. The CI job installs that same Alire
-with `alire-project/setup-alire@v5` and selects
-`gnat_native=16.1.0 gprbuild=26.0.1`. The script in section 4 selects
-that toolchain again, so a local run and the runner do the same thing.
+with `alire-project/setup-alire@v5`. It then runs `tools/toolchain-setup.sh`,
+which selects `gnat_native` 16.1.0 and `gprbuild` 26.0.1 from
+`ci/toolchain.lock`. A cached archive is used only when its sha256 matches.
+The script in section 4 selects that toolchain again, so a local run and
+the runner ask for the same versions. On the runner the second select
+finds them already installed.
 
 ## 2. Node.js 22
 
@@ -104,9 +107,9 @@ mean something:
 | Line | What it does |
 |---|---|
 | `alr -n toolchain --select …` | Puts GNAT 16.1.0 and gprbuild 26.0.1 on the Alire toolchain |
-| `./tools/get-toolchain.sh` | Downloads AdaWebPack 24 into `toolchain/` (gitignored). Later runs see the compiler and return |
+| `./tools/get-toolchain.sh` | Downloads AdaWebPack 24 into `toolchain/` (gitignored). The bytes are checked against `ci/toolchain.lock`. A cached copy is used only when the checksum matches. Later runs see the compiler and return |
 | `alr -n build` | Native build. Warnings and checks are on, including `-gnata`, so `Pre` and `Post` run |
-| `./bin/hello` | Prints `ada-ai-amplifier v0.22.0-askcheck` |
+| `./bin/hello` | Prints `ada-ai-amplifier v0.23.0-ci-cache` |
 | `./tools/check-version.sh` | That line, `version.txt`, and the badge in `web/template.html` must be the same stamp |
 | `./bin/tensors_test` | Prints `tensors ok` |
 | `./bin/mlp_test` | Prints `mlp ok` |
@@ -131,7 +134,7 @@ mean something:
 | `node tools/page-smoke.mjs` | Opens that page in headless Chrome: splash, tensor demo, leaky ReLU, training, the speed panel, tokens, recorded chains, wrong turns, the benchmark audit, the reward table, the harness table, the checked-steps table, the locked statements, the second checker, the checking-status table, F9, crash report, a failed module |
 
 Then open `site/index.html` in a browser yourself. The badge reads
-`v0.22.0-askcheck`. Leaky ReLU shows slope `0.01` and the output
+`v0.23.0-ci-cache`. Leaky ReLU shows slope `0.01` and the output
 `-0.02`, `0`, `3`. Compute still shows the product `14`, `14`, `17`.
 
 The file, which CI runs as `./tools/howto-steps.sh`:
@@ -467,4 +470,4 @@ or the step checker. The flag rules are proved. The summaries
 are not.
 `AI_Amplifier.Version` is SPARK,
 with the contracts from the skeleton. The stamp there is
-`v0.22.0-askcheck`.
+`v0.23.0-ci-cache`.

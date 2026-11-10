@@ -1,0 +1,67 @@
+name: Toolchain cache
+description: >
+  Cache the pinned Alire toolchain and the AdaWebPack download.
+  The key is the piece version plus ci/toolchain.lock, so a new
+  checksum or version does not reuse an old copy. The fetch script
+  still checks the sha256 before it uses a restored file.
+
+inputs:
+  gnatprove:
+    description: Also cache GNATprove. The page job does not prove.
+    required: false
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/cache@v4
+      with:
+        path: ~/.cache/ada-ai-amplifier/toolchain/archives/gnat_native
+        key: gnat_native-16.1.0-${{ hashFiles('ci/toolchain.lock') }}
+
+    - uses: actions/cache@v4
+      with:
+        path: ~/.cache/ada-ai-amplifier/toolchain/archives/gprbuild
+        key: gprbuild-26.0.1-${{ hashFiles('ci/toolchain.lock') }}
+
+    - uses: actions/cache@v4
+      with:
+        path: ~/.cache/ada-ai-amplifier/toolchain/archives/gnat14
+        key: gnat14-14.2.1-${{ hashFiles('ci/toolchain.lock') }}
+
+    - uses: actions/cache@v4
+      with:
+        path: ~/.cache/ada-ai-amplifier/toolchain/archives/adawebpack
+        key: adawebpack-24.0.0-${{ hashFiles('ci/toolchain.lock') }}
+
+    - uses: actions/cache@v4
+      with:
+        path: ~/.cache/ada-ai-amplifier/toolchain/archives/llvm16_libs
+        key: llvm16_libs-16.0.6-7-${{ hashFiles('ci/toolchain.lock') }}
+
+    - uses: actions/cache@v4
+      with:
+        path: ~/.cache/ada-ai-amplifier/toolchain/archives/clang16_libs
+        key: clang16_libs-16.0.6-5-${{ hashFiles('ci/toolchain.lock') }}
+
+    - uses: actions/cache@v4
+      if: inputs.gnatprove == 'true'
+      with:
+        path: ~/.cache/ada-ai-amplifier/toolchain/archives/gnatprove
+        key: gnatprove-16.1.0-${{ hashFiles('ci/toolchain.lock') }}
+
+    - uses: actions/cache@v4
+      with:
+        path: ~/.local/share/alire/toolchains
+        key: alire-toolchains-${{ hashFiles('ci/toolchain.lock') }}
+
+    - uses: actions/cache@v4
+      with:
+        path: toolchain
+        key: adawebpack-tree-${{ hashFiles('ci/toolchain.lock') }}
+
+    - uses: actions/cache@v4
+      if: inputs.gnatprove == 'true'
+      with:
+        path: ~/.alire
+        key: gnatprove-prefix-${{ hashFiles('ci/toolchain.lock') }}

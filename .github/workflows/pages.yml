@@ -27,7 +27,14 @@ jobs:
       - uses: alire-project/setup-alire@v5
         with:
           version: "2.1.1"
-          toolchain: gnat_native=16.1.0 gprbuild=26.0.1
+          toolchain: "--disable-assistant"
+
+      - uses: ./.github/actions/toolchain-cache
+        with:
+          gnatprove: "false"
+
+      - name: Pinned toolchain
+        run: ./tools/toolchain-setup.sh
 
       - name: Build the page
         run: |
