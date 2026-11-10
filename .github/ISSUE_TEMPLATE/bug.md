@@ -6,7 +6,7 @@ title: ""
 
 ## Stamp
 
-The yellow badge, bottom right. Example: `v0.23.0-ci-cache`.
+The yellow badge, bottom right. Example: `v0.24.0-readme`.
 
 ## What you expected
 

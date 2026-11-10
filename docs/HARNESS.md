@@ -3,9 +3,9 @@
 One fixed solver, four harnesses, eight tasks, one seed.
 The solver does not change. The harness does. The score moves.
 
-Visible stamp: **v0.23.0-ci-cache**
+Visible stamp: **v0.24.0-readme**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.23.0-ci-cache
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.24.0-readme
 
 ## The idea, and the licences
 

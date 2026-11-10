@@ -3,9 +3,9 @@
 One task, two graders, and a hill-climb that can please the weak
 grader without solving the task.
 
-Visible stamp: **v0.23.0-ci-cache**
+Visible stamp: **v0.24.0-readme**
 
-Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.23.0-ci-cache
+Live page: https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.24.0-readme
 
 The task is to make this repository's XOR net right. The real check
 reruns the net. The flawed grader does not. Four of the five

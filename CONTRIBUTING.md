@@ -17,13 +17,19 @@ GitHub Pages from `main`, not with a secret gist.
 4. Report what landed, what the checks did, and what is still open.
 5. Stop. Do not start the next item in the same change.
 
-Items 1 through 20 are done. Item 16 is the locked statements.
+Items 1 through 24 are done. Item 16 is the locked statements.
 Item 17 is the second checker. Item 18 labels items 1–19
 proved, tested, or unchecked. The summary is proved 12 of 19,
 tested 7, unchecked 0. Item 18 is proved for the label rule.
 Item 19 sets
 a written summary against the checked steps. Item 20 is the
 README: one line per item, with the label from `STATUS`.
+Item 21 proves five rules that had been only tested.
+Item 22 checks `--ask` against a stand-in. No real model is called.
+Item 23 pins the CI toolchain and uses a cached archive when the
+checksum matches. Item 24 is the README table generated from
+`STATUS`. `python3 tools/check-readme-status.py` fails if that
+table and `STATUS` disagree.
 Ideas inspired by
 [formal-math](https://github.com/anthropics/formal-math)
 (Apache-2.0) for items 16 and 17, and by
@@ -47,7 +53,7 @@ These four are the same text:
 
 | Place | Text |
 |---|---|
-| `AI_Amplifier.Version.Version_Text` | `v0.23.0-ci-cache` on this tree |
+| `AI_Amplifier.Version.Version_Text` | `v0.24.0-readme` on this tree |
 | `web/template.html`, the `#ver` badge | the same, so it shows with JavaScript off |
 | `version.txt` | the same, one line |
 | `alire.toml` `version` | the same without the leading `v` |
@@ -58,7 +64,7 @@ Bump the stamp when the page, or the Ada a visitor runs, would differ.
 Do not reuse a stamp. Pages deploys from `main` only, so the bump lands
 with the change that deploys. The link you send is
 
-`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.23.0-ci-cache`
+`https://robertboettchersf.github.io/ada-ai-amplifier/?v=0.24.0-readme`
 
 with `?v=` set to the stamp without the leading `v`. Before you say
 that stamp is live, fetch the page and `version.txt` and see the text
@@ -107,6 +113,8 @@ seen.
 5. **Do the docs name the numbers the code uses?** The How-To quotes
    `tools/howto-packages.sh` and `tools/howto-steps.sh`.
    `python3 tools/check-howto-quote.py` fails if a quote drifts.
+   `python3 tools/check-readme-status.py` fails if the README
+   table and `STATUS` disagree.
 6. **If a proved unit changed,** `./prove.sh` passes and
    the item's `proof/item_NN.out` matches that run. No `pragma Annotate`. No
    `pragma Assume`.
